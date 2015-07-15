@@ -1,6 +1,6 @@
 ### Intel(R) Threading Building Blocks
 
-This is git repository is currently based on TBB 4.3 Update 2 and will be
+This is git repository is currently based on TBB 4.3 Update 6 and will be
 updated from time to time to track the most recent release. The only
 modification is the addition of a CMake-based build system.
 
@@ -9,10 +9,10 @@ TBB can be easily incorporated into their build process using the
 [ExternalProject_Add](http://www.cmake.org/cmake/help/v3.0/module/ExternalProject.html)
 mechanism.
 
-Currently, the CMake-based build can create static versions of `libtbb`,
-`libtbbmalloc` and `libtbbmalloc_proxy` for the Intel `i386`/`x86_64`
-architectures on Windows (Visual Studio), MacOS (clang) and Linux (gcc).
-Other combinations may work but have not been tested.
+Currently, the CMake-based build can create shared and static versions of
+`libtbb`, `libtbbmalloc` and `libtbbmalloc_proxy` for the Intel `i386`/`x86_64`
+architectures on Windows (Visual Studio), MacOS (clang) and Linux (gcc). Other
+combinations may work but have not been tested.
 
 See index.html for general directions and documentation regarding TBB.
 
