@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -57,50 +57,34 @@
 #endif
 
 #if __INTEL_COMPILER
-  #define __TBB_LAMBDAS_PRESENT ( _TBB_CPP0X && __INTEL_COMPILER > 1100 )
-  #define __TBB_CPP11_SMART_POINTERS_PRESENT ( _TBB_CPP0X && __INTEL_COMPILER >= 1200 && \
-    ( _MSC_VER >= 1600 || __TBB_GCC_VERSION >= 40400 || ( __clang__ && __cplusplus >= 201103L ) ) )
   #define __TBB_CPP11_REFERENCE_WRAPPER_PRESENT ( _TBB_CPP0X && __INTEL_COMPILER >= 1200 && \
     ( _MSC_VER >= 1600 || __TBB_GCC_VERSION >= 40400 || ( __clang__ && __cplusplus >= 201103L ) ) )
   #define __TBB_RANGE_BASED_FOR_PRESENT ( _TBB_CPP0X && __INTEL_COMPILER >= 1300 )
   #define __TBB_SCOPED_ENUM_PRESENT ( _TBB_CPP0X && __INTEL_COMPILER > 1100 )
 #elif __clang__
-  #define __TBB_LAMBDAS_PRESENT ( _TBB_CPP0X && __has_feature(cxx_lambdas) )
-  #define __TBB_CPP11_SMART_POINTERS_PRESENT ( _TBB_CPP0X && __cplusplus >= 201103L && (__TBB_GCC_VERSION >= 40400 || _LIBCPP_VERSION) )
   #define __TBB_CPP11_REFERENCE_WRAPPER_PRESENT ( _TBB_CPP0X && __cplusplus >= 201103L && (__TBB_GCC_VERSION >= 40400 || _LIBCPP_VERSION) )
   #define __TBB_RANGE_BASED_FOR_PRESENT ( _TBB_CPP0X && __has_feature(__cxx_range_for) )
   #define __TBB_SCOPED_ENUM_PRESENT ( _TBB_CPP0X && __has_feature(cxx_strong_enums) )
 #elif __GNUC__
-  #define __TBB_LAMBDAS_PRESENT ( _TBB_CPP0X && __TBB_GCC_VERSION >= 40500 )
-  #define __TBB_CPP11_SMART_POINTERS_PRESENT ( _TBB_CPP0X && __TBB_GCC_VERSION >= 40400 )
   #define __TBB_CPP11_REFERENCE_WRAPPER_PRESENT ( _TBB_CPP0X && __TBB_GCC_VERSION >= 40400 )
   #define __TBB_RANGE_BASED_FOR_PRESENT ( _TBB_CPP0X && __TBB_GCC_VERSION >= 40500 )
   #define __TBB_SCOPED_ENUM_PRESENT ( _TBB_CPP0X && __TBB_GCC_VERSION >= 40400 )
 #elif _MSC_VER
-  #define __TBB_LAMBDAS_PRESENT ( _MSC_VER >= 1600 )
-  #define __TBB_CPP11_SMART_POINTERS_PRESENT ( _MSC_VER >= 1600 )
   #define __TBB_CPP11_REFERENCE_WRAPPER_PRESENT ( _MSC_VER >= 1600 )
   #define __TBB_RANGE_BASED_FOR_PRESENT ( _MSC_VER >= 1700 )
   #define __TBB_SCOPED_ENUM_PRESENT ( _MSC_VER >= 1700 )
 #endif
 
-#define __TBB_TEST_SKIP_LAMBDA (__TBB_ICC_13_0_CPP11_STDLIB_SUPPORT_BROKEN || !__TBB_LAMBDAS_PRESENT)
+//Due to libc++ limitations in C++03 mode, do not pass rvalues to std::make_shared()
+#define __TBB_CPP11_SMART_POINTERS_PRESENT ( _MSC_VER >= 1600 || _TBB_CPP0X && __TBB_GCC_VERSION >= 40400 || _LIBCPP_VERSION)
+#define __TBB_LAMBDAS_PRESENT __TBB_CPP11_LAMBDAS_PRESENT // TODO: replace the old macro in tests
+#define __TBB_TEST_SKIP_LAMBDA (__TBB_ICC_13_0_CPP11_STDLIB_SUPPORT_BROKEN || !__TBB_CPP11_LAMBDAS_PRESENT)
 
 #if __GNUC__ && __ANDROID__
   /** Android GCC does not support _thread keyword **/
   #define __TBB_THREAD_LOCAL_VARIABLES_PRESENT 0
 #else
   #define __TBB_THREAD_LOCAL_VARIABLES_PRESENT 1
-#endif
-
-#if _WIN32 || __ANDROID__
-  /** Windows and Android Bionic library do not support posix_memalign() **/
-  #define __TBB_POSIX_MEMALIGN_PRESENT 0
-  /** Windows and Android Bionic library do not support pvalloc() **/
-  #define __TBB_PVALLOC_PRESENT 0
-#else
-  #define __TBB_POSIX_MEMALIGN_PRESENT 1
-  #define __TBB_PVALLOC_PRESENT 1
 #endif
 
 //MSVC 2013 is unable to properly resolve call to overloaded operator= with std::initializer_list argument for std::pair list elements

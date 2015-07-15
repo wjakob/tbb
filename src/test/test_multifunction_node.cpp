@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -86,7 +86,7 @@ void buffered_levels( size_t concurrency, Body body ) {
                 // Do the test with varying numbers of senders
                 harness_counting_sender<InputType> *senders = NULL;
                 for (size_t num_senders = 1; num_senders <= MAX_NODES; ++num_senders ) {
-                    // Create num_senders senders, set there message limit each to N, and connect them to the exe_vec[node_idx]
+                    // Create num_senders senders, set their message limit each to N, and connect them to the exe_vec[node_idx]
                     senders = new harness_counting_sender<InputType>[num_senders];
                     for (size_t s = 0; s < num_senders; ++s ) {
                         senders[s].my_limit = N;
@@ -425,10 +425,12 @@ void run_multiport_test(int num_threads) {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(mo_node.predecessor_count() == 0, NULL);
     ASSERT(tbb::flow::output_port<0>(mo_node).successor_count() == 1, NULL);
-    std::vector< tbb::flow::receiver<EvenType> *> my_0succs;
+    typedef typename mo_node_type::output_ports_type oports_type;
+    typedef typename tbb::flow::tuple_element<0,oports_type>::type port0_type;
+    typename port0_type::successor_list_type my_0succs;
     tbb::flow::output_port<0>(mo_node).copy_successors(my_0succs);
     ASSERT(my_0succs.size() == 1, NULL);
-    typename mo_node_type::predecessor_vector_type my_preds;
+    typename mo_node_type::predecessor_list_type my_preds;
     mo_node.copy_predecessors(my_preds);
     ASSERT(my_preds.size() == 0, NULL);
 #endif
@@ -584,12 +586,12 @@ void test_extract() {
         ASSERT(my_count == 4, "multifunction_node didn't fire though it has one predecessor");
         ASSERT(!q0.try_get(cm), "multifunction_node forwarded");
         ASSERT(q1.try_get(cm), "multifunction_node forwarded");
+        mf0.extract();
     
         if(i == 0) {
-            mf0.extract();
         }
         else {
-            mf0.extract(tbb::flow::rf_reset_bodies);
+            g.reset(tbb::flow::rf_reset_bodies);
         }
     
     

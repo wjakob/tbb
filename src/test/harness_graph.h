@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -298,10 +298,15 @@ struct harness_counting_receiver : public tbb::flow::receiver<T>, NoCopy {
     }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
+    built_predecessors_type mbp;
+    /*override*/ built_predecessors_type &built_predecessors() { return mbp; }
+    typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
     /*override*/void internal_add_built_predecessor(tbb::flow::sender<T> &) {}
     /*override*/void internal_delete_built_predecessor(tbb::flow::sender<T> &) {}
-    /*override*/void copy_predecessors(std::vector<tbb::flow::sender<T> *> &) { }
+    /*override*/void copy_predecessors(predecessor_list_type &) { }
     /*override*/size_t predecessor_count() { return 0; }
+    /*override*/void clear_predecessors() { my_count = 0; };
     /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) { my_count = 0; }
 #else
     /*override*/void reset_receiver() { my_count = 0; }
@@ -362,10 +367,15 @@ struct harness_mapped_receiver : public tbb::flow::receiver<T>, NoCopy {
         }
     }
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
+    built_predecessors_type mbp;
+    /*override*/ built_predecessors_type &built_predecessors() { return mbp; }
+    typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
     /*override*/void internal_add_built_predecessor(tbb::flow::sender<T> &) {}
     /*override*/void internal_delete_built_predecessor(tbb::flow::sender<T> &) {}
-    /*override*/void copy_predecessors(std::vector<tbb::flow::sender<T> *> &) { }
+    /*override*/void copy_predecessors(predecessor_list_type &) { }
     /*override*/size_t predecessor_count() { return 0; }
+    /*override*/void clear_predecessors() { my_count = 0; };
     /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) { my_count = 0; if(my_map) delete my_map; my_map = new map_type; }
 #else
     /*override*/void reset_receiver() { my_count = 0; if(my_map) delete my_map; my_map = new map_type; }
@@ -407,9 +417,14 @@ struct harness_counting_sender : public tbb::flow::sender<T>, NoCopy {
     }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    typedef typename tbb::flow::sender<T>::successor_list_type successor_list_type;
+    typedef typename tbb::flow::sender<T>::built_successors_type built_successors_type;
+    built_successors_type bst;
+    /*override*/ built_successors_type &built_successors() { return bst; }
     /* override */ void internal_add_built_successor( successor_type &) {}
     /* override */ void internal_delete_built_successor( successor_type &) {}
-    /* override */ void copy_successors(std::vector<successor_type *> &) { }
+    /* override */ void copy_successors(successor_list_type &) { }
+    /*override*/ void clear_successors() { my_receiver = NULL; }
     /* override */ size_t successor_count() { return 0; }
 #endif
 
@@ -504,7 +519,9 @@ struct serial_continue_body {
 // return true if all elements of sv appear in tv.
 template<typename SV, typename TV>
 bool lists_match(SV &sv, TV &tv) {
-    if(sv.size() != tv.size()) return false;
+    if(sv.size() != tv.size()) {
+        return false;
+    }
     std::vector<bool> bv(sv.size(), false);
     for(typename TV::iterator itv = tv.begin(); itv != tv.end(); ++itv) {
         int ibv = 0;
@@ -627,7 +644,7 @@ void test_resets() {
             serial_fn_state0 = 0;  // release the function_node.
             g.wait_for_all();  // wait for all the tasks to complete.
         }
-        g.reset(tbb::flow::rf_extract);
+        g.reset(tbb::flow::rf_clear_edges);
         // test that no one is a successor to the buffer now.
         serial_fn_state0 = 1;  // let the function_node go if it gets an input message
         b0.try_put((T)23);
@@ -652,38 +669,40 @@ protected:
     typename NODE_TYPE::successor_type *ms_ptr;
     typename NODE_TYPE::predecessor_type *mp_ptr;
 
-    typename NODE_TYPE::predecessor_vector_type in0_p_vec;
-    typename NODE_TYPE::successor_vector_type in0_s_vec;
-    typename NODE_TYPE::predecessor_vector_type in1_p_vec;
-    typename NODE_TYPE::successor_vector_type in1_s_vec;
-    typename NODE_TYPE::predecessor_vector_type out0_p_vec;
-    typename NODE_TYPE::successor_vector_type out0_s_vec;
-    typename NODE_TYPE::predecessor_vector_type out1_p_vec;
-    typename NODE_TYPE::successor_vector_type out1_s_vec;
-    typename NODE_TYPE::predecessor_vector_type mp_vec;
-    typename NODE_TYPE::successor_vector_type ms_vec;
+    typename NODE_TYPE::predecessor_list_type in0_p_list;
+    typename NODE_TYPE::successor_list_type in0_s_list;
+    typename NODE_TYPE::predecessor_list_type in1_p_list;
+    typename NODE_TYPE::successor_list_type in1_s_list;
+    typename NODE_TYPE::predecessor_list_type out0_p_list;
+    typename NODE_TYPE::successor_list_type out0_s_list;
+    typename NODE_TYPE::predecessor_list_type out1_p_list;
+    typename NODE_TYPE::successor_list_type out1_s_list;
+    typename NODE_TYPE::predecessor_list_type mp_list;
+    typename NODE_TYPE::predecessor_list_type::iterator mp_list_iter;
+    typename NODE_TYPE::successor_list_type ms_list;
+    typename NODE_TYPE::successor_list_type::iterator ms_list_iter;
 
-    virtual void set_up_vectors() {
-        in0_p_vec.clear(); 
-        in0_s_vec.clear();
-        in1_p_vec.clear(); 
-        in1_s_vec.clear();
-        mp_vec.clear(); 
-        ms_vec.clear();
-        out0_p_vec.clear(); 
-        out0_s_vec.clear();
-        out1_p_vec.clear(); 
-        out1_s_vec.clear();
-        in0.copy_predecessors(in0_p_vec);
-        in0.copy_successors(in0_s_vec);
-        in1.copy_predecessors(in1_p_vec);
-        in1.copy_successors(in1_s_vec);
-        middle.copy_predecessors(mp_vec);
-        middle.copy_successors(ms_vec);
-        out0.copy_predecessors(out0_p_vec);
-        out0.copy_successors(out0_s_vec);
-        out1.copy_predecessors(out1_p_vec);
-        out1.copy_successors(out1_s_vec);
+    virtual void set_up_lists() {
+        in0_p_list.clear(); 
+        in0_s_list.clear();
+        in1_p_list.clear(); 
+        in1_s_list.clear();
+        mp_list.clear(); 
+        ms_list.clear();
+        out0_p_list.clear(); 
+        out0_s_list.clear();
+        out1_p_list.clear(); 
+        out1_s_list.clear();
+        in0.copy_predecessors(in0_p_list);
+        in0.copy_successors(in0_s_list);
+        in1.copy_predecessors(in1_p_list);
+        in1.copy_successors(in1_s_list);
+        middle.copy_predecessors(mp_list);
+        middle.copy_successors(ms_list);
+        out0.copy_predecessors(out0_p_list);
+        out0.copy_successors(out0_s_list);
+        out1.copy_predecessors(out1_p_list);
+        out1.copy_successors(out1_s_list);
     }
 
     void make_and_validate_full_graph() {
@@ -697,25 +716,27 @@ protected:
         tbb::flow::make_edge( middle, out0 );
         tbb::flow::make_edge( middle, out1 );
 
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 1 && in0_s_vec.size() == 1 && in0_s_vec[0] == ms_ptr, "expected 1 successor" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 1 && in1_s_vec.size() == 1 && in1_s_vec[0] == ms_ptr, "expected 1 successor" );
-        ASSERT( middle.predecessor_count() == 2 && mp_vec.size() == 2, "expected 2 predecessors" );
-        ASSERT( middle.successor_count() == 2 && ms_vec.size() == 2, "expected 2 successors" );
-        ASSERT( out0.predecessor_count() == 1 && out0_p_vec.size() == 1 && out0_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 1 && out1_p_vec.size() == 1 && out1_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 1 && in0_s_list.size() == 1 && *(in0_s_list.begin()) == ms_ptr, "expected 1 successor" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 1 && in1_s_list.size() == 1 && *(in1_s_list.begin()) == ms_ptr, "expected 1 successor" );
+        ASSERT( middle.predecessor_count() == 2 && mp_list.size() == 2, "expected 2 predecessors" );
+        ASSERT( middle.successor_count() == 2 && ms_list.size() == 2, "expected 2 successors" );
+        ASSERT( out0.predecessor_count() == 1 && out0_p_list.size() == 1 && *(out0_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 1 && out1_p_list.size() == 1 && *(out1_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
 
-        int first_pred = mp_vec[0] == ins[0] ? 0 : ( mp_vec[0] == ins[1] ? 1 : -1 );
-        int second_pred = mp_vec[1] == ins[0] ? 0 : ( mp_vec[1] == ins[1] ? 1 : -1 );
+        int first_pred = *(mp_list.begin()) == ins[0] ? 0 : ( *(mp_list.begin()) == ins[1] ? 1 : -1 );
+        mp_list_iter = mp_list.begin(); ++mp_list_iter;
+        int second_pred = *mp_list_iter == ins[0] ? 0 : ( *mp_list_iter == ins[1] ? 1 : -1 );
         ASSERT( first_pred != -1 && second_pred != -1 && first_pred != second_pred, "bad predecessor(s) for middle" ); 
 
-        int first_succ = ms_vec[0] == outs[0] ? 0 : ( ms_vec[0] == outs[1] ? 1 : -1 );
-        int second_succ = ms_vec[1] == outs[0] ? 0 : ( ms_vec[1] == outs[1] ? 1 : -1 );
+        int first_succ = *(ms_list.begin()) == outs[0] ? 0 : ( *(ms_list.begin()) == outs[1] ? 1 : -1 );
+        ms_list_iter = ++(ms_list.begin());
+        int second_succ = *ms_list_iter == outs[0] ? 0 : ( *ms_list_iter == outs[1] ? 1 : -1 );
         ASSERT( first_succ != -1 && second_succ != -1 && first_succ != second_succ, "bad successor(s) for middle" ); 
  
         in0.try_put(1);
@@ -748,24 +769,24 @@ protected:
         /*           middle        */
         /*         /       \       */
         /*     in1           out1  */
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 0 && in0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 1 && in1_s_vec.size() == 1 && in1_s_vec[0] == ms_ptr, "expected 1 successor" );
-        ASSERT( middle.predecessor_count() == 1 && mp_vec.size() == 1, "expected 1 predecessor" );
-        ASSERT( middle.successor_count() == 1 && ms_vec.size() == 1, "expected 1 successor" );
-        ASSERT( out0.predecessor_count() == 0 && out0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 1 && out1_p_vec.size() == 1 && out1_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 0 && in0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 1 && in1_s_list.size() == 1 && *(in1_s_list.begin()) == ms_ptr, "expected 1 successor" );
+        ASSERT( middle.predecessor_count() == 1 && mp_list.size() == 1, "expected 1 predecessor" );
+        ASSERT( middle.successor_count() == 1 && ms_list.size() == 1, "expected 1 successor" );
+        ASSERT( out0.predecessor_count() == 0 && out0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 1 && out1_p_list.size() == 1 && *(out1_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
     
-        ASSERT( middle.predecessor_count() == 1 && mp_vec.size() == 1, "expected two predecessors" );
-        ASSERT( middle.successor_count() == 1 && ms_vec.size() == 1, "expected two successors" );
+        ASSERT( middle.predecessor_count() == 1 && mp_list.size() == 1, "expected two predecessors" );
+        ASSERT( middle.successor_count() == 1 && ms_list.size() == 1, "expected two successors" );
     
-        ASSERT( mp_vec[0] == ins[1], "incorrect predecessor" );
-        ASSERT( ms_vec[0] == outs[1], "incorrect successor" );
+        ASSERT( *(mp_list.begin()) == ins[1], "incorrect predecessor" );
+        ASSERT( *(ms_list.begin()) == outs[1], "incorrect successor" );
     
         in0.try_put(1);
         in1.try_put(2);
@@ -786,21 +807,21 @@ protected:
         /*           middle        */
         /*                         */
         /*     in1           out1  */
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 0 && in0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 0 && in1_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( middle.predecessor_count() == 0 && mp_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( middle.successor_count() == 0 && ms_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out0.predecessor_count() == 0 && out0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 0 && out1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 0 && in0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 0 && in1_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( middle.predecessor_count() == 0 && mp_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( middle.successor_count() == 0 && ms_list.size() == 0, "expected 0 successors" );
+        ASSERT( out0.predecessor_count() == 0 && out0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 0 && out1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
     
-        ASSERT( middle.predecessor_count() == 0 && mp_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( middle.successor_count() == 0 && ms_vec.size() == 0, "expected 0 successors" );
+        ASSERT( middle.predecessor_count() == 0 && mp_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( middle.successor_count() == 0 && ms_list.size() == 0, "expected 0 successors" );
     
         in0.try_put(1);
         in1.try_put(2);
@@ -892,12 +913,12 @@ protected:
         } 
     };
 
-    /*override*/void set_up_vectors() {
+    /*override*/void set_up_lists() {
         middle_count = 0;
         out0_count = 0;
         out1_count = 0;
         my_g.reset(); // reset the sequencer nodes to start at 0 again
-        test_buffer_base_extract< my_node_t >::set_up_vectors();
+        test_buffer_base_extract< my_node_t >::set_up_lists();
     }
 
 
@@ -937,10 +958,8 @@ void test_extract_on_node() {
         ASSERT(node0.successor_count() == 1 && q2.predecessor_count() == 1, "bad successor count");
 
         ASSERT(q2.try_get(dont_care) && int(dont_care) == i, "item not forwarded");
-        typename NType<ItemType>::successor_vector_type sv;
-        typename NType<ItemType>::predecessor_vector_type pv;
-        std::vector<tbb::flow::receiver<ItemType>*> sv1;
-        std::vector<tbb::flow::sender<ItemType>*> pv1;
+        typename NType<ItemType>::successor_list_type sv, sv1;
+        typename NType<ItemType>::predecessor_list_type pv, pv1;
     
         pv1.push_back(&q0);
         pv1.push_back(&q1);
@@ -970,6 +989,7 @@ void test_extract_on_node() {
         ASSERT(pv.size() == 0, "error in pred array count after extract");
         ASSERT(node0.successor_count() == 0 && q2.predecessor_count() == 0, "error in succ count after extract");
         ASSERT(sv.size() == 0, "error in succ array count after extract");
+        g.wait_for_all();
     }
 }
 

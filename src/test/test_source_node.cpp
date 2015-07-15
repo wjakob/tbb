@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -18,6 +18,7 @@
     reasons why the executable file might be covered by the GNU General Public License.
 */
 
+// have to expose the reset_node method to be able to reset a function_body
 #include "harness.h"
 #include "harness_graph.h"
 #include "tbb/flow_graph.h"
@@ -46,9 +47,13 @@ public:
     typedef tbb::flow::sender<T> predecessor_type;
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
+    typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
+    built_predecessors_type bpt;
+    built_predecessors_type &built_predecessors() { return bpt; }
     void internal_add_built_predecessor( predecessor_type & ) { }
     void internal_delete_built_predecessor( predecessor_type & ) { }
-    void copy_predecessors( std::vector<predecessor_type *> & ) { }
+    void copy_predecessors( predecessor_list_type & ) { }
     size_t predecessor_count() { return 0; }
 #endif
 
@@ -141,7 +146,7 @@ void test_single_dest() {
    tbb::flow::make_edge( src2, dest2 );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
    ASSERT(src2.successor_count() == 1, NULL);
-   typename tbb::flow::source_node<T>::successor_vector_type my_succs;
+   typename tbb::flow::source_node<T>::successor_list_type my_succs;
    src2.copy_successors(my_succs);
    ASSERT(my_succs.size() == 1, NULL);
 #endif
@@ -167,7 +172,8 @@ void test_extract() {
     tbb::flow::tuple<int,int> dont_care;
     tbb::flow::graph g;
     typedef tbb::flow::source_node<int> snode_type;
-    tbb::flow::source_node<int> s0(g, source_body<int>(counts), /*is_active*/false ); 
+    typedef snode_type::successor_list_type successor_list_type;
+    snode_type s0(g, source_body<int>(counts), /*is_active*/false ); 
     tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::reserving > j0(g);
     tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::reserving > j1(g);
     tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::reserving > j2(g);
@@ -191,7 +197,7 @@ void test_extract() {
     s0.activate();
     g.wait_for_all();  // no successors, so the body will not execute
     ASSERT(counts == 0, "source_node shouldn't forward (no successors)");
-    s0.extract(tbb::flow::rf_reset_bodies);
+    g.reset(tbb::flow::rf_reset_bodies);
 
     tbb::flow::make_edge(s0, tbb::flow::get<0>(j0.input_ports()));
     tbb::flow::make_edge(s0, tbb::flow::get<0>(j1.input_ports()));
@@ -210,11 +216,11 @@ void test_extract() {
     /*         +    */
 
     // do all joins appear in successor list?
-    std::vector<tbb::flow::receiver<int>*> jv1;
+    successor_list_type jv1;
     jv1.push_back(&(tbb::flow::get<0>(j0.input_ports())));
     jv1.push_back(&(tbb::flow::get<0>(j1.input_ports())));
     jv1.push_back(&(tbb::flow::get<0>(j2.input_ports())));
-    tbb::flow::source_node<int>::successor_vector_type sv;
+    snode_type::successor_list_type sv;
     s0.copy_successors(sv);
     ASSERT(lists_match(sv, jv1), "mismatch in successor list");
 

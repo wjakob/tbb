@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -38,7 +38,6 @@ const unsigned n_buffers = 2*n_tokens;
 const unsigned max_counter = 16;
 static tbb::atomic<int> output_counter;
 static tbb::atomic<int> input_counter;
-static tbb::atomic<int> check_type_counter;
 static tbb::atomic<int> non_pointer_specialized_calls;
 static tbb::atomic<int> pointer_specialized_calls;
 static tbb::atomic<int> first_pointer_specialized_calls;
@@ -81,39 +80,7 @@ private:
     T *my_p;
 };
 
-template<class Counter>
-class check_type : Harness::NoAfterlife {
-    Counter id;
-    bool am_ready;
-public:
-    check_type( ) : id(0), am_ready(false) {
-        ++check_type_counter;
-    }
-
-    check_type(const check_type& other) : Harness::NoAfterlife(other) {
-        other.AssertLive();
-        AssertLive();
-        id = other.id;
-        am_ready = other.am_ready;
-        ++check_type_counter;
-    }
-
-    ~check_type() { 
-        AssertLive(); 
-        --check_type_counter;
-        ASSERT(check_type_counter >= 0, "too many destructions");
-    }
-
-    unsigned int my_id() { AssertLive(); return id; }
-    bool is_ready() { AssertLive(); return am_ready; }
-    void function() {
-        AssertLive();
-        if( id == 0 ) {
-            id = 1;
-            am_ready = true;
-        }
-    }
-};
+#include "harness_checktype.h"
 
 // methods for testing check_type< >, that return okay values for other types.
 template<typename T>
@@ -392,10 +359,6 @@ void checkCounters(final_assert_type my_t) {
         case no_pointer_counts:
             break;
     }
-    if(check_type_counter > 0) {
-        REMARK("check_type_counter == %lu\n", (unsigned long)check_type_counter);
-    }
-    ASSERT(!check_type_counter, "Error in check_type creation/destruction");
 }
 
 static const tbb::filter::mode filter_table[] = { tbb::filter::parallel, tbb::filter::serial_in_order, tbb::filter::serial_out_of_order}; 
@@ -618,6 +581,9 @@ void run_function(const char *l1, const char *l2) {
     if(check_intbuffer) REMARK(", check output of filters");
     REMARK("\n");
 
+    Check<type1> check1;  // check constructions/destructions
+    Check<type2> check2;  // for type1 or type2 === check_type<T>
+
     const size_t number_of_filters = 3;
 
     input_filter<type1> i_filter;
@@ -690,18 +656,12 @@ int TestMain() {
         run_function<size_t,double>("size_t", "double");
         run_function<size_t,bool>("size_t", "bool");
         run_function<int,int>("int","int");
-        check_type_counter = 0;
         run_function<check_type<unsigned int>,size_t>("check_type<unsigned int>", "size_t");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned int> creation/destruction");
         run_function<check_type<unsigned short>,size_t>("check_type<unsigned short>", "size_t");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned short> creation/destruction");
         run_function<check_type<unsigned int>, check_type<unsigned int> >("check_type<unsigned int>", "check_type<unsigned int>");
         run_function<check_type<unsigned int>, check_type<unsigned short> >("check_type<unsigned int>", "check_type<unsigned short>");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned int> creation/destruction");
         run_function<check_type<unsigned short>, check_type<unsigned short> >("check_type<unsigned short>", "check_type<unsigned short>");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned short> creation/destruction");
         run_function<double, check_type<unsigned short> >("double", "check_type<unsigned short>");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned short> creation/destruction");
     }
     return Harness::Done;
 }

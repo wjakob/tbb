@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -116,6 +116,13 @@ inline void FencedStore( volatile intptr_t &location, intptr_t value ) {
 inline void SpinWaitWhileEq(const volatile intptr_t &location, const intptr_t value) {
     tbb::internal::spin_wait_while_eq(location, value);
 }
+
+class AtomicBackoff {
+    tbb::internal::atomic_backoff backoff;
+public:
+    AtomicBackoff() {}
+    void pause() { backoff.pause(); }
+};
 
 inline void SpinWaitUntilEq(const volatile intptr_t &location, const intptr_t value) {
     tbb::internal::spin_wait_until_eq(location, value);

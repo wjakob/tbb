@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::atomic&lt; void * &gt; Struct Template Reference</title>
+<title>tbb::flow::interface7::internal::async_gateway&lt; Output &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,55 +33,64 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00233.html">tbb</a></li><li class="navelem"><a class="el" href="a00016.html">atomic< void * ></a></li>  </ul>
+<li class="navelem"><a class="el" href="a00240.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface7</b></li><li class="navelem"><b>internal</b></li><li class="navelem"><a class="el" href="a00016.html">async_gateway</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="a00258.html">List of all members</a>  </div>
+<a href="a00367.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::atomic&lt; void * &gt; Struct Template Reference</div>  </div>
+<div class="title">tbb::flow::interface7::internal::async_gateway&lt; Output &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Specialization for <a class="el" href="a00016.html" title="Specialization for atomic&lt;void*&gt;, for sake of not allowing arithmetic or operator-&gt;. ">atomic&lt;void*&gt;</a>, for sake of not allowing arithmetic or operator-&gt;.  
+<p>Pure virtual template class that defines interface for async communication.  
  <a href="a00016.html#details">More...</a></p>
 
-<p><code>#include &lt;atomic.h&gt;</code></p>
+<p><code>#include &lt;flow_graph.h&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for tbb::atomic&lt; void * &gt;:</div>
+Inheritance diagram for tbb::flow::interface7::internal::async_gateway&lt; Output &gt;:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="a00016.png" usemap="#tbb::atomic&lt; void * &gt;_map" alt=""/>
-  <map id="tbb::atomic&lt; void * &gt;_map" name="tbb::atomic&lt; void * &gt;_map">
+  <img src="a00016.png" usemap="#tbb::flow::interface7::internal::async_gateway&lt; Output &gt;_map" alt=""/>
+  <map id="tbb::flow::interface7::internal::async_gateway&lt; Output &gt;_map" name="tbb::flow::interface7::internal::async_gateway&lt; Output &gt;_map">
+<area href="a00017.html" title="Implements a async node. " alt="tbb::flow::interface7::async_node&lt; Input, Output, Allocator &gt;" shape="rect" coords="0,56,353,80"/>
 </map>
  </div></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a9c71a50d231f333cfa20d01a90aadabb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c71a50d231f333cfa20d01a90aadabb"></a>
+typedef Output&#160;</td><td class="memItemRight" valign="bottom"><b>output_type</b></td></tr>
+<tr class="separator:a9c71a50d231f333cfa20d01a90aadabb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a744970055554db56a922b83dd1125dcf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a744970055554db56a922b83dd1125dcf"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>atomic</b> (void *arg)</td></tr>
-<tr class="separator:a744970055554db56a922b83dd1125dcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3da2906b224154d9961054f07b2e310b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3da2906b224154d9961054f07b2e310b"></a>
-void *&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (void *rhs)</td></tr>
-<tr class="separator:a3da2906b224154d9961054f07b2e310b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cb22d05fe655337f6129dc8f3ab6783"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8cb22d05fe655337f6129dc8f3ab6783"></a>
-<a class="el" href="a00015.html">atomic</a>&lt; void * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="a00015.html">atomic</a>&lt; void * &gt; &amp;rhs)</td></tr>
-<tr class="separator:a8cb22d05fe655337f6129dc8f3ab6783"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a308f7feb8ac2fc3b7cbcf4e5246e78a2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a308f7feb8ac2fc3b7cbcf4e5246e78a2"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00016.html#a308f7feb8ac2fc3b7cbcf4e5246e78a2">async_try_put</a> (const output_type &amp;i)=0</td></tr>
+<tr class="memdesc:a308f7feb8ac2fc3b7cbcf4e5246e78a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Submit signal from Async Activity to FG. <br/></td></tr>
+<tr class="separator:a308f7feb8ac2fc3b7cbcf4e5246e78a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f050c912d54e3de4f3bea8f1575f9c4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f050c912d54e3de4f3bea8f1575f9c4"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>async_reserve</b> ()=0</td></tr>
+<tr class="separator:a4f050c912d54e3de4f3bea8f1575f9c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31ef0c4d0871f20c925fc993ef2ba29e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a31ef0c4d0871f20c925fc993ef2ba29e"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>async_commit</b> ()=0</td></tr>
+<tr class="separator:a31ef0c4d0871f20c925fc993ef2ba29e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;&gt;<br/>
-struct tbb::atomic&lt; void * &gt;</h3>
+<div class="textblock"><h3>template&lt;typename Output&gt;<br/>
+class tbb::flow::interface7::internal::async_gateway&lt; Output &gt;</h3>
 
-<p>Specialization for <a class="el" href="a00016.html" title="Specialization for atomic&lt;void*&gt;, for sake of not allowing arithmetic or operator-&gt;. ">atomic&lt;void*&gt;</a>, for sake of not allowing arithmetic or operator-&gt;. </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>atomic.h</li>
+<p>Pure virtual template class that defines interface for async communication. </p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
+<li><a class="el" href="a00196.html">flow_graph.h</a></li>
 </ul>
 </div><!-- contents -->
 <hr>
 <p></p>
-Copyright &copy; 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2015 Intel Corporation.  All Rights Reserved.
 <p></p>
 Intel, Pentium, Intel Xeon, Itanium, Intel XScale and VTune are
 registered trademarks or trademarks of Intel Corporation or its

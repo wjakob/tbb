@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -71,10 +71,10 @@ typedef __cilk_tbb_retcode (*__cilk_tbb_pfn_unwatch_stacks)(void *data);
       The thunk must be invoked on the thread doing the releasing,
       Must "happen before" the stack is used elsewhere.
 
-   When a non-empty stack is transfered between threads, the first thread must orphan it 
+   When a non-empty stack is transferred between threads, the first thread must orphan it 
    and the second thread must adopt it.
 
-   An empty stack can be transfered similarly, or simply released by the first thread.
+   An empty stack can be transferred similarly, or simply released by the first thread.
 
    Here is a summary of the actions as transitions on a state machine.
 

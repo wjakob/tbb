@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -68,7 +68,7 @@ else
     ifeq ($(arch),ia64)
         override CXXFLAGS += $(PIC_KEY)
     endif
-    ifeq ($(subst suncc,gcc,$(compiler)),gcc)
+    ifneq ($(filter suncc gcc clang,$(compiler)),)
         ifeq ($(compiler),suncc)
             override CXXFLAGS += -I$(tbb_root)$(SLASH)include -library=stlport4 -M$(tbb_root)/build/suncc.map.pause -erroff=unassigned,attrskipunsup,badargtype2w,badbinaryopw,wbadasg,wvarhidemem,wbadinit
         endif

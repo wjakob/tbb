@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -241,9 +241,10 @@ public:
                 __TBB_THROW( std::bad_alloc() );
             return NULL;
         }
+        pointer p = base_alloc_t::allocate(n, pointer(0));
         allocations++;
         items_allocated += n;
-        return base_alloc_t::allocate(n, pointer(0));
+        return p;
     }
 
     pointer allocate(const size_type n, const void * const)
@@ -477,9 +478,10 @@ public:
     {
         if(max_items && items_allocated + n >= max_items)
             __TBB_THROW( std::bad_alloc() );
+        pointer p = base_alloc_t::allocate(n, pointer(0));
         ++allocations;
         items_allocated += n;
-        return base_alloc_t::allocate(n, pointer(0));
+        return p;
     }
 
     pointer allocate(const size_type n, const void * const)

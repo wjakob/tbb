@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -746,7 +746,7 @@ void LargeObjectCache::rollbackCacheState(size_t size)
         hugeCache.rollbackCacheState(extMemPool, size);
 }
 
-// return artifical bin index, it's used only during sorting and never saved
+// return artificial bin index, it's used only during sorting and never saved
 int LargeObjectCache::sizeToIdx(size_t size)
 {
     MALLOC_ASSERT(size < maxHugeSize, ASSERT_TEXT);

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::improper_lock Class Reference</title>
+<title>tbb::interface6::flow_control Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,46 +33,46 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00233.html">tbb</a></li><li class="navelem"><a class="el" href="a00067.html">improper_lock</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00240.html">tbb</a></li><li class="navelem"><b>interface6</b></li><li class="navelem"><a class="el" href="a00067.html">flow_control</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="a00311.html">List of all members</a>  </div>
+<a href="#friends">Friends</a> &#124;
+<a href="a00400.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::improper_lock Class Reference</div>  </div>
+<div class="title">tbb::interface6::flow_control Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Exception for PPL locks.  
+<p>input_filter control to signal end-of-input for parallel_pipeline  
  <a href="a00067.html#details">More...</a></p>
 
-<p><code>#include &lt;tbb_exception.h&gt;</code></p>
-<div class="dynheader">
-Inheritance diagram for tbb::improper_lock:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="a00067.png" usemap="#tbb::improper_lock_map" alt=""/>
-  <map id="tbb::improper_lock_map" name="tbb::improper_lock_map">
-</map>
- </div></div>
+<p><code>#include &lt;pipeline.h&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a71847061d0e5bef413e28a9031e1f07e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a71847061d0e5bef413e28a9031e1f07e"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><b>what</b> () const   throw ()</td></tr>
-<tr class="separator:a71847061d0e5bef413e28a9031e1f07e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21a61b812ca97a6eb5549dab4b4ae490"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21a61b812ca97a6eb5549dab4b4ae490"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>stop</b> ()</td></tr>
+<tr class="separator:a21a61b812ca97a6eb5549dab4b4ae490"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:ae4743f434cefacb6650e3e736daf9392"><td class="memTemplParams" colspan="2"><a class="anchor" id="ae4743f434cefacb6650e3e736daf9392"></a>
+template&lt;typename T , typename U , typename Body &gt; </td></tr>
+<tr class="memitem:ae4743f434cefacb6650e3e736daf9392"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>internal::concrete_filter</b></td></tr>
+<tr class="separator:ae4743f434cefacb6650e3e736daf9392"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Exception for PPL locks. </p>
+<div class="textblock"><p>input_filter control to signal end-of-input for parallel_pipeline </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>tbb_exception.h</li>
+<li>pipeline.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
 <p></p>
-Copyright &copy; 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2015 Intel Corporation.  All Rights Reserved.
 <p></p>
 Intel, Pentium, Intel Xeon, Itanium, Intel XScale and VTune are
 registered trademarks or trademarks of Intel Corporation or its

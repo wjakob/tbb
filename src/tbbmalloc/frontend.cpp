@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -37,7 +37,7 @@
     #if __sun || __SUNPRO_CC
     #define __asm__ asm
     #endif
-
+    #include <unistd.h> // sysconf(_SC_PAGESIZE)
 #elif USE_WINTHREAD
     #define GetMyTID() GetCurrentThreadId()
 #if __TBB_WIN8UI_SUPPORT
@@ -539,16 +539,6 @@ const uint32_t numBlockBins = minFittingIndex+numFittingBins;
 const uint32_t minLargeObjectSize = fittingSize5 + 1;
 
 /*
- * Default granularity of memory pools
- */
-
-#if USE_WINTHREAD
-const size_t scalableMallocPoolGranularity = 64*1024; // for VirtualAlloc use
-#else
-const size_t scalableMallocPoolGranularity = 4*1024;  // page size, for mmap use
-#endif
-
-/*
  * Per-thread pool of slab blocks. Idea behind it is to not share with other
  * threads memory that are likely in local cache(s) of our CPU.
  */
@@ -690,6 +680,7 @@ void AllLocalCaches::registerThread(TLSRemote *tls)
 void AllLocalCaches::unregisterThread(TLSRemote *tls)
 {
     MallocMutex::scoped_lock lock(listLock);
+    MALLOC_ASSERT(head, "Can't unregister thread: no threads are registered.");
     if (head == tls)
         head = tls->next;
     if (tls->next)
@@ -737,8 +728,7 @@ bool        RecursiveMallocCallProtector::canUsePthread;
 /*********** End code to provide thread ID and a TLS pointer **********/
 
 // Parameter for isLargeObject, keeps our expectations on memory origin.
-// In assertions it must be used
-// unknownMem to reliably check them for invalid objects.
+// Assertions must use unknownMem to reliably report object invalidity.
 enum MemoryOrigin {
     ourMem,    // allocated by TBB allocator
     unknownMem // can be allocated by system allocator or TBB allocator
@@ -1139,12 +1129,17 @@ void MemoryPool::destroy()
         if (next)
             next->prev = prev;
     }
-    bootStrapBlocks.reset();
-    orphanedBlocks.reset();
     // slab blocks in non-default pool do not have backreferences,
     // only large objects do
     if (extMemPool.userPool())
         extMemPool.lmbList.releaseAll</*poolDestroy=*/true>(&extMemPool.backend);
+    else {
+        // There and below in extMemPool.destroy(), do not restore initial state
+        // for user pool, because it's just about to be released. But for system
+        // pool restoring, we do not want to do zeroing of it on subsequent reload.
+        bootStrapBlocks.reset();
+        orphanedBlocks.reset();
+    }
     extMemPool.destroy();
 }
 
@@ -1726,6 +1721,7 @@ void TLSData::release(MemoryPool *mPool)
  * allocations are performed by moving bump pointer and increasing of object counter,
  * releasing is done via counter of objects allocated in the block
  * or moving bump pointer if releasing object is on a bound.
+ * TODO: make bump pointer to grow to the same backward direction as all the others.
  */
 
 class StartupBlock : public Block {
@@ -1894,8 +1890,8 @@ void MemoryPool::initDefaultPool()
     if (FILE *f = fopen("/proc/meminfo", "r")) {
         const int READ_BUF_SIZE = 100;
         char buf[READ_BUF_SIZE];
-        MALLOC_ASSERT(sizeof(hugePageSize) >= 8,
-                      "At least 64 bits required for keeping page size/numbers.");
+        MALLOC_STATIC_ASSERT(sizeof(hugePageSize) >= 8,
+              "At least 64 bits required for keeping page size/numbers.");
 
         while (fgets(buf, READ_BUF_SIZE, f)) {
             if (1 == sscanf(buf, "Hugepagesize: %llu kB", &hugePageSize)) {
@@ -1976,8 +1972,14 @@ static void initMemoryManager()
     MALLOC_ASSERT( 2*blockHeaderAlignment == sizeof(Block), ASSERT_TEXT );
     MALLOC_ASSERT( sizeof(FreeObject) == sizeof(void*), ASSERT_TEXT );
 
+#if USE_WINTHREAD
+    const size_t granularity = 64*1024; // granulatity of VirtualAlloc
+#else
+    // POSIX.1-2001-compliant way to get page size
+    const size_t granularity = sysconf(_SC_PAGESIZE);
+#endif
     bool initOk = defaultMemPool->
-        extMemPool.init(0, NULL, NULL, scalableMallocPoolGranularity,
+        extMemPool.init(0, NULL, NULL, granularity,
                         /*keepAllMemory=*/false, /*fixedPool=*/false);
 // TODO: add error handling, and on error do something better than exit(1)
     if (!initOk || !initBackRefMaster(&defaultMemPool->extMemPool.backend)) {
@@ -2212,6 +2214,7 @@ void *MemoryPool::getFromLLOCache(TLSData* tls, size_t size, size_t alignment)
     size_t allocationSize = LargeObjectCache::alignToBin(size+headersSize+alignment);
     if (allocationSize < size) // allocationSize is wrapped around after alignToBin
         return NULL;
+    MALLOC_ASSERT(allocationSize >= alignment, "Overflow must be checked before.");
 
     if (tls)
         lmb = tls->lloc.get(allocationSize);
@@ -2331,6 +2334,12 @@ static void *reallocAligned(MemoryPool *memPool, void *ptr,
             return ptr;
         } else {
             copySize = lmb->objectSize;
+#if BACKEND_HAS_MREMAP
+            if ((result = (memPool->extMemPool.backend.remap(ptr, copySize, size,
+                              alignment<largeObjectAlignment?
+                                        largeObjectAlignment : alignment))))
+                return result;
+#endif
             result = alignment ? allocateAligned(memPool, size, alignment) :
                 internalPoolMalloc(memPool, size);
         }
@@ -2395,8 +2404,6 @@ bool isLargeObject(void *object)
     if (!isAligned(object, largeObjectAlignment))
         return false;
     LargeObjectHdr *header = (LargeObjectHdr*)object - 1;
-    // TODO: drop safer_dereference() when we know for sure that we allocated
-    // the object, i.e. on scalable_free() callpath
     BackRefIdx idx = memOrigin==unknownMem? safer_dereference(&header->backRefIdx) :
         header->backRefIdx;
 
@@ -2917,7 +2924,16 @@ extern "C" void* __TBB_malloc_safer_realloc(void* ptr, size_t sz, void* original
 
 extern "C" void * scalable_calloc(size_t nobj, size_t size)
 {
-    size_t arraySize = nobj * size;
+    // it's square root of maximal size_t value
+    const size_t mult_not_overflow = size_t(1) << (sizeof(size_t)*CHAR_BIT/2);
+    const size_t arraySize = nobj * size;
+
+    // check for overflow during multiplication:
+    if (nobj>=mult_not_overflow || size>=mult_not_overflow) // 1) heuristic check
+        if (nobj && arraySize / nobj != size) {             // 2) exact check
+            errno = ENOMEM;
+            return NULL;
+        }
     void* result = internalMalloc(arraySize);
     if (result)
         memset(result, 0, arraySize);

@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -34,7 +34,7 @@ LIBDL = -ldl
 OPENMP_FLAG = -openmp
 LIBS = -lpthread
 LINK_FLAGS =
-LIB_LINK_FLAGS = -dynamiclib -i-static
+LIB_LINK_FLAGS = -dynamiclib -i-static -install_name @rpath/$(BUILDING_LIBRARY)
 C_FLAGS = $(CPLUS_FLAGS)
 # ICC 11.0 and higher support -std=c++0x
 ifneq (,$(shell icc -dumpversion | egrep  "^1[1-9]\."))

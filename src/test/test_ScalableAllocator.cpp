@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -91,9 +91,9 @@ void TestZeroSpaceMemoryPool()
     try {
         tbb::memory_pool<NullAllocator> pool;
         ASSERT(0, "Useless allocator with no memory must not be created");
-    } catch (std::bad_alloc) {
+    } catch (std::runtime_error) {
     } catch (...) {
-        ASSERT(0, "wrong exception type; expected bad_alloc");
+        ASSERT(0, "wrong exception type; expected runtime_error");
     }
 }
 
@@ -136,11 +136,20 @@ void TestSmallFixedSizePool()
    that can be fulfilled from the pool. 16B allocation fits in 16KB slabs,
    so it requires at least 16KB. Requirement of 9KB allocation is more modest.
 */
-            allocated = pool.malloc( 16 ) || pool.malloc( 9*1024 );
-            ASSERT(allocated, "If pool created, it must be useful.");
-        } catch (std::bad_alloc) {
+            try {
+                allocated = pool.malloc( 16 ) || pool.malloc( 9*1024 );
+                ASSERT(allocated, "If pool created, it must be useful.");
+            } catch (std::bad_alloc) {
+            } catch (...) {
+                ASSERT(0, "wrong exception type; expected bad_alloc");
+            }
+        } catch (std::runtime_error) {
+            // This occurs when no space in buf for internal pool
+            // structures. Can't predict exact size for this.
+        } catch (std::invalid_argument) {
+            ASSERT(!sz, "expect std::invalid_argument for zero-sized pool only");
         } catch (...) {
-            ASSERT(0, "wrong exception type; expected bad_alloc");
+            ASSERT(0, "wrong exception type;");
         }
 #else
 /* Do not test high-level pool interface because pool ctor emit exception
@@ -169,9 +178,9 @@ void TestSmallFixedSizePool()
     try {
         tbb::fixed_pool pool(NULL, 10*1024*1024);
         ASSERT(0, "Useless allocator with no memory must not be created");
-    } catch (std::bad_alloc) {
+    } catch (std::invalid_argument) {
     } catch (...) {
-        ASSERT(0, "wrong exception type; expected bad_alloc");
+        ASSERT(0, "wrong exception type; expected invalid_argument");
     }
 #endif
 }

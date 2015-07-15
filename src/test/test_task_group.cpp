@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -63,6 +63,9 @@
 
     typedef unsigned int uint_t;
 
+    // Bug in this ConcRT version results in task_group::wait() rethrowing
+    // internal cancellation exception propagated by the scheduler from the nesting
+    // task group.
     #define __TBB_SILENT_CANCELLATION_BROKEN  (_MSC_VER == 1600)
 
 #endif /* !TBBTEST_USE_TBB */
@@ -71,6 +74,7 @@
 
 #include "tbb/atomic.h"
 #include "tbb/aligned_space.h"
+#include "harness.h"
 #include "harness_concurrency_tracker.h"
 
 unsigned g_MaxConcurrency = 0;

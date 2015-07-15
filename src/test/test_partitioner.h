@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -18,7 +18,15 @@
     reasons why the executable file might be covered by the GNU General Public License.
 */
 
+#if _MSC_VER==1500 && !__INTEL_COMPILER
+    // VS2008/VC9 has an issue in math.h
+    #pragma warning( push )
+    #pragma warning( disable: 4985 )
+#endif
 #include <cmath>
+#if _MSC_VER==1500 && !__INTEL_COMPILER
+    #pragma warning( pop )
+#endif
 #include "tbb/tbb_stddef.h"
 #include "harness.h"
 

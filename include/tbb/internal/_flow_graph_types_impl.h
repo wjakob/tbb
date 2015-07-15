@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -339,20 +339,16 @@ template< class Tuple, template<class> class Selector > struct pick_tuple_max<0,
 };
 
 // is the specified type included in a tuple?
-
-template<class U, class V> struct is_same_type      { static const bool value = false; };
-template<class W>          struct is_same_type<W,W> { static const bool value = true; };
-
 template<class Q, size_t N, class Tuple>
 struct is_element_of {
     typedef typename tbb::flow::tuple_element<N-1, Tuple>::type T_i;
-    static const bool value = is_same_type<Q,T_i>::value || is_element_of<Q,N-1,Tuple>::value;
+    static const bool value = tbb::internal::is_same_type<Q,T_i>::value || is_element_of<Q,N-1,Tuple>::value;
 };
 
 template<class Q, class Tuple>
 struct is_element_of<Q,0,Tuple> {
     typedef typename tbb::flow::tuple_element<0, Tuple>::type T_i;
-    static const bool value = is_same_type<Q,T_i>::value;
+    static const bool value = tbb::internal::is_same_type<Q,T_i>::value;
 };
 
 // allow the construction of types that are listed tuple.  If a disallowed type
@@ -388,6 +384,7 @@ template<typename TagType, typename T0, typename T1=tagged_null_type, typename T
                            typename T7=tagged_null_type, typename T8=tagged_null_type, typename T9=tagged_null_type>
 class tagged_msg {
     typedef tbb::flow::tuple<T0, T1, T2, T3, T4
+                  //TODO: Should we reject lists longer than a tuple can hold?
                   #if __TBB_VARIADIC_MAX >= 6
                   , T5
                   #endif
@@ -486,11 +483,11 @@ public:
 }; //class tagged_msg
 
 // template to simplify cast and test for tagged_msg in template contexts
-template<typename T, typename V>
-const T& cast_to(V const &v) { return v.template cast_to<T>(); }
+template<typename V, typename T>
+const V& cast_to(T const &t) { return t.template cast_to<V>(); }
 
-template<typename T, typename V>
-bool is_a(V const &v) { return v.template is_a<T>(); }
+template<typename V, typename T>
+bool is_a(T const &t) { return t.template is_a<V>(); }
 
 }  // namespace internal
 

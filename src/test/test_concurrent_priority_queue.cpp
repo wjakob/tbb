@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -1036,7 +1036,10 @@ void TestTypes() {
 
 #if __TBB_CPP11_SMART_POINTERS_PRESENT
     std::vector< std::shared_ptr<int> > arrShr;
-    for (int i = 0; i<NUMBER; ++i) arrShr.push_back(std::make_shared<int>(rnd.get()));
+    for (int i = 0; i<NUMBER; ++i) {
+        const int rnd_get = rnd.get();
+        arrShr.push_back(std::make_shared<int>(rnd_get));
+    }
     std::vector< std::weak_ptr<int> > arrWk;
     std::copy(arrShr.begin(), arrShr.end(), std::back_inserter(arrWk));
     TypeTester(arrShr, SmartPointersCompare());

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -53,48 +53,48 @@ protected:
     typename in_queue_t::successor_type *ms_p0_ptr;
     typename in_queue_t::successor_type *ms_p1_ptr;
     typename out_queue_t::predecessor_type *mp_ptr;
-    typename in_queue_t::predecessor_vector_type in0_p_vec;
-    typename in_queue_t::successor_vector_type in0_s_vec;
-    typename in_queue_t::predecessor_vector_type in1_p_vec;
-    typename in_queue_t::successor_vector_type in1_s_vec;
-    typename in_queue_t::predecessor_vector_type in2_p_vec;
-    typename in_queue_t::successor_vector_type in2_s_vec;
-    typename out_queue_t::predecessor_vector_type out0_p_vec;
-    typename out_queue_t::successor_vector_type out0_s_vec;
-    typename out_queue_t::predecessor_vector_type out1_p_vec;
-    typename out_queue_t::successor_vector_type out1_s_vec;
-    typename in_queue_t::predecessor_vector_type mp0_vec;
-    typename in_queue_t::predecessor_vector_type mp1_vec;
-    typename out_queue_t::successor_vector_type ms_vec;
+    typename in_queue_t::predecessor_list_type in0_p_list;
+    typename in_queue_t::successor_list_type in0_s_list;
+    typename in_queue_t::predecessor_list_type in1_p_list;
+    typename in_queue_t::successor_list_type in1_s_list;
+    typename in_queue_t::predecessor_list_type in2_p_list;
+    typename in_queue_t::successor_list_type in2_s_list;
+    typename out_queue_t::predecessor_list_type out0_p_list;
+    typename out_queue_t::successor_list_type out0_s_list;
+    typename out_queue_t::predecessor_list_type out1_p_list;
+    typename out_queue_t::successor_list_type out1_s_list;
+    typename in_queue_t::predecessor_list_type mp0_list;
+    typename in_queue_t::predecessor_list_type mp1_list;
+    typename out_queue_t::successor_list_type ms_list;
 
-    virtual void set_up_vectors() {
-        in0_p_vec.clear();
-        in0_s_vec.clear();
-        in1_p_vec.clear();
-        in1_s_vec.clear();
-        in2_p_vec.clear();
-        in2_s_vec.clear();
-        out0_p_vec.clear();
-        out0_s_vec.clear();
-        out1_p_vec.clear();
-        out1_s_vec.clear();
-        mp0_vec.clear();
-        mp1_vec.clear();
-        ms_vec.clear();
+    virtual void set_up_lists() {
+        in0_p_list.clear();
+        in0_s_list.clear();
+        in1_p_list.clear();
+        in1_s_list.clear();
+        in2_p_list.clear();
+        in2_s_list.clear();
+        out0_p_list.clear();
+        out0_s_list.clear();
+        out1_p_list.clear();
+        out1_s_list.clear();
+        mp0_list.clear();
+        mp1_list.clear();
+        ms_list.clear();
 
-        in0.copy_predecessors(in0_p_vec);
-        in0.copy_successors(in0_s_vec);
-        in1.copy_predecessors(in1_p_vec);
-        in1.copy_successors(in1_s_vec);
-        in2.copy_predecessors(in2_p_vec);
-        in2.copy_successors(in2_s_vec);
-        tbb::flow::input_port<0>(middle).copy_predecessors(mp0_vec);
-        tbb::flow::input_port<1>(middle).copy_predecessors(mp1_vec);
-        middle.copy_successors(ms_vec);
-        out0.copy_predecessors(out0_p_vec);
-        out0.copy_successors(out0_s_vec);
-        out1.copy_predecessors(out1_p_vec);
-        out1.copy_successors(out1_s_vec);
+        in0.copy_predecessors(in0_p_list);
+        in0.copy_successors(in0_s_list);
+        in1.copy_predecessors(in1_p_list);
+        in1.copy_successors(in1_s_list);
+        in2.copy_predecessors(in2_p_list);
+        in2.copy_successors(in2_s_list);
+        tbb::flow::input_port<0>(middle).copy_predecessors(mp0_list);
+        tbb::flow::input_port<1>(middle).copy_predecessors(mp1_list);
+        middle.copy_successors(ms_list);
+        out0.copy_predecessors(out0_p_list);
+        out0.copy_successors(out0_s_list);
+        out1.copy_predecessors(out1_p_list);
+        out1.copy_successors(out1_s_list);
     }
 
     void check_tuple( T &r, tuple_t &v ) {
@@ -120,30 +120,32 @@ protected:
         tbb::flow::make_edge( middle, out0 );
         tbb::flow::make_edge( middle, out1 );
 
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 1 && in0_s_vec.size() == 1 && in0_s_vec[0] == ms_p0_ptr, "expected 1 successor" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 1 && in1_s_vec.size() == 1 && in1_s_vec[0] == ms_p0_ptr, "expected 1 successor" );
-        ASSERT( in2.predecessor_count() == 0 && in2_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in2.successor_count() == 1 && in2_s_vec.size() == 1 && in2_s_vec[0] == ms_p1_ptr, "expected 1 successor" );
-        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 2 && mp0_vec.size() == 2, "expected 2 predecessors" );
-        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 1 && mp1_vec.size() == 1, "expected 1 predecessors" );
-        ASSERT( middle.successor_count() == 2 && ms_vec.size() == 2, "expected 2 successors" );
-        ASSERT( out0.predecessor_count() == 1 && out0_p_vec.size() == 1 && out0_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 1 && out1_p_vec.size() == 1 && out1_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 1 && in0_s_list.size() == 1 && *(in0_s_list.begin()) == ms_p0_ptr, "expected 1 successor" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 1 && in1_s_list.size() == 1 && *(in1_s_list.begin()) == ms_p0_ptr, "expected 1 successor" );
+        ASSERT( in2.predecessor_count() == 0 && in2_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in2.successor_count() == 1 && in2_s_list.size() == 1 && *(in2_s_list.begin()) == ms_p1_ptr, "expected 1 successor" );
+        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 2 && mp0_list.size() == 2, "expected 2 predecessors" );
+        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 1 && mp1_list.size() == 1, "expected 1 predecessors" );
+        ASSERT( middle.successor_count() == 2 && ms_list.size() == 2, "expected 2 successors" );
+        ASSERT( out0.predecessor_count() == 1 && out0_p_list.size() == 1 && *(out0_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 1 && out1_p_list.size() == 1 && *(out1_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
 
-        int first_pred = mp0_vec[0] == ins[0] ? 0 : ( mp0_vec[0] == ins[1] ? 1 : -1 );
-        int second_pred = mp0_vec[1] == ins[0] ? 0 : ( mp0_vec[1] == ins[1] ? 1 : -1 );
+        typename in_queue_t::predecessor_list_type::iterator mp0_list_iter = mp0_list.begin(); ++mp0_list_iter;
+        int first_pred = *(mp0_list.begin()) == ins[0] ? 0 : ( *(mp0_list.begin()) == ins[1] ? 1 : -1 );
+        int second_pred = *mp0_list_iter == ins[0] ? 0 : ( *mp0_list_iter == ins[1] ? 1 : -1 );
         ASSERT( first_pred != -1 && second_pred != -1 && first_pred != second_pred, "bad predecessor(s) for middle port 0" ); 
 
-        ASSERT( mp1_vec[0] == ins[2], "bad predecessor for middle port 1" );
+        ASSERT( *(mp1_list.begin()) == ins[2], "bad predecessor for middle port 1" );
 
-        int first_succ = ms_vec[0] == outs[0] ? 0 : ( ms_vec[0] == outs[1] ? 1 : -1 );
-        int second_succ = ms_vec[1] == outs[0] ? 0 : ( ms_vec[1] == outs[1] ? 1 : -1 );
+        typename out_queue_t::successor_list_type::iterator ms_list_iter = ms_list.begin(); ++ms_list_iter;
+        int first_succ = *(ms_list.begin()) == outs[0] ? 0 : ( *(ms_list.begin()) == outs[1] ? 1 : -1 );
+        int second_succ = *ms_list_iter == outs[0] ? 0 : ( *ms_list_iter == outs[1] ? 1 : -1 );
         ASSERT( first_succ != -1 && second_succ != -1 && first_succ != second_succ, "bad successor(s) for middle" ); 
  
         in0.try_put(1);
@@ -185,21 +187,21 @@ protected:
         /*     in1         middle          */
         /*                 |      \        */
         /*     in2 - port1          out1   */
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 0 && in0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 1 && in1_s_vec.size() == 1 && in1_s_vec[0] == ms_p0_ptr, "expected 1 successor" );
-        ASSERT( in2.predecessor_count() == 0 && in2_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in2.successor_count() == 1 && in2_s_vec.size() == 1 && in2_s_vec[0] == ms_p1_ptr, "expected 1 successor" );
-        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 1 && mp0_vec.size() == 1 && mp0_vec[0] == ins[1], "expected 1 predecessor" );
-        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 1 && mp1_vec.size() == 1 && mp1_vec[0] == ins[2], "expected 1 predecessor" );
-        ASSERT( middle.successor_count() == 1 && ms_vec.size() == 1 && ms_vec[0] == outs[1], "expected 1 successor" );
-        ASSERT( out0.predecessor_count() == 0 && out0_p_vec.size() == 0, "expected 1 predecessor" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 1 && out1_p_vec.size() == 1 && out1_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 0 && in0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 1 && in1_s_list.size() == 1 && *(in1_s_list.begin()) == ms_p0_ptr, "expected 1 successor" );
+        ASSERT( in2.predecessor_count() == 0 && in2_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in2.successor_count() == 1 && in2_s_list.size() == 1 && *(in2_s_list.begin()) == ms_p1_ptr, "expected 1 successor" );
+        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 1 && mp0_list.size() == 1 && *(mp0_list.begin()) == ins[1], "expected 1 predecessor" );
+        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 1 && mp1_list.size() == 1 && *(mp1_list.begin()) == ins[2], "expected 1 predecessor" );
+        ASSERT( middle.successor_count() == 1 && ms_list.size() == 1 && *(ms_list.begin()) == outs[1], "expected 1 successor" );
+        ASSERT( out0.predecessor_count() == 0 && out0_p_list.size() == 0, "expected 1 predecessor" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 1 && out1_p_list.size() == 1 && *(out1_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
 
         in0.try_put(1);
         in1.try_put(2);
@@ -227,21 +229,21 @@ protected:
         /*     in1         middle          */
         /*                 |               */
         /*     in2   port1          out1   */
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 0 && in0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 0 && in1_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in2.predecessor_count() == 0 && in2_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in2.successor_count() == 0 && in2_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 0 && mp0_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 0 && mp1_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( middle.successor_count() == 0 && ms_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out0.predecessor_count() == 0 && out0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 0 && out1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 0 && in0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 0 && in1_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in2.predecessor_count() == 0 && in2_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in2.successor_count() == 0 && in2_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 0 && mp0_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 0 && mp1_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( middle.successor_count() == 0 && ms_list.size() == 0, "expected 0 successors" );
+        ASSERT( out0.predecessor_count() == 0 && out0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 0 && out1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
 
         in0.try_put(1);
         in1.try_put(2);
@@ -1256,7 +1258,7 @@ void test_input_port_policies<tbb::flow::reserving>() {
     tbb::flow::make_edge( jn, oq1 );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(jn.successor_count() == 2, NULL);
-    JType::successor_vector_type my_succs;
+    JType::successor_list_type my_succs;
     jn.copy_successors(my_succs);
     ASSERT(my_succs.size() == 2, NULL);
 #endif
@@ -1265,7 +1267,7 @@ void test_input_port_policies<tbb::flow::reserving>() {
     tbb::flow::make_edge( iq1, tbb::flow::get<1>(jn.input_ports()) );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(tbb::flow::get<0>(jn.input_ports()).predecessor_count() == 1, NULL);
-    std::vector<tbb::flow::sender<int> *> my_0preds;
+    tbb::flow::tuple_element<0,JType::input_type>::type::predecessor_list_type my_0preds;
     tbb::flow::input_port<0>(jn).copy_predecessors(my_0preds);
     ASSERT(my_0preds.size() == 1, NULL);
 #endif
@@ -1351,7 +1353,7 @@ void test_input_port_policies<tbb::flow::queueing>() {
     tbb::flow::make_edge( jn, oq1 );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(jn.successor_count() == 2, NULL);
-    JType::successor_vector_type my_succs;
+    JType::successor_list_type my_succs;
     jn.copy_successors(my_succs);
     ASSERT(my_succs.size() == 2, NULL);
 #endif
@@ -1360,7 +1362,7 @@ void test_input_port_policies<tbb::flow::queueing>() {
     tbb::flow::make_edge( iq1, tbb::flow::get<1>(jn.input_ports()) );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(tbb::flow::get<0>(jn.input_ports()).predecessor_count() == 1, NULL);
-    std::vector<tbb::flow::sender<int> *> my_0preds;
+    tbb::flow::tuple_element<0,JType::input_type>::type::predecessor_list_type my_0preds;
     tbb::flow::input_port<0>(jn).copy_predecessors(my_0preds);
     ASSERT(my_0preds.size() == 1, NULL);
 #endif
@@ -1454,7 +1456,7 @@ void test_input_port_policies<tbb::flow::tag_matching>() {
         tbb::flow::make_edge( testJoinNode, checkTupleQueue1 );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         ASSERT(testJoinNode.successor_count() == 2, NULL);
-        JoinNodeType::successor_vector_type my_succs;
+        JoinNodeType::successor_list_type my_succs;
         testJoinNode.copy_successors(my_succs);
         ASSERT(my_succs.size() == 2, NULL);
 #endif
@@ -1463,7 +1465,7 @@ void test_input_port_policies<tbb::flow::tag_matching>() {
         tbb::flow::make_edge( checkInputQueue, tbb::flow::input_port<1>(testJoinNode) );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         ASSERT(tbb::flow::input_port<0>(testJoinNode).predecessor_count() == 1, NULL);
-        std::vector<tbb::flow::sender<int> *> my_0preds;
+        tbb::flow::tuple_element<0,JoinNodeType::input_type>::type::predecessor_list_type my_0preds;
         tbb::flow::input_port<0>(testJoinNode).copy_predecessors(my_0preds);
         ASSERT(my_0preds.size() == 1, NULL);
 #endif

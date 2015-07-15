@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -2055,7 +2055,7 @@ void ITTAPI __itt_frame_end_v3(const __itt_domain *domain, __itt_id *id);
  * take the current timestamp as the end timestamp.
  * @param[in] domain The domain for this frame instance
  * @param[in] id The instance ID for this frame instance or NULL
- * @param[in] begin Timestamp of the beggining of the frame
+ * @param[in] begin Timestamp of the beginning of the frame
  * @param[in] end Timestamp of the end of the frame
  */
 void ITTAPI __itt_frame_submit_v3(const __itt_domain *domain, __itt_id *id,

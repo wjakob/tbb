@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -108,13 +108,13 @@ OPEN_INTERNAL_NAMESPACE
 
 #if __TBB_WEAK_SYMBOLS_PRESENT || __TBB_DYNAMIC_LOAD_ENABLED
 
-#if !defined(DYNAMIC_LINK_WARNING) && !__TBB_WIN8UI_SUPPORT
+#if !defined(DYNAMIC_LINK_WARNING) && !__TBB_WIN8UI_SUPPORT && __TBB_DYNAMIC_LOAD_ENABLED
     // Report runtime errors and continue.
     #define DYNAMIC_LINK_WARNING dynamic_link_warning
     static void dynamic_link_warning( dynamic_link_error_t code, ... ) {
         (void) code;
     } // library_warning
-#endif /* DYNAMIC_LINK_WARNING */
+#endif /* !defined(DYNAMIC_LINK_WARNING) && !__TBB_WIN8UI_SUPPORT && __TBB_DYNAMIC_LOAD_ENABLED */
     static bool resolve_symbols( dynamic_link_handle module, const dynamic_link_descriptor descriptors[], size_t required )
     {
         if ( !module )
@@ -352,17 +352,6 @@ OPEN_INTERNAL_NAMESPACE
         init_ap_data();
     }
 
-#if __USE_STATIC_DL_INIT
-    // ap_data structure is initialized with current directory on Linux.
-    // So it should be initialized as soon as possible since the current directory may be changed.
-    // static_init_ap_data object provides this initialization during library loading.
-    static struct static_init_dl_data_t {
-        static_init_dl_data_t() {
-            atomic_once( &init_dl_data, init_dl_data_state );
-        }
-    } static_init_dl_data;
-#endif
-
     /*
         The function constructs absolute path for given relative path. Important: Base directory is not
         current one, it is the directory libtbb.so loaded from.
@@ -390,6 +379,23 @@ OPEN_INTERNAL_NAMESPACE
         return full_len;
     }
     #endif  // __TBB_DYNAMIC_LOAD_ENABLED
+
+    void init_dynamic_link_data() {
+    #if __TBB_DYNAMIC_LOAD_ENABLED
+        atomic_once( &init_dl_data, init_dl_data_state );
+    #endif
+    }
+
+    #if __USE_STATIC_DL_INIT
+    // ap_data structure is initialized with current directory on Linux.
+    // So it should be initialized as soon as possible since the current directory may be changed.
+    // static_init_ap_data object provides this initialization during library loading.
+    static struct static_init_dl_data_t {
+        static_init_dl_data_t() {
+            init_dynamic_link_data();
+        }
+    } static_init_dl_data;
+    #endif
 
     #if __TBB_WEAK_SYMBOLS_PRESENT
     static bool weak_symbol_link( const dynamic_link_descriptor descriptors[], size_t required )
@@ -481,7 +487,9 @@ OPEN_INTERNAL_NAMESPACE
     #endif
         // Check existence of the first symbol only, then use it to find the library and load all necessary symbols.
         pointer_to_handler handler;
-        dynamic_link_descriptor desc = { descriptors[0].name, &handler };
+        dynamic_link_descriptor desc;
+        desc.name = descriptors[0].name;
+        desc.handler = &handler;
         if ( resolve_symbols( library_handle, &desc, 1 ) )
             return pin_symbols( library_handle, desc, descriptors, required );
 #endif /* _WIN32 */
@@ -498,6 +506,7 @@ OPEN_INTERNAL_NAMESPACE
     }
 
     dynamic_link_handle dynamic_load( const char* library, const dynamic_link_descriptor descriptors[], size_t required ) {
+    ::tbb::internal::suppress_unused_warning( library, descriptors, required );
     #if __TBB_DYNAMIC_LOAD_ENABLED
     #if _XBOX
         return LoadLibrary (library);
@@ -533,7 +542,7 @@ OPEN_INTERNAL_NAMESPACE
     }
 
     bool dynamic_link( const char* library, const dynamic_link_descriptor descriptors[], size_t required, dynamic_link_handle *handle, int flags ) {
-        atomic_once( &init_dl_data, init_dl_data_state );
+        init_dynamic_link_data();
 
         // TODO: May global_symbols_link find weak symbols?
         dynamic_link_handle library_handle = ( flags & DYNAMIC_LINK_GLOBAL ) ? global_symbols_link( library, descriptors, required ) : 0;

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     The source code contained or described herein and all documents related
     to the source code ("Material") are owned by Intel Corporation or its
@@ -43,3 +43,4 @@ private:
     DWRITE_TEXT_METRICS m_textMetrics;
     bool m_renderNeeded;
     ~tbbTachyonRenderer();
+};

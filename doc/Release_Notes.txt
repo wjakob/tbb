@@ -136,8 +136,15 @@ Library Issues
         in LD_PRELOAD, or set up a Intel(R) VTune(TM) Amplifier XE project
         to use a shell script that sets LD_PRELOAD and starts the application.
 
+    - If your application includes tbb/enumerable_thread_specific.h (or
+        tbb/tbb.h) for offload execution on an Intel(R) Xeon Phi(TM)
+        coprocessor, you may see link issues related to libpthread. To resolve
+        this issue, add the /Qoffload-option,mic,compiler,"-pthread" compiler
+        switch to the command line on Windows* OS (or
+        -qoffload-option,mic,compiler,"-pthread" on Linux* OS).
+
 ------------------------------------------------------------------------
-Copyright (C) 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright (C) 2005-2015 Intel Corporation.  All Rights Reserved.
 
 Intel, Xeon and Pentium are registered trademarks or trademarks of
 Intel Corporation or its subsidiaries in the United States and other countries.
@@ -146,5 +153,5 @@ Intel Corporation or its subsidiaries in the United States and other countries.
 
 Third Party and Open Source Licenses
 
-Content of some examples or binaries may be covered by various open-source 
+Content of some examples or binaries may be covered by various open-source
 licenses. See the index.html file in each respective folder for details.

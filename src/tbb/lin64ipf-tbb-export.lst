@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -404,5 +404,10 @@ __TBB_SYMBOL( __TBB_machine_load2_relaxed )
 __TBB_SYMBOL( __TBB_machine_store2_relaxed )
 __TBB_SYMBOL( __TBB_machine_load1_relaxed )
 __TBB_SYMBOL( __TBB_machine_store1_relaxed )
+
+/* global parameter */
+__TBB_SYMBOL( _ZN3tbb10interface914global_control12active_valueEi )
+__TBB_SYMBOL( _ZN3tbb10interface914global_control15internal_createEv )
+__TBB_SYMBOL( _ZN3tbb10interface914global_control16internal_destroyEv )
 
 #undef __TBB_SYMBOL

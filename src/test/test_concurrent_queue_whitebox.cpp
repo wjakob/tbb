@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -18,11 +18,10 @@
     reasons why the executable file might be covered by the GNU General Public License.
 */
 
-#include <algorithm> // include it first to avoid error on define below
-#include <string> // merely prevents LNK2019 error to happen (on ICL+VC9 configurations)
+#define HARNESS_DEFINE_PRIVATE_PUBLIC 1
+#include "harness_inject_scheduler.h"
 #define private public
 #define protected public
-#include "harness_inject_scheduler.h"
 #include "tbb/concurrent_queue.h"
 #include "../tbb/concurrent_queue.cpp"
 #undef protected

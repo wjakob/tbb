@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -379,7 +379,7 @@ bool market::propagate_task_group_state ( T task_group_context::*mptr_state, tas
     // Advance global state propagation epoch
     __TBB_FetchAndAddWrelease(&the_context_state_propagation_epoch, 1);
     // Propagate to all workers and masters and sync up their local epochs with the global one
-    unsigned num_workers = my_num_workers;
+    unsigned num_workers = my_first_unused_worker_idx;
     for ( unsigned i = 0; i < num_workers; ++i ) {
         generic_scheduler *s = my_workers[i];
         // If the worker is only about to be registered, skip it.

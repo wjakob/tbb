@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -133,6 +133,19 @@ void TestBasic( A& a ) {
     ASSERT( NumberOfFoo==n, "destructor for Foo not called?" );
     a.deallocate(p,1);
 
+#if TBB_USE_EXCEPTIONS
+    size_t too_big = (~size_t(0) - 1024*1024)/sizeof(T);
+    bool exception_caught = false;
+    typename A::pointer p1 = NULL;
+    try {
+        p1 = a.allocate(too_big);
+    } catch ( std::bad_alloc ) {
+        exception_caught = true;
+    }
+    ASSERT( exception_caught, "allocate expected to throw bad_alloc" );
+    a.deallocate(p1, too_big);
+#endif // TBB_USE_EXCEPTIONS
+
     #if __TBB_ALLOCATOR_CONSTRUCT_VARIADIC
     {
         typedef typename A:: template rebind<std::pair<typename A::value_type, typename A::value_type> >::other pair_allocator_type;
@@ -220,7 +233,7 @@ void Test(A &a) {
 }
 
 template<typename Allocator>
-int TestMain(const Allocator &a = Allocator() ) {
+int TestMain(const Allocator &a = Allocator()) {
     NumberOfFoo = 0;
     typename Allocator::template rebind<Foo<char,1> >::other a1(a);
     typename Allocator::template rebind<Foo<double,1> >::other a2(a);
@@ -228,4 +241,3 @@ int TestMain(const Allocator &a = Allocator() ) {
     Test<Foo<float,23> >( a2 );
     return 0;
 }
-

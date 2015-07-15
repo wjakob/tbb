@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -17,6 +17,8 @@
     by the GNU General Public License. This exception does not however invalidate any other
     reasons why the executable file might be covered by the GNU General Public License.
 */
+
+#include "tbb/global_control.h" // thread_stack_size
 
 #include "scheduler.h"
 #include "governor.h"
@@ -125,12 +127,10 @@ quit:
     // In contrast to earlier versions of TBB (before 3.0 U5) now it is possible
     // that arena may be temporarily left unpopulated by threads. See comments in
     // arena::on_thread_leaving() for more details.
-#if !__TBB_TRACK_PRIORITY_LEVEL_SATURATION
     on_thread_leaving</*is_master*/false>();
-#endif /* !__TBB_TRACK_PRIORITY_LEVEL_SATURATION */
 }
 
-arena::arena ( market& m, unsigned max_num_workers ) {
+arena::arena ( market& m, unsigned num_slots ) {
     __TBB_ASSERT( !my_guard, "improperly allocated arena?" );
     __TBB_ASSERT( sizeof(my_slots[0]) % NFS_GetLineSize()==0, "arena::slot size not multiple of cache line size" );
     __TBB_ASSERT( (uintptr_t)this % NFS_GetLineSize()==0, "arena misaligned" );
@@ -140,8 +140,8 @@ arena::arena ( market& m, unsigned max_num_workers ) {
     my_market = &m;
     my_limit = 1;
     // Two slots are mandatory: for the master, and for 1 worker (required to support starvation resistant tasks).
-    my_num_slots = num_slots_to_reserve(max_num_workers);
-    my_max_num_workers = max_num_workers;
+    my_num_slots = num_slots_to_reserve(num_slots);
+    my_max_num_workers = num_slots-1;
     my_references = 1; // accounts for the master
 #if __TBB_TASK_PRIORITY
     my_bottom_priority = my_top_priority = normalized_normal_priority;
@@ -180,15 +180,15 @@ arena::arena ( market& m, unsigned max_num_workers ) {
 #endif
 }
 
-arena& arena::allocate_arena( market& m, unsigned max_num_workers ) {
+arena& arena::allocate_arena( market& m, unsigned num_slots ) {
     __TBB_ASSERT( sizeof(base_type) + sizeof(arena_slot) == sizeof(arena), "All arena data fields must go to arena_base" );
     __TBB_ASSERT( sizeof(base_type) % NFS_GetLineSize() == 0, "arena slots area misaligned: wrong padding" );
     __TBB_ASSERT( sizeof(mail_outbox) == NFS_MaxLineSize, "Mailbox padding is wrong" );
-    size_t n = allocation_size(max_num_workers);
+    size_t n = allocation_size(num_slots);
     unsigned char* storage = (unsigned char*)NFS_Allocate( 1, n, NULL );
     // Zero all slots to indicate that they are empty
     memset( storage, 0, n );
-    return *new( storage + num_slots_to_reserve(max_num_workers) * sizeof(mail_outbox) ) arena(m, max_num_workers);
+    return *new( storage + num_slots_to_reserve(num_slots) * sizeof(mail_outbox) ) arena(m, num_slots);
 }
 
 void arena::free_arena () {
@@ -618,20 +618,27 @@ namespace interface7 {
 namespace internal {
 
 void task_arena_base::internal_initialize( ) {
+    governor::one_time_init();
     __TBB_ASSERT( my_master_slots <= 1, "Number of slots reserved for master can be only [0,1]");
     if( my_master_slots > 1 ) my_master_slots = 1; // TODO: make more masters
-    if( my_max_concurrency < 1 )
+    bool default_concurrency_requested = false;
+    if( my_max_concurrency < 1 ) {
         my_max_concurrency = (int)governor::default_num_threads();
+        default_concurrency_requested = true;
+    }
+    arena* new_arena = &market::create_arena( my_max_concurrency + 1-my_master_slots/*it's +1 slot for num_masters=0*/,
+                                              global_control::active_value(global_control::thread_stack_size),
+                                              default_concurrency_requested );
+    // increases market's ref count for task_arena
+    market::global_market();
     // TODO: reimplement in an efficient way. We need a scheduler instance in this thread
     // but the scheduler is only required for task allocation and fifo random seeds until
     // master wants to join the arena. (Idea - to create a restricted specialization)
     // It is excessive to create an implicit arena for master here anyway. But scheduler
     // instance implies master thread to be always connected with arena.
-    // browse recursively into init_scheduler and arena::process for details
-    if( !governor::local_scheduler_if_initialized() )
-        governor::init_scheduler( (unsigned)my_max_concurrency - my_master_slots + 1/*TODO: address in market instead*/, 0, true );
-    // TODO: we will need to introduce a mechanism for global settings, including stack size, used by all arenas
-    arena* new_arena = &market::create_arena( my_max_concurrency - my_master_slots/*it's +1 slot for num_masters=0*/, ThreadStackSize );
+    governor::local_scheduler();
+    //TODO: if( !governor::local_scheduler_if_initialized() ) generic_scheduler::create_master( the_dummy_arena )->my_auto_initialized = true;
+
     if(as_atomic(my_arena).compare_and_swap(new_arena, NULL) != NULL) { // there is a race possible on my_initialized
         __TBB_ASSERT(my_arena, NULL);                             // other thread was the first
         new_arena->on_thread_leaving</*is_master*/true>(); // deallocate new arena
@@ -649,6 +656,7 @@ void task_arena_base::internal_terminate( ) {
 #if __TBB_STATISTICS_EARLY_DUMP
         GATHER_STATISTIC( my_arena->dump_arena_statistics() );
 #endif
+        my_arena->my_market->release( /*is_public*/true ); // remove market's public reference for task_arena
         my_arena->on_thread_leaving</*is_master*/true>();
         my_arena = 0;
 #if __TBB_TASK_GROUP_CONTEXT

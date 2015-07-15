@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -53,6 +53,22 @@ struct fgt_internal_input_helper<TypesTuple,PortsTuple,1> {
     } 
 };
 
+//for cases where the ports tuple are already receivers
+template < typename PortsTuple, int N >
+struct fgt_internal_input_helper< PortsTuple, PortsTuple, N> {
+    static void register_port( void *node, PortsTuple &ports ) {
+        fgt_internal_create_input_port( node,&(tbb::flow::get<N-1>(ports)), static_cast<tbb::internal::string_index>(FLOW_INPUT_PORT_0 + N - 1) );
+        fgt_internal_input_helper<PortsTuple, PortsTuple, N-1>::register_port( node, ports );
+    } 
+};
+
+template < typename PortsTuple >
+struct fgt_internal_input_helper<PortsTuple, PortsTuple,1> {
+    static void register_port( void *node, PortsTuple &ports ) {
+        fgt_internal_create_input_port( node, &(tbb::flow::get<0>(ports)), FLOW_INPUT_PORT_0 );
+    } 
+};
+
 template < typename TypesTuple, typename PortsTuple, int N >
 struct fgt_internal_output_helper {
     static void register_port( void *node, PortsTuple &ports ) {
@@ -70,9 +86,31 @@ struct fgt_internal_output_helper<TypesTuple,PortsTuple,1> {
     } 
 };
 
+//for cases where the ports tuple are already senders
+template < typename PortsTuple, int N >
+struct fgt_internal_output_helper<PortsTuple, PortsTuple, N> {
+    static void register_port( void *node, PortsTuple &ports ) {
+        fgt_internal_create_output_port( node,&(tbb::flow::get<N-1>(ports)),  static_cast<tbb::internal::string_index>(FLOW_OUTPUT_PORT_0 + N - 1) ); 
+        fgt_internal_output_helper<PortsTuple, PortsTuple, N-1>::register_port( node, ports );
+    } 
+};
+
+template < typename PortsTuple >
+struct fgt_internal_output_helper<PortsTuple,PortsTuple,1> {
+    static void register_port( void *node, PortsTuple &ports ) {
+        fgt_internal_create_output_port( node,&(tbb::flow::get<0>(ports)), FLOW_OUTPUT_PORT_0 ); 
+    } 
+};
+
 template< typename NodeType >
 void fgt_multioutput_node_desc( const NodeType *node, const char *desc ) {
     void *addr =  (void *)( static_cast< tbb::flow::interface7::receiver< typename NodeType::input_type > * >(const_cast< NodeType *>(node)) ); 
+    itt_metadata_str_add( ITT_DOMAIN_FLOW, addr, FLOW_NODE, FLOW_OBJECT_NAME, desc ); 
+}
+
+template< typename NodeType >
+void fgt_multiinput_multioutput_node_desc( const NodeType *node, const char *desc ) {
+    void *addr =  (void *)(node); 
     itt_metadata_str_add( ITT_DOMAIN_FLOW, addr, FLOW_NODE, FLOW_OBJECT_NAME, desc ); 
 }
 

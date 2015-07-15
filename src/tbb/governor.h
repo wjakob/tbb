@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -24,7 +24,7 @@
 #include "tbb/task_scheduler_init.h"
 #include "../rml/include/rml_tbb.h"
 
-#include "tbb_misc.h" // for AvailableHwConcurrency and ThreadStackSize
+#include "tbb_misc.h" // for AvailableHwConcurrency
 #include "tls.h"
 
 #if __TBB_SURVIVE_THREAD_SWITCH
@@ -50,6 +50,7 @@ class tbb_client;
 /** It also supports automatic on-demand initialization of the TBB scheduler.
     The class contains only static data members and methods.*/
 class governor {
+private:
     friend class __TBB_InitOnce;
     friend class market;
 
@@ -91,10 +92,11 @@ public:
         return DefaultNumberOfThreads ? DefaultNumberOfThreads :
                                         DefaultNumberOfThreads = AvailableHwConcurrency();
     }
+    static void one_time_init();
     //! Processes scheduler initialization request (possibly nested) in a master thread
     /** If necessary creates new instance of arena and/or local scheduler.
         The auto_init argument specifies if the call is due to automatic initialization. **/
-    static generic_scheduler* init_scheduler( unsigned num_threads, stack_size_type stack_size, bool auto_init = false );
+    static generic_scheduler* init_scheduler( int num_threads, stack_size_type stack_size, bool auto_init = false );
 
     //! Processes scheduler termination request (possibly nested) in a master thread
     static void terminate_scheduler( generic_scheduler* s, const task_scheduler_init *tsi_ptr );
@@ -116,7 +118,7 @@ public:
         Note that auto-initialized scheduler instance is destroyed only when its thread terminates. **/
     static generic_scheduler* local_scheduler () {
         generic_scheduler* s = theTLS.get();
-        return s ? s : init_scheduler( (unsigned)task_scheduler_init::automatic, 0, true );
+        return s ? s : init_scheduler( task_scheduler_init::automatic, 0, true );
     }
 
     static generic_scheduler* local_scheduler_if_initialized () {

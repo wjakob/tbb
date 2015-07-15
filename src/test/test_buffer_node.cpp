@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -350,10 +350,10 @@ int test_serial() {
     ASSERT( b.predecessor_count() == 0, NULL);
     ASSERT( b2.successor_count() == 0, NULL);
     ASSERT( b2.predecessor_count() == 1, NULL);
-    typename tbb::flow::buffer_node<T>::successor_vector_type my_succs;
+    typename tbb::flow::buffer_node<T>::successor_list_type my_succs;
     b.copy_successors(my_succs);
     ASSERT(my_succs.size() == 1, NULL);
-    typename tbb::flow::buffer_node<T>::predecessor_vector_type my_preds;
+    typename tbb::flow::buffer_node<T>::predecessor_list_type my_preds;
     b.copy_predecessors(my_preds);
     ASSERT(my_preds.size() == 0, NULL);
 #endif
