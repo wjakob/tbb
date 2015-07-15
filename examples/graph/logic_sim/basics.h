@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -58,20 +58,23 @@ typedef enum { low=0, high, undefined } signal_t;
 template<int N> class gate;
 
 template<>
-class gate<1> {
+class gate<1> : public composite_node< tuple< signal_t >, tuple< signal_t > > {
 protected:
     typedef indexer_node<signal_t> input_port_t;
     typedef multifunction_node< input_port_t::output_type, tuple<signal_t> > gate_fn_t;
     typedef gate_fn_t::output_ports_type ports_type;
+    typedef composite_node< tuple< signal_t >, tuple< signal_t > > base_type;
 public:
     template <typename Body>
-    gate(graph& g, Body b) : my_graph(g), in_ports(g), gate_fn(g, 1, b) {
+    gate(graph& g, Body b) : base_type(g), my_graph(g), in_ports(g), gate_fn(g, 1, b) {
         make_edge(in_ports, gate_fn);
+        base_type::input_ports_type input_tuple(input_port<0>(in_ports));
+        base_type::output_ports_type output_tuple(output_port<0>(gate_fn));
+        base_type::set_external_ports(input_tuple, output_tuple);
+        base_type::add_visible_nodes(in_ports, gate_fn);
     }
     virtual ~gate() {}
     gate& operator=(const gate& src) { return *this; }
-    sender<signal_t>& get_out() { return output_port<0>(gate_fn); }
-    receiver<signal_t>& get_in(size_t port) { return input_port<0>(in_ports);} 
 protected:
     graph& my_graph;
 private:
@@ -80,23 +83,23 @@ private:
 };
 
 template<>
-class gate<2> {
+class gate<2> : public composite_node< tuple< signal_t, signal_t >, tuple< signal_t > > {
 protected:
-    typedef indexer_node<signal_t, signal_t> input_port_t;
+    typedef indexer_node<signal_t,signal_t> input_port_t;
     typedef multifunction_node< input_port_t::output_type, tuple<signal_t> > gate_fn_t;
     typedef gate_fn_t::output_ports_type ports_type;
+    typedef composite_node< tuple< signal_t, signal_t >, tuple< signal_t > > base_type;
 public:
     template <typename Body>
-    gate(graph& g, Body b) : my_graph(g), in_ports(g), gate_fn(g, 1, b) {
+    gate(graph& g, Body b) : base_type(g), my_graph(g), in_ports(g), gate_fn(g, 1, b) {
         make_edge(in_ports, gate_fn);
+        base_type::input_ports_type input_tuple(input_port<0>(in_ports),input_port<1>(in_ports));
+        base_type::output_ports_type output_tuple(output_port<0>(gate_fn));
+        base_type::set_external_ports(input_tuple, output_tuple);
+        base_type::add_visible_nodes(in_ports, gate_fn);
     }
     virtual ~gate() {}
     gate& operator=(const gate& src) { return *this; }
-    sender<signal_t>& get_out() { return output_port<0>(gate_fn); }
-    receiver<signal_t>& get_in(size_t port) {
-        if (port == 0) return input_port<0>(in_ports);
-        else return input_port<1>(in_ports);
-    }
 protected:
     graph& my_graph;
 private:
@@ -105,24 +108,23 @@ private:
 };
 
 template<>
-class gate<3> {
+class gate<3> : public composite_node< tuple< signal_t, signal_t, signal_t >, tuple< signal_t > > {
 protected:
     typedef indexer_node<signal_t, signal_t, signal_t> input_port_t;
     typedef multifunction_node< input_port_t::output_type, tuple<signal_t> > gate_fn_t;
     typedef gate_fn_t::output_ports_type ports_type;
+    typedef composite_node< tuple< signal_t, signal_t, signal_t >, tuple< signal_t > > base_type;
 public:
     template <typename Body>
-    gate(graph& g, Body b) : my_graph(g), in_ports(g), gate_fn(g, 1, b) {
+    gate(graph& g, Body b) : base_type(g), my_graph(g), in_ports(g), gate_fn(g, 1, b) {
         make_edge(in_ports, gate_fn);
+        base_type::input_ports_type input_tuple(input_port<0>(in_ports),input_port<1>(in_ports),input_port<2>(in_ports));
+        base_type::output_ports_type output_tuple(output_port<0>(gate_fn));
+        base_type::set_external_ports(input_tuple, output_tuple);
+        base_type::add_visible_nodes(in_ports, gate_fn);
     }
     virtual ~gate() {}
     gate& operator=(const gate& src) { return *this; }
-    sender<signal_t>& get_out() { return output_port<0>(gate_fn); }
-    receiver<signal_t>& get_in(size_t port) {
-        if (port == 0) return input_port<0>(in_ports);
-        else if (port==1) return input_port<1>(in_ports);
-        else return input_port<2>(in_ports);
-    }
 protected:
     graph& my_graph;
 private:
@@ -131,25 +133,23 @@ private:
 };
 
 template<>
-class gate<4> {
+class gate<4> : public composite_node< tuple< signal_t, signal_t, signal_t, signal_t >, tuple< signal_t > > {
 protected:
     typedef indexer_node<signal_t, signal_t, signal_t, signal_t> input_port_t;
     typedef multifunction_node< input_port_t::output_type, tuple<signal_t> > gate_fn_t;
     typedef gate_fn_t::output_ports_type ports_type;
+    typedef composite_node< tuple< signal_t, signal_t, signal_t, signal_t >, tuple< signal_t > > base_type;
 public:
     template <typename Body>
-    gate(graph& g, Body b) : my_graph(g), in_ports(g), gate_fn(g, 1, b) {
+    gate(graph& g, Body b) : base_type(g), my_graph(g), in_ports(g), gate_fn(g, 1, b) {
         make_edge(in_ports, gate_fn);
+        base_type::input_ports_type input_tuple(input_port<0>(in_ports),input_port<1>(in_ports),input_port<2>(in_ports), input_port<3>(in_ports)); 
+        base_type::output_ports_type output_tuple(output_port<0>(gate_fn));
+        base_type::set_external_ports(input_tuple, output_tuple);
+        base_type::add_visible_nodes(in_ports, gate_fn);
     }
     virtual ~gate() {}
     gate& operator=(const gate& src) { return *this; }
-    sender<signal_t>& get_out() { return output_port<0>(gate_fn); }
-    receiver<signal_t>& get_in(size_t port) {
-        if (port == 0) return input_port<0>(in_ports);
-        else if (port==1) return input_port<1>(in_ports);
-        else if (port==2) return input_port<2>(in_ports);
-        else return input_port<3>(in_ports);
-    }
 protected:
     graph& my_graph;
 private:
@@ -216,7 +216,7 @@ public:
     void activate() { clock_node.activate(); }
     void reset() { reps = init_reps; }
 };
-    
+
 class push_button {
     graph& my_graph;
     overwrite_node<signal_t> push_button_node;

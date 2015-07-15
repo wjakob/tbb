@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -123,7 +123,7 @@ struct touches {
                 printf("No touch at %d, my_num_threads = %d\n", n, my_num_threads);
             //ASSERT( all_touches[n] == true, "value not seen by any thread\n" );
         }
-        delete all_touches;
+        delete [] all_touches;
         return true;
     }
 

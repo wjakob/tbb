@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -1632,7 +1632,7 @@ activate_threads:
     if( index==request_size )
         return;
 
-    // If we come to this point, it must be becuase dynamic==false
+    // If we come to this point, it must be because dynamic==false
     // Create Oversubscribers..
 
     // Note that our policy is such that MinConcurrency==MaxConcurrency.

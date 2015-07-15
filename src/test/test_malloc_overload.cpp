@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -34,11 +34,8 @@
 #endif // _WIN32 || _WIN64
 
 #define HARNESS_NO_PARSE_COMMAND_LINE 1
-// LD_PRELOAD mechanism is broken in offload
-#if __TBB_MIC_OFFLOAD
-#define HARNESS_SKIP_TEST 1
-#endif
-#include "harness.h"
+
+#include "tbb/tbb_config.h" // to get __TBB_WIN8UI_SUPPORT
 
 #if __linux__ || __APPLE__
 #define MALLOC_REPLACEMENT_AVAILABLE 1
@@ -47,11 +44,26 @@
 #include "tbb/tbbmalloc_proxy.h"
 #endif
 
+// LD_PRELOAD mechanism is broken in offload, no support for MSVC 2015 in debug for now
+#if __TBB_MIC_OFFLOAD || !MALLOC_REPLACEMENT_AVAILABLE || (_MSC_VER >= 1900 && _DEBUG)
+#define HARNESS_SKIP_TEST 1
+#endif
+#include "harness.h"
+
 #if MALLOC_REPLACEMENT_AVAILABLE
+
+#if __ANDROID__
+  #include <android/api-level.h> // for __ANDROID_API__
+#endif
+
+#define __TBB_POSIX_MEMALIGN_PRESENT (__linux__ && !__ANDROID__) || __APPLE__
+#define __TBB_PVALLOC_PRESENT __linux__ && !__ANDROID__
+ // later Android doesn't have valloc or dlmalloc_usable_size
+#define __TBB_VALLOC_PRESENT (__linux__ && __ANDROID_API__<21) || __APPLE__
+#define __TBB_DLMALLOC_USABLE_SIZE_PRESENT  __ANDROID__ && __ANDROID_API__<21
 
 #include "harness_report.h"
 #include "harness_assert.h"
-#include "harness_defs.h"
 #include <stdlib.h>
 #include <string.h>
 #if !__APPLE__
@@ -75,7 +87,7 @@ void __libc_free(void *ptr);
 void *__libc_memalign(size_t alignment, size_t size);
 void *__libc_pvalloc(size_t size);
 void *__libc_valloc(size_t size);
-#if __ANDROID__
+#if __TBB_DLMALLOC_USABLE_SIZE_PRESENT
 #define malloc_usable_size(p) dlmalloc_usable_size(p)
 size_t dlmalloc_usable_size(const void *ptr);
 #endif
@@ -112,14 +124,7 @@ using namespace std;
 #include <string>
 #endif
 
-template<typename T>
-static inline T alignDown(T arg, uintptr_t alignment) {
-    return T( (uintptr_t)arg  & ~(alignment-1));
-}
-template<typename T>
-static inline T alignUp(T arg, uintptr_t alignment) {
-    return T(((uintptr_t)arg+(alignment-1)) & ~(alignment-1));
-}
+#include "../tbbmalloc/shared_utils.h"  // alignDown, alignUp, estimatedCacheLineSize
 
 /* start of code replicated from src/tbbmalloc */
 
@@ -171,13 +176,8 @@ struct LargeObjectHdr {
  * Objects of size minLargeObjectSize and larger are considered large objects.
  */
 const uintptr_t blockSize = 16*1024;
-#if __powerpc64__ || __ppc64__ || __bgp__
-const int estimatedCacheLineSize = 128;
-#else
-const int estimatedCacheLineSize =  64;
-#endif
-const uint32_t fittingAlignment = estimatedCacheLineSize;
-#define SET_FITTING_SIZE(N) ( (blockSize-2*estimatedCacheLineSize)/N ) & ~(fittingAlignment-1)
+const uint32_t fittingAlignment = rml::internal::estimatedCacheLineSize;
+#define SET_FITTING_SIZE(N) ( (blockSize-2*rml::internal::estimatedCacheLineSize)/N ) & ~(fittingAlignment-1)
 const uint32_t fittingSize5 = SET_FITTING_SIZE(2); // 8128/8064
 #undef SET_FITTING_SIZE
 const uint32_t minLargeObjectSize = fittingSize5 + 1;
@@ -221,22 +221,23 @@ void CheckStdFuncOverload(void *(*malloc_p)(size_t), void *(*calloc_p)(size_t, s
 
 #if MALLOC_REPLACEMENT_AVAILABLE == 1
 
-void CheckUnixAlignFuncOverload(void *(*memalign_p)(size_t, size_t),
-                                void *(*valloc_p)(size_t), void (*free_p)(void*))
+void CheckMemalignFuncOverload(void *(*memalign_p)(size_t, size_t),
+                               void (*free_p)(void*))
 {
-    if (memalign_p) {
-        void *ptr = memalign_p(128, 4*minLargeObjectSize);
-        scalableMallocCheckSize(ptr, 4*minLargeObjectSize);
-        ASSERT(is_aligned(ptr, 128), NULL);
-        free_p(ptr);
-    }
+    void *ptr = memalign_p(128, 4*minLargeObjectSize);
+    scalableMallocCheckSize(ptr, 4*minLargeObjectSize);
+    ASSERT(is_aligned(ptr, 128), NULL);
+    free_p(ptr);
+}
+
+void CheckVallocFuncOverload(void *(*valloc_p)(size_t), void (*free_p)(void*))
+{
     void *ptr = valloc_p(minLargeObjectSize);
     scalableMallocCheckSize(ptr, minLargeObjectSize);
     ASSERT(is_aligned(ptr, sysconf(_SC_PAGESIZE)), NULL);
     free_p(ptr);
 }
 
-#if __TBB_PVALLOC_PRESENT
 void CheckPvalloc(void *(*pvalloc_p)(size_t), void (*free_p)(void*))
 {
     const long memoryPageSize = sysconf(_SC_PAGESIZE);
@@ -250,9 +251,6 @@ void CheckPvalloc(void *(*pvalloc_p)(size_t), void (*free_p)(void*))
         free_p(ptr);
     }
 }
-#else
-#define CheckPvalloc(alloc_p, free_p) ((void)0)
-#endif
 
 #endif // MALLOC_REPLACEMENT_AVAILABLE
 
@@ -266,7 +264,8 @@ void CheckFreeAligned() {
         for (int a=0; align[a]; a++) {
             void *ptr = NULL;
 #if __TBB_POSIX_MEMALIGN_PRESENT
-            posix_memalign(&ptr, align[a], sz[s]);
+            int ret = posix_memalign(&ptr, align[a], sz[s]);
+            ASSERT(!ret, NULL);
 #elif MALLOC_REPLACEMENT_AVAILABLE == 2
             ptr = _aligned_malloc(sz[s], align[a]);
 #endif
@@ -350,9 +349,14 @@ int TestMain() {
     free(ptr);
 #endif
 
-#if __linux__
-    CheckUnixAlignFuncOverload(memalign, valloc, free);
+#if __TBB_VALLOC_PRESENT
+    CheckVallocFuncOverload(valloc, free);
+#endif
+#if __TBB_PVALLOC_PRESENT
     CheckPvalloc(pvalloc, free);
+#endif
+#if __linux__
+    CheckMemalignFuncOverload(memalign, free);
 
     struct mallinfo info = mallinfo();
     // right now mallinfo initialized by zero
@@ -365,11 +369,10 @@ int TestMain() {
     // in conjunction with standard malloc/free. Test that we overload them as well.
     // Bionic doesn't have them.
     CheckStdFuncOverload(__libc_malloc, __libc_calloc, __libc_realloc, __libc_free);
-    CheckUnixAlignFuncOverload(__libc_memalign, __libc_valloc, __libc_free);
+    CheckMemalignFuncOverload(__libc_memalign, __libc_free);
+    CheckVallocFuncOverload(__libc_valloc, __libc_free);
     CheckPvalloc(__libc_pvalloc, __libc_free);
  #endif
-#elif __APPLE__
-    CheckUnixAlignFuncOverload(NULL, valloc, free);
 #endif // __linux__
 
 #elif MALLOC_REPLACEMENT_AVAILABLE == 2
@@ -416,11 +419,4 @@ int TestMain() {
 
     return Harness::Done;
 }
-
-#else  /* !MALLOC_REPLACEMENT_AVAILABLE */
-#include <stdio.h>
-
-int TestMain() {
-    return Harness::Skipped;
-}
-#endif /* !MALLOC_REPLACEMENT_AVAILABLE */
+#endif /* MALLOC_REPLACEMENT_AVAILABLE */

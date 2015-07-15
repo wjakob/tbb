@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -606,14 +606,35 @@ inline task* generic_scheduler::prepare_for_spawning( task* t ) {
     But doing so would force us to publish class scheduler in the headers. */
 void generic_scheduler::local_spawn( task& first, task*& next ) {
     __TBB_ASSERT( governor::is_set(this), NULL );
+#if __TBB_TODO
+    // We need to consider capping the max task pool size and switching
+    // to in-place task execution whenever it is reached.
+#endif
     if ( &first.prefix().next == &next ) {
         // Single task is being spawned
+#if __TBB_TODO
+        // TODO: 
+        // In the future we need to add overloaded spawn method for a single task,
+        // and a method accepting an array of task pointers (we may also want to
+        // change the implementation of the task_list class). But since such changes 
+        // may affect the binary compatibility, we postpone them for a while.
+#endif
         size_t T = prepare_task_pool( 1 );
         my_arena_slot->task_pool_ptr[T] = prepare_for_spawning( &first );
         commit_spawned_tasks( T + 1 );
     }
     else {
         // Task list is being spawned
+#if __TBB_TODO
+        // TODO: add task_list::front() and implement&document the local execution ordering which is
+        // opposite to the current implementation. The idea is to remove hackish fast_reverse_vector
+        // and use push_back/push_front when accordingly LIFO and FIFO order of local execution is
+        // desired. It also requires refactoring of the reload_tasks method and my_offloaded_tasks list.
+        // Additional benefit may come from adding counter to the task_list so that it can reserve enough
+        // space in the task pool in advance and move all the tasks directly without any intermediate
+        // storages. But it requires dealing with backward compatibility issues and still supporting
+        // counter-less variant (though not necessarily fast implementation).
+#endif
         task *arr[min_task_pool_size];
         fast_reverse_vector<task*> tasks(arr, min_task_pool_size);
         task *t_next = NULL;
@@ -695,6 +716,14 @@ task* generic_scheduler::winnow_task_pool () {
     auto_indicator indicator(my_pool_reshuffling_pending);
     // The purpose of the synchronization algorithm here is for the owner thread
     // to avoid locking task pool most of the time.
+#if __TBB_TODO
+    // Just locking the task pool unconditionally would produce simpler code, 
+    // scalability of which should not suffer unless priority jitter takes place. 
+    // Since priority jitter is nocuous by itself, we may want to evaluate 
+    // applicability of the simpler variant...
+    // Non-blocking variant also prevent us from relocating remaining tasks to
+    // the beginning of the task pool, not sure if it makes much sense.
+#endif
     size_t T0 = __TBB_load_relaxed(my_arena_slot->tail);
     __TBB_store_relaxed( my_arena_slot->tail, __TBB_load_relaxed(my_arena_slot->head) - 1 );
     atomic_fence();
@@ -840,6 +869,8 @@ task* generic_scheduler::reload_tasks () {
         // are still present. This results in both bottom and top priority bounds
         // becoming 'normal', which makes offloaded low priority tasks unreachable.
         // Update arena's bottom priority to accommodate them.
+        // NOTE:    If the number of priority levels is increased, we may want 
+        //          to calculate minimum of priorities in my_offloaded_tasks.
 
         // First indicate the presence of lower-priority tasks
         my_market->update_arena_priority( *my_arena, priority(*my_offloaded_tasks) );
@@ -1036,6 +1067,8 @@ generic_scheduler* generic_scheduler::create_worker( market& m, size_t index ) {
 // TODO: make it a member method
 generic_scheduler* generic_scheduler::create_master( arena& a ) {
     generic_scheduler* s = allocate_scheduler( &a, 0 /*Master thread always occupies the first slot*/ );
+    s->my_market = &market::global_market(); // increases market's ref count
+
     task& t = *s->my_dummy_task;
     s->my_innermost_running_task = &t;
     s->my_dispatching_task = &t;
@@ -1048,7 +1081,6 @@ generic_scheduler* generic_scheduler::create_master( arena& a ) {
     // for task objects since the free list is empty at the moment.
     t.prefix().context = a.my_default_ctx;
 #endif /* __TBB_TASK_GROUP_CONTEXT */
-    s->my_market = a.my_market;
     __TBB_ASSERT( s->my_arena_index == 0, "Master thread must occupy the first slot in its arena" );
     s->attach_mailbox(1);
     s->my_arena_slot = a.my_slots + 0;
@@ -1148,11 +1180,10 @@ void generic_scheduler::cleanup_master() {
     // if workers are not joining, market can be released from on_thread_leaving(),
     // so keep copy the state on local stack
     bool must_join = my_market->join_workers = governor::needsWaitWorkers();
-    if (must_join)
-        my_market->prepare_wait_workers();
     a->on_thread_leaving</*is_master*/true>();
-    if (must_join)
+    if( must_join )
         my_market->wait_workers();
+    my_market->release( /*is_public*/true );
 }
 
 } // namespace internal

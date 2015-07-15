@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -63,6 +63,7 @@ void TestTwiceInsideTemplateClass(){
     using namespace TestTwiceInsideClassTemplateHelper;
     typedef template_struct<int> template_struct_int_typedef;
     typedef template_struct<char> template_struct_char_typedef;
+    tbb::internal::suppress_unused_warning(template_struct_int_typedef(), template_struct_char_typedef());
 }
 
 template<typename T>

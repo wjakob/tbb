@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -238,7 +238,7 @@ int main(int argc, char *argv[] ) {
 void initialize_strings_vector(std::vector <string_pair>* vector)
 {
     vector->push_back(string_pair("TBB: VERSION\t\t4.3", required));          // check TBB_VERSION
-    vector->push_back(string_pair("TBB: INTERFACE VERSION\t8002", required)); // check TBB_INTERFACE_VERSION
+    vector->push_back(string_pair("TBB: INTERFACE VERSION\t8006", required)); // check TBB_INTERFACE_VERSION
     vector->push_back(string_pair("TBB: BUILD_DATE", required));
     vector->push_back(string_pair("TBB: BUILD_HOST", required));
     vector->push_back(string_pair("TBB: BUILD_OS", required));
@@ -257,12 +257,9 @@ void initialize_strings_vector(std::vector <string_pair>* vector)
     vector->push_back(string_pair("TBB: BUILD_SUNCC", required));
     vector->push_back(string_pair("TBB: BUILD_COMPILER", optional)); //if( getenv("COMPILER_VERSION") )
 #else // We use version_info_linux.sh for unsupported OSes
-#if __ANDROID__
-    vector->push_back(string_pair("TBB: BUILD_TARGET_OS", required));
-    vector->push_back(string_pair("TBB: BUILD_TARGET_KERNEL", required));
-#else
+#if !__ANDROID__
     vector->push_back(string_pair("TBB: BUILD_KERNEL", required));
-#endif // !__ANDROID__
+#endif
     vector->push_back(string_pair("TBB: BUILD_GCC", required));
     vector->push_back(string_pair("TBB: BUILD_COMPILER", optional)); //if( getenv("COMPILER_VERSION") )
 #if __ANDROID__

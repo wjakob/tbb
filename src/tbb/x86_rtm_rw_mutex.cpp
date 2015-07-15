@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -60,6 +60,7 @@ enum {
 };
 
 // maximum number of times to retry
+// TODO: experiment on retry values.
 static const int retry_threshold_read = 10;
 static const int retry_threshold_write = 10;
 

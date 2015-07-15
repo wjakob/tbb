@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -17,6 +17,10 @@
     by the GNU General Public License. This exception does not however invalidate any other
     reasons why the executable file might be covered by the GNU General Public License.
 */
+
+#if _MSC_VER
+#define _SCL_SECURE_NO_WARNINGS
+#endif
 
 #include "tbb/concurrent_vector.h"
 #include "tbb/tbb_allocator.h"
@@ -1595,8 +1599,9 @@ void Examine( tbb::concurrent_vector<Type, Allocator> c, const std::vector<Type>
     std::copy( c.begin(), c.begin() + 5, std::back_inserter( c2 ) );
 
     c.grow_by( c2.begin(), c2.end() );
-    ASSERT( Harness::IsEqual()(c.front(), *(c2.rend()-1)), NULL );
-    ASSERT( Harness::IsEqual()(c.back(), *c2.rbegin()), NULL);
+    const vector_t& cvcr = c;
+    ASSERT( Harness::IsEqual()(cvcr.front(), *(c2.rend()-1)), NULL );
+    ASSERT( Harness::IsEqual()(cvcr.back(), *c2.rbegin()), NULL);
     ASSERT( Harness::IsEqual()(*c.cbegin(), *(c.crend()-1)), NULL );
     ASSERT( Harness::IsEqual()(*(c.cend()-1), *c.crbegin()), NULL );
     c.swap( c2 );

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::concurrent_bounded_queue&lt; T, A &gt; Class Template Reference</title>
+<title>tbb::captured_exception Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,376 +33,179 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00233.html">tbb</a></li><li class="navelem"><a class="el" href="a00035.html">concurrent_bounded_queue</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00240.html">tbb</a></li><li class="navelem"><a class="el" href="a00035.html">captured_exception</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#friends">Friends</a> &#124;
-<a href="a00268.html">List of all members</a>  </div>
+<a href="a00324.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::concurrent_bounded_queue&lt; T, A &gt; Class Template Reference<div class="ingroups"><a class="el" href="a00248.html">Containers</a></div></div>  </div>
+<div class="title">tbb::captured_exception Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>A high-performance thread-safe blocking concurrent bounded queue.  
+<p>This class is used by TBB to propagate information about unhandled exceptions into the root thread.  
  <a href="a00035.html#details">More...</a></p>
 
-<p><code>#include &lt;concurrent_queue.h&gt;</code></p>
+<p><code>#include &lt;tbb_exception.h&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for tbb::concurrent_bounded_queue&lt; T, A &gt;:</div>
+Inheritance diagram for tbb::captured_exception:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="a00035.png" usemap="#tbb::concurrent_bounded_queue&lt; T, A &gt;_map" alt=""/>
-  <map id="tbb::concurrent_bounded_queue&lt; T, A &gt;_map" name="tbb::concurrent_bounded_queue&lt; T, A &gt;_map">
+  <img src="a00035.png" usemap="#tbb::captured_exception_map" alt=""/>
+  <map id="tbb::captured_exception_map" name="tbb::captured_exception_map">
+<area href="a00161.html" title="Interface to be implemented by all exceptions TBB recognizes and propagates across the threads..." alt="tbb::tbb_exception" shape="rect" coords="0,56,146,80"/>
 </map>
  </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a6eb564625fef03dd9a5881d5d4e52f9f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6eb564625fef03dd9a5881d5d4e52f9f"></a>
-typedef T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a6eb564625fef03dd9a5881d5d4e52f9f">value_type</a></td></tr>
-<tr class="memdesc:a6eb564625fef03dd9a5881d5d4e52f9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Element type in the queue. <br/></td></tr>
-<tr class="separator:a6eb564625fef03dd9a5881d5d4e52f9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbfceb845de1c770e2b56409f09b0364"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acbfceb845de1c770e2b56409f09b0364"></a>
-typedef A&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a></td></tr>
-<tr class="memdesc:acbfceb845de1c770e2b56409f09b0364"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocator type. <br/></td></tr>
-<tr class="separator:acbfceb845de1c770e2b56409f09b0364"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5fa4002bcd265d9d3ed305e3b686f1da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5fa4002bcd265d9d3ed305e3b686f1da"></a>
-typedef T &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a5fa4002bcd265d9d3ed305e3b686f1da">reference</a></td></tr>
-<tr class="memdesc:a5fa4002bcd265d9d3ed305e3b686f1da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reference type. <br/></td></tr>
-<tr class="separator:a5fa4002bcd265d9d3ed305e3b686f1da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af838e520ce0db2c22369748c019b11cb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af838e520ce0db2c22369748c019b11cb"></a>
-typedef const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#af838e520ce0db2c22369748c019b11cb">const_reference</a></td></tr>
-<tr class="memdesc:af838e520ce0db2c22369748c019b11cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Const reference type. <br/></td></tr>
-<tr class="separator:af838e520ce0db2c22369748c019b11cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae73fa352d781bdb9d01bfb77f2a8bc28"><td class="memItemLeft" align="right" valign="top">typedef std::ptrdiff_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#ae73fa352d781bdb9d01bfb77f2a8bc28">size_type</a></td></tr>
-<tr class="memdesc:ae73fa352d781bdb9d01bfb77f2a8bc28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Integral type for representing size of the queue.  <a href="#ae73fa352d781bdb9d01bfb77f2a8bc28">More...</a><br/></td></tr>
-<tr class="separator:ae73fa352d781bdb9d01bfb77f2a8bc28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72725361e050c5a981035a20ef1b773e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a72725361e050c5a981035a20ef1b773e"></a>
-typedef std::ptrdiff_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a72725361e050c5a981035a20ef1b773e">difference_type</a></td></tr>
-<tr class="memdesc:a72725361e050c5a981035a20ef1b773e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Difference type for iterator. <br/></td></tr>
-<tr class="separator:a72725361e050c5a981035a20ef1b773e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42dfb71b1e4bdc0da3c1217d0d40ddd5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a42dfb71b1e4bdc0da3c1217d0d40ddd5"></a>
-typedef <br class="typebreak"/>
-internal::concurrent_queue_iterator<br class="typebreak"/>
-&lt; <a class="el" href="a00035.html">concurrent_bounded_queue</a>, T &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>iterator</b></td></tr>
-<tr class="separator:a42dfb71b1e4bdc0da3c1217d0d40ddd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18049841284051e18b854692bd04602c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a18049841284051e18b854692bd04602c"></a>
-typedef <br class="typebreak"/>
-internal::concurrent_queue_iterator<br class="typebreak"/>
-&lt; <a class="el" href="a00035.html">concurrent_bounded_queue</a>, <br class="typebreak"/>
-const T &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>const_iterator</b></td></tr>
-<tr class="separator:a18049841284051e18b854692bd04602c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a85f8a800cae02b601f36ad7a655a0126"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85f8a800cae02b601f36ad7a655a0126"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a85f8a800cae02b601f36ad7a655a0126">concurrent_bounded_queue</a> (const <a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a> &amp;a=<a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a>())</td></tr>
-<tr class="memdesc:a85f8a800cae02b601f36ad7a655a0126"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct empty queue. <br/></td></tr>
-<tr class="separator:a85f8a800cae02b601f36ad7a655a0126"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad6fd2353d64c2c31d074cd99df58c02"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aad6fd2353d64c2c31d074cd99df58c02"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#aad6fd2353d64c2c31d074cd99df58c02">concurrent_bounded_queue</a> (const <a class="el" href="a00035.html">concurrent_bounded_queue</a> &amp;src, const <a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a> &amp;a=<a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a>())</td></tr>
-<tr class="memdesc:aad6fd2353d64c2c31d074cd99df58c02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy constructor. <br/></td></tr>
-<tr class="separator:aad6fd2353d64c2c31d074cd99df58c02"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a228b9d3bf3158a9379748894a93fbe55"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a228b9d3bf3158a9379748894a93fbe55"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a228b9d3bf3158a9379748894a93fbe55">concurrent_bounded_queue</a> (<a class="el" href="a00035.html">concurrent_bounded_queue</a> &amp;&amp;src)</td></tr>
-<tr class="memdesc:a228b9d3bf3158a9379748894a93fbe55"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move constructors. <br/></td></tr>
-<tr class="separator:a228b9d3bf3158a9379748894a93fbe55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed0303dafc38c5088ae62ac023fffb4e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed0303dafc38c5088ae62ac023fffb4e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>concurrent_bounded_queue</b> (<a class="el" href="a00035.html">concurrent_bounded_queue</a> &amp;&amp;src, const <a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a> &amp;a)</td></tr>
-<tr class="separator:aed0303dafc38c5088ae62ac023fffb4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcfdc998e106fdb7b2dfa5df880cd9cf"><td class="memTemplParams" colspan="2"><a class="anchor" id="afcfdc998e106fdb7b2dfa5df880cd9cf"></a>
-template&lt;typename InputIterator &gt; </td></tr>
-<tr class="memitem:afcfdc998e106fdb7b2dfa5df880cd9cf"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="a00035.html#afcfdc998e106fdb7b2dfa5df880cd9cf">concurrent_bounded_queue</a> (InputIterator begin, InputIterator end, const <a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a> &amp;a=<a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a>())</td></tr>
-<tr class="memdesc:afcfdc998e106fdb7b2dfa5df880cd9cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">[begin,end) constructor <br/></td></tr>
-<tr class="separator:afcfdc998e106fdb7b2dfa5df880cd9cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1291bf6837ecfb8836c24dde5dd80b5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab1291bf6837ecfb8836c24dde5dd80b5"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#ab1291bf6837ecfb8836c24dde5dd80b5">~concurrent_bounded_queue</a> ()</td></tr>
-<tr class="memdesc:ab1291bf6837ecfb8836c24dde5dd80b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy queue. <br/></td></tr>
-<tr class="separator:ab1291bf6837ecfb8836c24dde5dd80b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5e9051772bbc93b2ccb8fd0a98a21f5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5e9051772bbc93b2ccb8fd0a98a21f5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#ae5e9051772bbc93b2ccb8fd0a98a21f5">push</a> (const T &amp;source)</td></tr>
-<tr class="memdesc:ae5e9051772bbc93b2ccb8fd0a98a21f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueue an item at tail of queue. <br/></td></tr>
-<tr class="separator:ae5e9051772bbc93b2ccb8fd0a98a21f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62a03e9c185562254ecb4104f38c106d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62a03e9c185562254ecb4104f38c106d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a62a03e9c185562254ecb4104f38c106d">push</a> (T &amp;&amp;source)</td></tr>
-<tr class="memdesc:a62a03e9c185562254ecb4104f38c106d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move an item at tail of queue. <br/></td></tr>
-<tr class="separator:a62a03e9c185562254ecb4104f38c106d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab9009e8a1bdf70623f6480681bb6b56a"><td class="memTemplParams" colspan="2"><a class="anchor" id="ab9009e8a1bdf70623f6480681bb6b56a"></a>
-template&lt;typename... Arguments&gt; </td></tr>
-<tr class="memitem:ab9009e8a1bdf70623f6480681bb6b56a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace</b> (Arguments &amp;&amp;...args)</td></tr>
-<tr class="separator:ab9009e8a1bdf70623f6480681bb6b56a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87926c31967a918ce80690a9ed5d6fa8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a87926c31967a918ce80690a9ed5d6fa8">pop</a> (T &amp;destination)</td></tr>
-<tr class="memdesc:a87926c31967a918ce80690a9ed5d6fa8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dequeue item from head of queue.  <a href="#a87926c31967a918ce80690a9ed5d6fa8">More...</a><br/></td></tr>
-<tr class="separator:a87926c31967a918ce80690a9ed5d6fa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77a755d94cabf5208905d10d5b57419c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77a755d94cabf5208905d10d5b57419c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a77a755d94cabf5208905d10d5b57419c">abort</a> ()</td></tr>
-<tr class="memdesc:a77a755d94cabf5208905d10d5b57419c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Abort all pending queue operations. <br/></td></tr>
-<tr class="separator:a77a755d94cabf5208905d10d5b57419c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03d93a240841a21788396bebd71c51bd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a03d93a240841a21788396bebd71c51bd">try_push</a> (const T &amp;source)</td></tr>
-<tr class="memdesc:a03d93a240841a21788396bebd71c51bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueue an item at tail of queue if queue is not already full.  <a href="#a03d93a240841a21788396bebd71c51bd">More...</a><br/></td></tr>
-<tr class="separator:a03d93a240841a21788396bebd71c51bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93f35e9d9381629e0a2993f9fdd96d92"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a93f35e9d9381629e0a2993f9fdd96d92">try_push</a> (T &amp;&amp;source)</td></tr>
-<tr class="memdesc:a93f35e9d9381629e0a2993f9fdd96d92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move an item at tail of queue if queue is not already full.  <a href="#a93f35e9d9381629e0a2993f9fdd96d92">More...</a><br/></td></tr>
-<tr class="separator:a93f35e9d9381629e0a2993f9fdd96d92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a4351eb8c93b6b2d9feaff0c7088ee8"><td class="memTemplParams" colspan="2"><a class="anchor" id="a0a4351eb8c93b6b2d9feaff0c7088ee8"></a>
-template&lt;typename... Arguments&gt; </td></tr>
-<tr class="memitem:a0a4351eb8c93b6b2d9feaff0c7088ee8"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>try_emplace</b> (Arguments &amp;&amp;...args)</td></tr>
-<tr class="separator:a0a4351eb8c93b6b2d9feaff0c7088ee8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3086cb4dcdeee245ef5cf34f72fb3e10"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a3086cb4dcdeee245ef5cf34f72fb3e10">try_pop</a> (T &amp;destination)</td></tr>
-<tr class="memdesc:a3086cb4dcdeee245ef5cf34f72fb3e10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempt to dequeue an item from head of queue.  <a href="#a3086cb4dcdeee245ef5cf34f72fb3e10">More...</a><br/></td></tr>
-<tr class="separator:a3086cb4dcdeee245ef5cf34f72fb3e10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d6c20fd8c193c12b6a7b0c3101fd966"><td class="memItemLeft" align="right" valign="top"><a class="el" href="a00035.html#ae73fa352d781bdb9d01bfb77f2a8bc28">size_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a9d6c20fd8c193c12b6a7b0c3101fd966">size</a> () const </td></tr>
-<tr class="memdesc:a9d6c20fd8c193c12b6a7b0c3101fd966"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return number of pushes minus number of pops.  <a href="#a9d6c20fd8c193c12b6a7b0c3101fd966">More...</a><br/></td></tr>
-<tr class="separator:a9d6c20fd8c193c12b6a7b0c3101fd966"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c59578f28c5fb4718b0eff43776e879"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c59578f28c5fb4718b0eff43776e879"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a8c59578f28c5fb4718b0eff43776e879">empty</a> () const </td></tr>
-<tr class="memdesc:a8c59578f28c5fb4718b0eff43776e879"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equivalent to <a class="el" href="a00035.html#a9d6c20fd8c193c12b6a7b0c3101fd966" title="Return number of pushes minus number of pops. ">size()</a>&lt;=0. <br/></td></tr>
-<tr class="separator:a8c59578f28c5fb4718b0eff43776e879"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a526487063242569685af8c8d778d39e0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a526487063242569685af8c8d778d39e0"></a>
-<a class="el" href="a00035.html#ae73fa352d781bdb9d01bfb77f2a8bc28">size_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a526487063242569685af8c8d778d39e0">capacity</a> () const </td></tr>
-<tr class="memdesc:a526487063242569685af8c8d778d39e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of allowed elements. <br/></td></tr>
-<tr class="separator:a526487063242569685af8c8d778d39e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a768699675813575eec08c1f43afda395"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a768699675813575eec08c1f43afda395">set_capacity</a> (<a class="el" href="a00035.html#ae73fa352d781bdb9d01bfb77f2a8bc28">size_type</a> new_capacity)</td></tr>
-<tr class="memdesc:a768699675813575eec08c1f43afda395"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the capacity.  <a href="#a768699675813575eec08c1f43afda395">More...</a><br/></td></tr>
-<tr class="separator:a768699675813575eec08c1f43afda395"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaeba11bbcd368a7a3a6e6e2dd3082c9c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaeba11bbcd368a7a3a6e6e2dd3082c9c"></a>
-<a class="el" href="a00035.html#acbfceb845de1c770e2b56409f09b0364">allocator_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#aaeba11bbcd368a7a3a6e6e2dd3082c9c">get_allocator</a> () const </td></tr>
-<tr class="memdesc:aaeba11bbcd368a7a3a6e6e2dd3082c9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">return allocator object <br/></td></tr>
-<tr class="separator:aaeba11bbcd368a7a3a6e6e2dd3082c9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a246be3920e079ea4847933f106baa98f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a246be3920e079ea4847933f106baa98f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a246be3920e079ea4847933f106baa98f">clear</a> ()</td></tr>
-<tr class="memdesc:a246be3920e079ea4847933f106baa98f"><td class="mdescLeft">&#160;</td><td class="mdescRight">clear the queue. not thread-safe. <br/></td></tr>
-<tr class="separator:a246be3920e079ea4847933f106baa98f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0c931eaa1ddc30025e49d06cc383703"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0c931eaa1ddc30025e49d06cc383703"></a>
-iterator&#160;</td><td class="memItemRight" valign="bottom"><b>unsafe_begin</b> ()</td></tr>
-<tr class="separator:ac0c931eaa1ddc30025e49d06cc383703"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a634cece9742cbaba56ba6f7777568e4c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a634cece9742cbaba56ba6f7777568e4c"></a>
-iterator&#160;</td><td class="memItemRight" valign="bottom"><b>unsafe_end</b> ()</td></tr>
-<tr class="separator:a634cece9742cbaba56ba6f7777568e4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ed2f8130fd679e89327cb292fb25510"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ed2f8130fd679e89327cb292fb25510"></a>
-const_iterator&#160;</td><td class="memItemRight" valign="bottom"><b>unsafe_begin</b> () const </td></tr>
-<tr class="separator:a2ed2f8130fd679e89327cb292fb25510"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a873d62f59fd79959c0204f5fb44c774d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a873d62f59fd79959c0204f5fb44c774d"></a>
-const_iterator&#160;</td><td class="memItemRight" valign="bottom"><b>unsafe_end</b> () const </td></tr>
-<tr class="separator:a873d62f59fd79959c0204f5fb44c774d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
-Friends</h2></td></tr>
-<tr class="memitem:a1f5eec0de2e660ea5372d19393f0920b"><td class="memTemplParams" colspan="2"><a class="anchor" id="a1f5eec0de2e660ea5372d19393f0920b"></a>
-template&lt;typename Container , typename Value &gt; </td></tr>
-<tr class="memitem:a1f5eec0de2e660ea5372d19393f0920b"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>internal::concurrent_queue_iterator</b></td></tr>
-<tr class="separator:a1f5eec0de2e660ea5372d19393f0920b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56f6c51b6d4f8ce31669457ff8f0c07f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56f6c51b6d4f8ce31669457ff8f0c07f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>captured_exception</b> (const <a class="el" href="a00035.html">captured_exception</a> &amp;src)</td></tr>
+<tr class="separator:a56f6c51b6d4f8ce31669457ff8f0c07f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3d72662db6a2badffa95a649a6c0bdd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab3d72662db6a2badffa95a649a6c0bdd"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>captured_exception</b> (const char *name_, const char *info)</td></tr>
+<tr class="separator:ab3d72662db6a2badffa95a649a6c0bdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78a66603238d40da9ec6a750b6a2425c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a78a66603238d40da9ec6a750b6a2425c"></a>
+<a class="el" href="a00035.html">captured_exception</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="a00035.html">captured_exception</a> &amp;src)</td></tr>
+<tr class="separator:a78a66603238d40da9ec6a750b6a2425c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb221485cd260349efdef681f633a6a4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="a00035.html">captured_exception</a> <br class="typebreak"/>
+*__TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#abb221485cd260349efdef681f633a6a4">move</a> ()  throw ()</td></tr>
+<tr class="memdesc:abb221485cd260349efdef681f633a6a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates and returns pointer to the deep copy of this exception object.  <a href="#abb221485cd260349efdef681f633a6a4">More...</a><br/></td></tr>
+<tr class="separator:abb221485cd260349efdef681f633a6a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3006b6825dda6c746d28fb748f5675de"><td class="memItemLeft" align="right" valign="top">void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a3006b6825dda6c746d28fb748f5675de">destroy</a> ()  throw ()</td></tr>
+<tr class="memdesc:a3006b6825dda6c746d28fb748f5675de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroys objects created by the <a class="el" href="a00035.html#abb221485cd260349efdef681f633a6a4" title="Creates and returns pointer to the deep copy of this exception object. ">move()</a> method.  <a href="#a3006b6825dda6c746d28fb748f5675de">More...</a><br/></td></tr>
+<tr class="separator:a3006b6825dda6c746d28fb748f5675de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9ae925678fcc0cc02a74df7d06b8d63"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#ac9ae925678fcc0cc02a74df7d06b8d63">throw_self</a> ()</td></tr>
+<tr class="memdesc:ac9ae925678fcc0cc02a74df7d06b8d63"><td class="mdescLeft">&#160;</td><td class="mdescRight">Throws this exception object.  <a href="#ac9ae925678fcc0cc02a74df7d06b8d63">More...</a><br/></td></tr>
+<tr class="separator:ac9ae925678fcc0cc02a74df7d06b8d63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23426113851b78d3f0069956afd21976"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23426113851b78d3f0069956afd21976"></a>
+const char *__TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#a23426113851b78d3f0069956afd21976">name</a> () const   throw ()</td></tr>
+<tr class="memdesc:a23426113851b78d3f0069956afd21976"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns RTTI name of the originally intercepted exception. <br/></td></tr>
+<tr class="separator:a23426113851b78d3f0069956afd21976"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac97ee315d8613c803dae2f6d3e0b91a7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac97ee315d8613c803dae2f6d3e0b91a7"></a>
+const char *__TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00035.html#ac97ee315d8613c803dae2f6d3e0b91a7">what</a> () const   throw ()</td></tr>
+<tr class="memdesc:ac97ee315d8613c803dae2f6d3e0b91a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the result of originally intercepted exception's <a class="el" href="a00035.html#ac97ee315d8613c803dae2f6d3e0b91a7" title="Returns the result of originally intercepted exception&#39;s what() method. ">what()</a> method. <br/></td></tr>
+<tr class="separator:ac97ee315d8613c803dae2f6d3e0b91a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa72deb29316e8c08700f7e6afa4a48e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa72deb29316e8c08700f7e6afa4a48e8"></a>
+void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><b>set</b> (const char *<a class="el" href="a00035.html#a23426113851b78d3f0069956afd21976">name</a>, const char *info)  throw ()</td></tr>
+<tr class="separator:aa72deb29316e8c08700f7e6afa4a48e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b160c0fc5d2fab90df2be96ea14088a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0b160c0fc5d2fab90df2be96ea14088a"></a>
+void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()  throw ()</td></tr>
+<tr class="separator:a0b160c0fc5d2fab90df2be96ea14088a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_a00161"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_a00161')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="a00161.html">tbb::tbb_exception</a></td></tr>
+<tr class="memitem:a6a973c37078afedf7d457ff4704bf8cd inherit pub_methods_a00161"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00161.html#a6a973c37078afedf7d457ff4704bf8cd">operator delete</a> (void *p)</td></tr>
+<tr class="separator:a6a973c37078afedf7d457ff4704bf8cd inherit pub_methods_a00161"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename T, class A = cache_aligned_allocator&lt;T&gt;&gt;<br/>
-class tbb::concurrent_bounded_queue&lt; T, A &gt;</h3>
-
-<p>A high-performance thread-safe blocking concurrent bounded queue. </p>
-<p>This is the pre-PPL TBB concurrent queue which supports boundedness and blocking semantics. Note that method names agree with the PPL-style concurrent queue. Multiple threads may each push and pop concurrently. Assignment construction is not allowed. </p>
-</div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a class="anchor" id="ae73fa352d781bdb9d01bfb77f2a8bc28"></a>
+<div class="textblock"><p>This class is used by TBB to propagate information about unhandled exceptions into the root thread. </p>
+<p>Exception of this type is thrown by TBB in the root thread (thread that started a parallel algorithm ) if an unhandled exception was intercepted during the algorithm execution in one of the workers. </p>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="a00161.html" title="Interface to be implemented by all exceptions TBB recognizes and propagates across the threads...">tbb::tbb_exception</a> </dd></dl>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a3006b6825dda6c746d28fb748f5675de"></a>
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , class A  = cache_aligned_allocator&lt;T&gt;&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef std::ptrdiff_t <a class="el" href="a00035.html">tbb::concurrent_bounded_queue</a>&lt; T, A &gt;::<a class="el" href="a00035.html#ae73fa352d781bdb9d01bfb77f2a8bc28">size_type</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Integral type for representing size of the queue. </p>
-<p>Note that the size_type is a signed integral type. This is because the size can be negative if there are pending pops without corresponding pushes. </p>
-
-</div>
-</div>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a87926c31967a918ce80690a9ed5d6fa8"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , class A  = cache_aligned_allocator&lt;T&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="a00035.html">tbb::concurrent_bounded_queue</a>&lt; T, A &gt;::pop </td>
-          <td>(</td>
-          <td class="paramtype">T &amp;&#160;</td>
-          <td class="paramname"><em>destination</em>)</td><td></td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Dequeue item from head of queue. </p>
-<p>Block until an item becomes available, and then dequeue it. </p>
-
-</div>
-</div>
-<a class="anchor" id="a768699675813575eec08c1f43afda395"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , class A  = cache_aligned_allocator&lt;T&gt;&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="a00035.html">tbb::concurrent_bounded_queue</a>&lt; T, A &gt;::set_capacity </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="a00035.html#ae73fa352d781bdb9d01bfb77f2a8bc28">size_type</a>&#160;</td>
-          <td class="paramname"><em>new_capacity</em>)</td><td></td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Set the capacity. </p>
-<p>Setting the capacity to 0 causes subsequent try_push operations to always fail, and subsequent push operations to block forever. </p>
-
-</div>
-</div>
-<a class="anchor" id="a9d6c20fd8c193c12b6a7b0c3101fd966"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , class A  = cache_aligned_allocator&lt;T&gt;&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="a00035.html#ae73fa352d781bdb9d01bfb77f2a8bc28">size_type</a> <a class="el" href="a00035.html">tbb::concurrent_bounded_queue</a>&lt; T, A &gt;::size </td>
+          <td class="memname">void __TBB_EXPORTED_METHOD tbb::captured_exception::destroy </td>
           <td>(</td>
           <td class="paramname">)</td><td></td>
-          <td> const</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td align="right">throw </td><td>(</td><td colspan="2"></td>
+        </tr>
+        <tr>
+          <td align="right"></td><td>)</td><td></td><td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Return number of pushes minus number of pops. </p>
-<p>Note that the result can be negative if there are pops waiting for the corresponding pushes. The result can also exceed <a class="el" href="a00035.html#a526487063242569685af8c8d778d39e0" title="Maximum number of allowed elements. ">capacity()</a> if there are push operations in flight. </p>
+<p>Destroys objects created by the <a class="el" href="a00035.html#abb221485cd260349efdef681f633a6a4" title="Creates and returns pointer to the deep copy of this exception object. ">move()</a> method. </p>
+<p>Frees memory and calls destructor for this exception object. Can and must be used only on objects created by the move method. </p>
+
+<p>Implements <a class="el" href="a00161.html#ad3bc09bf78c33f19a0bcdf882fdf9d41">tbb::tbb_exception</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a3086cb4dcdeee245ef5cf34f72fb3e10"></a>
+<a class="anchor" id="abb221485cd260349efdef681f633a6a4"></a>
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , class A  = cache_aligned_allocator&lt;T&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="a00035.html">tbb::concurrent_bounded_queue</a>&lt; T, A &gt;::try_pop </td>
+          <td class="memname"><a class="el" href="a00035.html">captured_exception</a>* __TBB_EXPORTED_METHOD tbb::captured_exception::move </td>
           <td>(</td>
-          <td class="paramtype">T &amp;&#160;</td>
-          <td class="paramname"><em>destination</em>)</td><td></td>
+          <td class="paramname">)</td><td></td>
           <td></td>
+        </tr>
+        <tr>
+          <td align="right">throw </td><td>(</td><td colspan="2"></td>
+        </tr>
+        <tr>
+          <td align="right"></td><td>)</td><td></td><td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Attempt to dequeue an item from head of queue. </p>
-<p>Does not wait for item to become available. Returns true if successful; false otherwise. </p>
+<p>Creates and returns pointer to the deep copy of this exception object. </p>
+<p>Move semantics is allowed. </p>
+
+<p>Implements <a class="el" href="a00161.html#a4bd4ba0d501021013d1473d21b020b69">tbb::tbb_exception</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a03d93a240841a21788396bebd71c51bd"></a>
+<a class="anchor" id="ac9ae925678fcc0cc02a74df7d06b8d63"></a>
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , class A  = cache_aligned_allocator&lt;T&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="a00035.html">tbb::concurrent_bounded_queue</a>&lt; T, A &gt;::try_push </td>
+          <td class="memname">void tbb::captured_exception::throw_self </td>
           <td>(</td>
-          <td class="paramtype">const T &amp;&#160;</td>
-          <td class="paramname"><em>source</em>)</td><td></td>
+          <td class="paramname">)</td><td></td>
           <td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Enqueue an item at tail of queue if queue is not already full. </p>
-<p>Does not wait for queue to become not full. Returns true if item is pushed; false if queue was already full. </p>
+<p>Throws this exception object. </p>
+<p>Make sure that if you have several levels of derivation from this interface you implement or override this method on the most derived level. The implementation is as simple as "throw *this;". Failure to do this will result in exception of a base class type being thrown. </p>
 
-</div>
-</div>
-<a class="anchor" id="a93f35e9d9381629e0a2993f9fdd96d92"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename T , class A  = cache_aligned_allocator&lt;T&gt;&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool <a class="el" href="a00035.html">tbb::concurrent_bounded_queue</a>&lt; T, A &gt;::try_push </td>
-          <td>(</td>
-          <td class="paramtype">T &amp;&amp;&#160;</td>
-          <td class="paramname"><em>source</em>)</td><td></td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Move an item at tail of queue if queue is not already full. </p>
-<p>Does not wait for queue to become not full. Returns true if item is pushed; false if queue was already full. </p>
+<p>Implements <a class="el" href="a00161.html#ae45c08d36c7ec7ae91785da3515a8828">tbb::tbb_exception</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>concurrent_queue.h</li>
+<li>tbb_exception.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
 <p></p>
-Copyright &copy; 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2015 Intel Corporation.  All Rights Reserved.
 <p></p>
 Intel, Pentium, Intel Xeon, Itanium, Intel XScale and VTune are
 registered trademarks or trademarks of Intel Corporation or its

@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -35,7 +35,7 @@ CPLUS = clang++
 CONLY = clang
 LIB_LINK_FLAGS = $(DYLIB_KEY) -Wl,-soname=$(BUILDING_LIBRARY)
 LIBS += -lpthread -lrt
-LINK_FLAGS = -Wl,-rpath-link=.
+LINK_FLAGS = -Wl,-rpath-link=. -rdynamic
 C_FLAGS = $(CPLUS_FLAGS)
 
 ifeq ($(cfg), release)

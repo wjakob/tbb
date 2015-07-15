@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -65,6 +65,7 @@ SCHEDULER_DEPENDENCIES = $(TBB_ASM.OBJ) tbb_misc.$(OBJ)
 SCHEDULER_DIRECTLY_INCLUDED = test_task_leaks.$(TEST_EXT) \
  test_task_assertions.$(TEST_EXT) \
  test_fast_random.$(TEST_EXT) \
+ test_global_control_whitebox.$(TEST_EXT) \
  test_concurrent_queue_whitebox.$(TEST_EXT)
 
 # Necessary to locate version_string.ver referenced from directly included tbb_misc.cpp
@@ -110,6 +111,7 @@ test_dynamic_link.$(TEST_EXT): LIBS += $(LIBDL)
 
 # The main list of TBB tests
 TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
+        test_global_control.$(TEST_EXT)              \
 	test_tbb_fork.$(TEST_EXT)                    \
 	test_assembly_compiler_builtins.$(TEST_EXT)  \
 	test_aligned_space.$(TEST_EXT)               \
@@ -198,6 +200,8 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_tagged_msg.$(TEST_EXT)                  \
 	test_partitioner_whitebox.$(TEST_EXT)        \
 	test_flow_graph_whitebox.$(TEST_EXT)         \
+	test_composite_node.$(TEST_EXT)              \
+	test_async_node.$(TEST_EXT)                  \
 	test_tbb_version.$(TEST_EXT)                 # insert new files right above
 
 TEST_TBB_PLAIN.EXE += $(TEST_TBB_CPP11)

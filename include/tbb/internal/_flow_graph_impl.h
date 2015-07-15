@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -199,6 +199,41 @@ namespace internal {
         B init_body;
     };
 
+#if __TBB_PREVIEW_ASYNC_NODE
+
+    //! A functor that takes Input and submit it to Asynchronous Activity
+    template< typename Input, typename AsyncGateway >
+    class async_body : tbb::internal::no_assign {
+    public:
+        virtual ~async_body() {}
+        virtual void operator()(const Input &output, AsyncGateway& gateway) = 0;
+        virtual async_body* clone() = 0;
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        virtual void reset_body() = 0;
+#endif
+    };
+
+    //! The leaf for async_body
+    template< typename Input, typename Body, typename AsyncGateway >
+    class async_body_leaf : public async_body< Input, AsyncGateway > {
+    public:
+        async_body_leaf( const Body &_body ) : body(_body), init_body(_body) { }
+        /*override*/ void operator()(const Input &input, AsyncGateway& gateway) { body( input, gateway ); }
+        /*override*/ async_body_leaf* clone() {
+            return new async_body_leaf< Input, Body, AsyncGateway >(init_body);
+        }
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        /*override*/ void reset_body() {
+            body = init_body;
+        }
+#endif
+        Body get_body() { return body; }
+    private:
+        Body body;
+        Body init_body;
+    };
+#endif
+
 // --------------------------- end of function_body containers ------------------------
 
 // --------------------------- node task bodies ---------------------------------------
@@ -291,7 +326,15 @@ namespace internal {
         }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<T *> predecessor_vector_type;
+        typedef edge_container<T> built_predecessors_type;
+        void clear() {
+            while( !my_q.empty()) (void)my_q.pop();
+            my_built_predecessors.clear();
+        }
+
+        built_predecessors_type &built_predecessors() { return my_built_predecessors; }
+
+        typedef typename edge_container<T>::edge_list_type predecessor_list_type;
         void internal_add_built_predecessor( T &n ) {
             typename my_mutex_type::scoped_lock lock( my_mutex );
             my_built_predecessors.add_edge(n);
@@ -302,7 +345,7 @@ namespace internal {
             my_built_predecessors.delete_edge(n);
         }
 
-        void copy_predecessors( predecessor_vector_type &v) {
+        void copy_predecessors( predecessor_list_type &v) {
             typename my_mutex_type::scoped_lock lock( my_mutex );
             my_built_predecessors.copy_edges(v);
         }
@@ -319,7 +362,7 @@ namespace internal {
         my_mutex_type my_mutex;
         std::queue< T * > my_q;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        edge_container<T> my_built_predecessors;
+        built_predecessors_type my_built_predecessors;
 #endif
 
         // Assumes lock is held
@@ -388,7 +431,8 @@ namespace internal {
             return msg;
         }
 
-        void reset( __TBB_PFG_RESET_ARG(reset_flags f)) {
+        // If we are removing arcs (rf_clear_edges), call clear() rather than reset().
+        void reset() {
             if(my_owner) {
                 for(;;) {
                     predecessor_type *src;
@@ -396,14 +440,9 @@ namespace internal {
                         if(this->internal_empty()) break;
                         src = &this->internal_pop();
                     }
-                        src->register_successor( *my_owner);
+                    src->register_successor( *my_owner);
                 }
             }
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-            if (f&rf_extract && my_owner) 
-                my_built_predecessors.receiver_extract(*my_owner);
-            __TBB_ASSERT(!(f&rf_extract) || this->internal_empty(), "predecessor cache not empty");
-#endif
         }
 
     protected:
@@ -469,9 +508,14 @@ namespace internal {
             return true;
         }
 
-        void reset( __TBB_PFG_RESET_ARG(reset_flags f)) {
+        void reset( ) {
             reserved_src = NULL;
-            predecessor_cache<T,M>::reset(__TBB_PFG_RESET_ARG(f));
+            predecessor_cache<T,M>::reset( );
+        }
+
+        void clear() {
+            reserved_src = NULL;
+            predecessor_cache<T,M>::clear();
         }
 
     private:
@@ -487,10 +531,11 @@ namespace internal {
         typedef M my_mutex_type;
         my_mutex_type my_mutex;
 
+        typedef receiver<T> successor_type;
         typedef receiver<T> *pointer_type;
         typedef std::list< pointer_type > my_successors_type;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        edge_container<receiver<T> > my_built_successors;
+        edge_container<successor_type> my_built_successors;
 #endif
         my_successors_type my_successors;
 
@@ -498,18 +543,21 @@ namespace internal {
 
     public:
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<pointer_type> successor_vector_type;
-        void internal_add_built_successor( receiver<T> &r) {
+        typedef typename edge_container<successor_type>::edge_list_type successor_list_type;
+
+        edge_container<successor_type> &built_successors() { return my_built_successors; }
+
+        void internal_add_built_successor( successor_type &r) {
             typename my_mutex_type::scoped_lock l(my_mutex, true);
             my_built_successors.add_edge( r );
         }
 
-        void internal_delete_built_successor( receiver<T> &r) {
+        void internal_delete_built_successor( successor_type &r) {
             typename my_mutex_type::scoped_lock l(my_mutex, true);
             my_built_successors.delete_edge(r);
         }
 
-        void copy_successors( successor_vector_type &v) {
+        void copy_successors( successor_list_type &v) {
             typename my_mutex_type::scoped_lock l(my_mutex, false);
             my_built_successors.copy_edges(v);
         }
@@ -519,10 +567,6 @@ namespace internal {
             return my_built_successors.edge_count();
         }
 
-        void reset( __TBB_PFG_RESET_ARG(reset_flags f)) {
-            if (f&rf_extract && my_owner) 
-                my_built_successors.sender_extract(*my_owner);
-        }
 #endif /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
 
         successor_cache( ) : my_owner(NULL) {}
@@ -531,12 +575,12 @@ namespace internal {
 
         virtual ~successor_cache() {}
 
-        void register_successor( receiver<T> &r ) {
+        void register_successor( successor_type &r ) {
             typename my_mutex_type::scoped_lock l(my_mutex, true);
             my_successors.push_back( &r );
         }
 
-        void remove_successor( receiver<T> &r ) {
+        void remove_successor( successor_type &r ) {
             typename my_mutex_type::scoped_lock l(my_mutex, true);
             for ( typename my_successors_type::iterator i = my_successors.begin();
                   i != my_successors.end(); ++i ) {
@@ -560,7 +604,7 @@ namespace internal {
         }
 
         virtual task * try_put_task( const T &t ) = 0;
-     };
+     };  // successor_cache<T>
 
     //! An abstract cache of successors, specialized to continue_msg
     template<>
@@ -570,11 +614,13 @@ namespace internal {
         typedef spin_rw_mutex my_mutex_type;
         my_mutex_type my_mutex;
 
+        typedef receiver<continue_msg> successor_type;
         typedef receiver<continue_msg> *pointer_type;
         typedef std::list< pointer_type > my_successors_type;
         my_successors_type my_successors;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        edge_container<receiver<continue_msg> > my_built_successors;
+        edge_container<successor_type> my_built_successors;
+        typedef edge_container<successor_type>::edge_list_type successor_list_type;
 #endif
 
         sender<continue_msg> *my_owner;
@@ -582,18 +628,20 @@ namespace internal {
     public:
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<pointer_type> successor_vector_type;
-        void internal_add_built_successor( receiver<continue_msg> &r) {
+
+        edge_container<successor_type> &built_successors() { return my_built_successors; }
+
+        void internal_add_built_successor( successor_type &r) {
             my_mutex_type::scoped_lock l(my_mutex, true);
             my_built_successors.add_edge( r );
         }
 
-        void internal_delete_built_successor( receiver<continue_msg> &r) {
+        void internal_delete_built_successor( successor_type &r) {
             my_mutex_type::scoped_lock l(my_mutex, true);
             my_built_successors.delete_edge(r);
         }
 
-        void copy_successors( successor_vector_type &v) {
+        void copy_successors( successor_list_type &v) {
             my_mutex_type::scoped_lock l(my_mutex, false);
             my_built_successors.copy_edges(v);
         }
@@ -603,10 +651,6 @@ namespace internal {
             return my_built_successors.edge_count();
         }
 
-        void reset( __TBB_PFG_RESET_ARG(reset_flags f)) {
-            if (f&rf_extract && my_owner) 
-                my_built_successors.sender_extract(*my_owner);
-        }
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
 
         successor_cache( ) : my_owner(NULL) {}
@@ -615,7 +659,7 @@ namespace internal {
 
         virtual ~successor_cache() {}
 
-        void register_successor( receiver<continue_msg> &r ) {
+        void register_successor( successor_type &r ) {
             my_mutex_type::scoped_lock l(my_mutex, true);
             my_successors.push_back( &r );
             if ( my_owner && r.is_continue_receiver() ) {
@@ -623,7 +667,7 @@ namespace internal {
             }
         }
 
-        void remove_successor( receiver<continue_msg> &r ) {
+        void remove_successor( successor_type &r ) {
             my_mutex_type::scoped_lock l(my_mutex, true);
             for ( my_successors_type::iterator i = my_successors.begin();
                   i != my_successors.end(); ++i ) {
@@ -652,13 +696,14 @@ namespace internal {
 
         virtual task * try_put_task( const continue_msg &t ) = 0;
 
-     };
+    };  // successor_cache< continue_msg >
 
     //! A cache of successors that are broadcast to
     template<typename T, typename M=spin_rw_mutex>
     class broadcast_cache : public successor_cache<T, M> {
         typedef M my_mutex_type;
-        typedef std::list< receiver<T> * > my_successors_type;
+        // typedef std::list< receiver<T> * > my_successors_type;
+        typedef typename successor_cache<T,M>::my_successors_type my_successors_type;
 
     public:
 
@@ -698,7 +743,8 @@ namespace internal {
     class round_robin_cache : public successor_cache<T, M> {
         typedef size_t size_type;
         typedef M my_mutex_type;
-        typedef std::list< receiver<T> * > my_successors_type;
+        // typedef std::list< receiver<T> * > my_successors_type;
+        typedef typename successor_cache<T,M>::my_successors_type my_successors_type;
 
     public:
 

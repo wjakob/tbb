@@ -1,6 +1,106 @@
 ------------------------------------------------------------------------
 The list of most significant changes made over time in
 Intel(R) Threading Building Blocks (Intel(R) TBB).
+
+Intel TBB 4.3 Update 6
+TBB_INTERFACE_VERSION == 8006
+
+Changes (w.r.t. Intel TBB 4.3 Update 5):
+- Supported zero-copy realloc for objects >1MB under Linux* via
+    mremap system call.
+- C++11 move-aware insert and emplace methods have been added to
+    concurrent_hash_map container.
+- install_name is set to @rpath/<library name> on OS X*.
+
+Preview Features:
+- Added template class async_node to the flow graph API. It allows a
+    flow graph to communicate with an external activity managed by
+    the user or another runtime.
+- Improved speed of flow::graph::reset() clearing graph edges.
+    rf_extract flag has been renamed rf_clear_edges.
+- extract() method of graph nodes now takes no arguments.
+
+Bugs fixed:
+- concurrent_unordered_{set,map} behaves correctly for degenerate
+    hashes.
+- Fixed a race condition in the memory allocator that may lead to
+    excessive memory consumption under high multithreading load.
+
+------------------------------------------------------------------------
+Intel TBB 4.3 Update 5
+TBB_INTERFACE_VERSION == 8005
+
+Changes (w.r.t. Intel TBB 4.3 Update 4):
+- Added add_ref_count() method of class tbb::task.
+
+Preview Features:
+- Added class global_control for application-wide control of allowed
+    parallelism and thread stack size.
+- memory_pool_allocator now throws the std::bad_alloc exception on
+    allocation failure.
+- Exceptions thrown for by memory pool constructors changed from
+    std::bad_alloc to std::invalid_argument and std::runtime_error.
+
+Bugs fixed:
+- scalable_allocator now throws the std::bad_alloc exception on
+    allocation failure.
+- Fixed a race condition in the memory allocator that may lead to
+    excessive memory consumption under high multithreading load.
+- A new scheduler created right after destruction of the previous one
+    might be unable to modify the number of worker threads.
+
+Open-source contributions integrated:
+- (Added but not enabled) push_front() method of class tbb::task_list
+    by Raf Schietekat.
+
+------------------------------------------------------------------------
+Intel TBB 4.3 Update 4
+TBB_INTERFACE_VERSION == 8004
+
+Changes (w.r.t. Intel TBB 4.3 Update 3):
+- Added a C++11 variadic constructor for enumerable_thread_specific.
+    The arguments from this constructor are used to construct
+    thread-local values.
+- Improved exception safety for enumerable_thread_specific.
+- Added documentation for tbb::flow::tagged_msg class and
+    tbb::flow::output_port function.
+- Fixed build errors for systems that do not support dynamic linking.
+- C++11 move-aware insert and emplace methods have been added to
+    concurrent unordered containers.
+
+Preview Features:
+- Interface-breaking change: typedefs changed for node predecessor and
+    successor lists, affecting copy_predecessors and copy_successors
+    methods.
+- Added template class composite_node to the flow graph API. It packages
+    a subgraph to represent it as a first-class flow graph node.
+- make_edge and remove_edge now accept multiport nodes as arguments,
+    automatically using the node port with index 0 for an edge.
+
+Open-source contributions integrated:
+- Draft code for enumerable_thread_specific constructor with multiple
+    arguments (see above) by Adrien Guinet.
+- Fix for GCC invocation on IBM* Blue Gene*
+    by Jeff Hammond and Raf Schietekat.
+- Extended testing with smart pointers for Clang & libc++
+    by Raf Schietekat.
+
+------------------------------------------------------------------------
+Intel TBB 4.3 Update 3
+TBB_INTERFACE_VERSION == 8003
+
+Changes (w.r.t. Intel TBB 4.3 Update 2):
+
+- Move constructor and assignment operator were added to unique_lock.
+
+Preview Features:
+
+- Time overhead for memory pool destruction was reduced.
+
+Open-source contributions integrated:
+
+- Build error fix for iOS* by Raf Schietekat.
+
 ------------------------------------------------------------------------
 Intel TBB 4.3 Update 2
 TBB_INTERFACE_VERSION == 8002
@@ -40,6 +140,7 @@ Changes (w.r.t. Intel TBB 4.3):
 - Different kind of solutions for each TBB example were merged.
 
 Preview Features:
+
 - Task priorities are re-enabled in preview binaries.
 
 Bugs fixed:
@@ -72,7 +173,7 @@ Changes (w.r.t. Intel TBB 4.2 Update 5):
 - C++11 move constructors and assignment operators have been added to
     concurrent_vector, concurrent_hash_map, concurrent_priority_queue,
     concurrent_unordered_{set,multiset,map,multimap}.
-- C++11 move aware emplace/push/pop methods have been added to
+- C++11 move-aware emplace/push/pop methods have been added to
     concurrent_vector, concurrent_queue, concurrent_bounded_queue,
     concurrent_priority_queue.
 - Methods to insert a C++11 initializer list have been added:
@@ -640,7 +741,7 @@ Bugs fixed:
 - concurrent_queue counter wraparound bug was fixed, which occurred when
     the number of push and pop operations exceeded ~>4 billion on IA32.
 - fixed races in the TBB scheduler that could put workers asleep too
-    early, especially in presense of affinitized tasks.
+    early, especially in presence of affinitized tasks.
 
 ------------------------------------------------------------------------
 Intel TBB 4.0 Update 1 commercial-aligned release

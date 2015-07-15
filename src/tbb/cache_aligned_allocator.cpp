@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -165,8 +165,9 @@ static void dummy_padded_free( void * ptr ) {
     initialize_cache_aligned_allocator();
     __TBB_ASSERT( padded_free_handler!=&dummy_padded_free, NULL );
     (*padded_free_handler)( ptr );
-}    
+}
 
+// TODO: use CPUID to find actual line size, though consider backward compatibility
 static size_t NFS_LineSize = 128;
 
 size_t NFS_GetLineSize() {

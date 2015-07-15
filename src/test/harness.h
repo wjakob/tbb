@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -144,7 +144,7 @@ void print_call_stack() {
             if(!SymFromAddr( GetCurrentProcess(), DWORD64(buff[i]), &offset, &sym )) {
                 sym.Address = ULONG64(buff[i]); offset = 0; sym.Name[0] = 0;
             }
-            REPORT("[%d] %016I64LX+%04I64LX: %s\n", i, sym.Address, offset, sym.Name); //TODO: print module name
+            REPORT("[%d] %016I64X+%04I64X: %s\n", i, sym.Address, offset, sym.Name); //TODO: print module name
         }
     #endif /*BACKTRACE_FUNCTION_AVAILABLE*/
 }

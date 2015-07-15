@@ -78,10 +78,6 @@
     <Link>
       <AdditionalDependencies>d2d1.lib; d3d11.lib; dxgi.lib; ole32.lib; windowscodecs.lib; dwrite.lib; dxguid.lib; %(AdditionalDependencies)</AdditionalDependencies>
       <GenerateWindowsMetadata>true</GenerateWindowsMetadata>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\users\vpolin\tbb\windows\ia32\vc_mt\lib;D:\users\vpolin\tbb\build\windows_ia32_cl_vc11_debug</AdditionalLibraryDirectories>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\..\tbb\lib</AdditionalLibraryDirectories>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\users\vpolin\tbb\windows\intel64\vc_mt\lib;D:\users\vpolin\tbb\build\windows_intel64_cl_vc11_debug</AdditionalLibraryDirectories>
-      <AdditionalLibraryDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\..\tbb\lib\x64</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</LinkTimeCodeGeneration>
       <LinkTimeCodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</LinkTimeCodeGeneration>
       <LinkTimeCodeGeneration Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</LinkTimeCodeGeneration>

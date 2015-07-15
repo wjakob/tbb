@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -1666,7 +1666,7 @@ void TestTypes() {
     TestTypes(arrWk);
 #else
     REPORT("Known issue: C++11 smart pointer tests are skipped.\n");
-#endif /* __TBB_CXX11_TYPES_PRESENT */
+#endif /* __TBB_CPP11_SMART_POINTERS_PRESENT */
 }
 
 int TestMain () {

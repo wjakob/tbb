@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -35,7 +35,7 @@ LIBDL = -ldl
 
 LIBS = -lpthread
 LINK_FLAGS =
-LIB_LINK_FLAGS = -dynamiclib
+LIB_LINK_FLAGS = -dynamiclib -install_name @rpath/$(BUILDING_LIBRARY)
 C_FLAGS = $(CPLUS_FLAGS)
 
 ifeq ($(cfg), release)
@@ -84,6 +84,17 @@ ifeq (ppc32,$(arch))
     CPLUS_FLAGS += -arch ppc
     LINK_FLAGS += -arch ppc
     LIB_LINK_FLAGS += -arch ppc
+endif
+
+ifeq (armv7,$(arch))
+    CPLUS_FLAGS += -arch armv7
+    LINK_FLAGS += -arch armv7
+    LIB_LINK_FLAGS += -arch armv7
+endif
+
+ifdef SDKROOT
+    CPLUS_FLAGS += -isysroot $(SDKROOT)
+    LIB_LINK_FLAGS += -L$(SDKROOT)/usr/lib/system -L$(SDKROOT)/usr/lib/
 endif
 
 #------------------------------------------------------------------------------

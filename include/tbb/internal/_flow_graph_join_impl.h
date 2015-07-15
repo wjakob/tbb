@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -124,7 +124,15 @@ namespace internal {
             join_helper<N-1>::reset_inputs(my_input __TBB_PFG_RESET_ARG(__TBB_COMMA f));
             tbb::flow::get<N-1>(my_input).reset_receiver(__TBB_PFG_RESET_ARG(f));
         }
-    };
+
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        template<typename InputTuple>
+        static inline void extract_inputs(InputTuple &my_input) {
+            join_helper<N-1>::extract_inputs(my_input);
+            tbb::flow::get<N-1>(my_input).extract_receiver();
+        }
+#endif
+    };  // join_helper<N>
 
     template< >
     struct join_helper<1> {
@@ -192,7 +200,14 @@ namespace internal {
         static inline void reset_inputs(InputTuple &my_input __TBB_PFG_RESET_ARG(__TBB_COMMA reset_flags f)) {
             tbb::flow::get<0>(my_input).reset_receiver(__TBB_PFG_RESET_ARG(f));
         }
-    };
+
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        template<typename InputTuple>
+        static inline void extract_inputs(InputTuple &my_input) {
+            tbb::flow::get<0>(my_input).extract_receiver();
+        }
+#endif
+    };  // join_helper<1>
 
     //! The two-phase join port
     template< typename T >
@@ -201,7 +216,8 @@ namespace internal {
         typedef T input_type;
         typedef sender<T> predecessor_type;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<predecessor_type *> predecessor_vector_type;
+        typedef typename receiver<input_type>::predecessor_list_type predecessor_list_type;
+        typedef typename receiver<input_type>::built_predecessors_type built_predecessors_type;
 #endif
     private:
         // ----------- Aggregator ------------
@@ -221,7 +237,7 @@ namespace internal {
                 predecessor_type *my_pred;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
                 size_t cnt_val;
-                predecessor_vector_type *pvec;
+                predecessor_list_type *plist;
 #endif
             };
             reserving_port_operation(const T& e, op_type t) :
@@ -293,7 +309,7 @@ namespace internal {
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
                 case blt_pred_cpy:
-                    my_predecessors.copy_predecessors(*(current->pvec));
+                    my_predecessors.copy_predecessors(*(current->plist));
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
@@ -364,6 +380,7 @@ namespace internal {
         }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        /*override*/ built_predecessors_type &built_predecessors() { return my_predecessors.built_predecessors(); }
         /*override*/void internal_add_built_predecessor(predecessor_type &src) {
             reserving_port_operation op_data(src, add_blt_pred);
             my_aggregator.execute(&op_data);
@@ -380,18 +397,27 @@ namespace internal {
             return op_data.cnt_val;
         }
 
-        /*override*/void copy_predecessors(predecessor_vector_type &v) {
+        /*override*/void copy_predecessors(predecessor_list_type &l) {
             reserving_port_operation op_data(blt_pred_cpy);
-            op_data.pvec = &v;
+            op_data.plist = &l;
             my_aggregator.execute(&op_data);
         }
+
+        void extract_receiver() {
+            my_predecessors.built_predecessors().receiver_extract(*this);
+        }
+
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
 
         /*override*/void reset_receiver( __TBB_PFG_RESET_ARG(reset_flags f)) {
-            my_predecessors.reset(__TBB_PFG_RESET_ARG(f));
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+            if(f & rf_clear_edges) my_predecessors.clear();
+            else
+#endif
+            my_predecessors.reset();
             reserved = false;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-            __TBB_ASSERT(!(f&rf_extract) || my_predecessors.empty(), "port edges not removed");
+            __TBB_ASSERT(!(f&rf_clear_edges) || my_predecessors.empty(), "port edges not removed");
 #endif
         }
 
@@ -399,7 +425,7 @@ namespace internal {
         forwarding_base *my_join;
         reservable_predecessor_cache< T, null_mutex > my_predecessors;
         bool reserved;
-    };
+    };  // reserving_port
 
     //! queueing join_port
     template<typename T>
@@ -409,7 +435,8 @@ namespace internal {
         typedef sender<T> predecessor_type;
         typedef queueing_port<T> my_node_type;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<predecessor_type *> predecessor_vector_type;
+        typedef typename receiver<input_type>::built_predecessors_type built_predecessors_type;
+        typedef typename receiver<input_type>::predecessor_list_type predecessor_list_type;
 #endif
 
     // ----------- Aggregator ------------
@@ -430,7 +457,7 @@ namespace internal {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
             sender<T> *pred;
             size_t cnt_val;
-            predecessor_vector_type *pvec;
+            predecessor_list_type *plist;
 #endif
             task * bypass_t;
             // constructor for value parameter
@@ -502,7 +529,7 @@ namespace internal {
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
                 case blt_pred_cpy:
-                    my_built_predecessors.copy_edges(*(current->pvec));
+                    my_built_predecessors.copy_edges(*(current->plist));
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
@@ -557,6 +584,8 @@ namespace internal {
         }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        /*override*/ built_predecessors_type &built_predecessors() { return my_built_predecessors; }
+
         /*override*/void internal_add_built_predecessor(sender<T> &p) {
             queueing_port_operation op_data(add_blt_pred);
             op_data.pred = &p;
@@ -575,16 +604,21 @@ namespace internal {
             return op_data.cnt_val;
         }
 
-        /*override*/void copy_predecessors(predecessor_vector_type &v) {
+        /*override*/void copy_predecessors(predecessor_list_type &l) {
             queueing_port_operation op_data(blt_pred_cpy);
-            op_data.pvec = &v;
+            op_data.plist = &l;
             my_aggregator.execute(&op_data);
+        }
+
+        void extract_receiver() {
+            item_buffer<T>::reset(); 
+            my_built_predecessors.receiver_extract(*this);
         }
 
         /*override*/void reset_receiver(__TBB_PFG_RESET_ARG(reset_flags f)) { 
             item_buffer<T>::reset(); 
-            if (f & rf_extract)
-                my_built_predecessors.receiver_extract(*this);
+            if (f & rf_clear_edges)
+                my_built_predecessors.clear();
         }
 #else
         /*override*/void reset_receiver(__TBB_PFG_RESET_ARG(reset_flags /*f*/)) { item_buffer<T>::reset(); }
@@ -595,7 +629,7 @@ namespace internal {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         edge_container<sender<T> > my_built_predecessors;
 #endif
-    };
+    };  // queueing_port
 
 #include "_flow_graph_tagged_buffer_impl.h"
 
@@ -608,7 +642,8 @@ namespace internal {
         typedef function_body<input_type, tag_value> my_tag_func_type;
         typedef tagged_buffer<tag_value,T,NO_TAG> my_buffer_type;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<predecessor_type *> predecessor_vector_type;
+        typedef typename receiver<input_type>::built_predecessors_type built_predecessors_type;
+        typedef typename receiver<input_type>::predecessor_list_type predecessor_list_type;
 #endif
     private:
 // ----------- Aggregator ------------
@@ -627,7 +662,7 @@ namespace internal {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
             predecessor_type *pred;
             size_t cnt_val;
-            predecessor_vector_type *pvec;
+            predecessor_list_type *plist;
 #endif
             tag_value my_tag_value;
             // constructor for value parameter
@@ -682,7 +717,7 @@ namespace internal {
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
                 case blt_pred_cpy:
-                    my_built_predecessors.copy_edges(*(current->pvec));
+                    my_built_predecessors.copy_edges(*(current->plist));
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
 #endif
@@ -749,6 +784,8 @@ namespace internal {
         }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        /*override*/built_predecessors_type &built_predecessors() { return my_built_predecessors; }
+        
         /*override*/void internal_add_built_predecessor(sender<T> &p) {
             tag_matching_port_operation op_data(add_blt_pred);
             op_data.pred = &p;
@@ -767,9 +804,9 @@ namespace internal {
             return op_data.cnt_val;
         }
 
-        /*override*/void copy_predecessors(predecessor_vector_type &v) {
+        /*override*/void copy_predecessors(predecessor_list_type &l) {
             tag_matching_port_operation op_data(blt_pred_cpy);
-            op_data.pvec = &v;
+            op_data.plist = &l;
             my_aggregator.execute(&op_data);
         }
 #endif
@@ -786,10 +823,15 @@ namespace internal {
         my_tag_func_type *my_original_func() { return my_original_tag_func; }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        void extract_receiver() {
+            my_buffer_type::reset();
+            my_built_predecessors.receiver_extract(*this);
+        }
+
         /*override*/void reset_receiver(__TBB_PFG_RESET_ARG(reset_flags f)) { 
             my_buffer_type::reset(); 
-           if (f & rf_extract)
-              my_built_predecessors.receiver_extract(*this);
+           if (f & rf_clear_edges)
+              my_built_predecessors.clear();
         }
 #else
         /*override*/void reset_receiver(__TBB_PFG_RESET_ARG(reset_flags /*f*/)) { my_buffer_type::reset(); }
@@ -862,6 +904,14 @@ namespace internal {
             join_helper<N>::reset_inputs(my_inputs __TBB_PFG_RESET_ARG( __TBB_COMMA f));
         }
 
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        void extract( ) {
+            // called outside of parallel contexts
+            ports_with_no_inputs = N;
+            join_helper<N>::extract_inputs(my_inputs);
+        }
+#endif
+
         // all methods on input ports should be called under mutual exclusion from join_node_base.
 
         bool tuple_build_may_succeed() {
@@ -883,7 +933,7 @@ namespace internal {
         input_type my_inputs;
         my_node_type *my_node;
         atomic<size_t> ports_with_no_inputs;
-    };
+    };  // join_node_FE<reserving, ... >
 
     template<typename InputTuple, typename OutputTuple>
     class join_node_FE<queueing, InputTuple, OutputTuple> : public forwarding_base {
@@ -936,6 +986,12 @@ namespace internal {
             join_helper<N>::reset_inputs(my_inputs __TBB_PFG_RESET_ARG( __TBB_COMMA f) );
         }
 
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        void extract() {
+            reset_port_count();
+            join_helper<N>::extract_inputs(my_inputs);
+        }
+#endif
         // all methods on input ports should be called under mutual exclusion from join_node_base.
 
         bool tuple_build_may_succeed() {
@@ -958,7 +1014,7 @@ namespace internal {
         input_type my_inputs;
         my_node_type *my_node;
         atomic<size_t> ports_with_no_items;
-    };
+    };  // join_node_FE<queueing, ...>
 
     // tag_matching join input port.
     template<typename InputTuple, typename OutputTuple>
@@ -1132,6 +1188,15 @@ namespace internal {
             my_node->current_tag = NO_TAG;
         }
 
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        void extract() {
+            // called outside of parallel contexts
+            join_helper<N>::extract_inputs(my_inputs);
+            my_tag_buffer::reset();  // have to reset the tag counts
+            output_buffer_type::reset();  // also the queue of outputs
+            my_node->current_tag = NO_TAG;
+        }
+#endif
         // all methods on input ports should be called under mutual exclusion from join_node_base.
 
         bool tuple_build_may_succeed() {  // called from back-end
@@ -1176,7 +1241,8 @@ namespace internal {
         using input_ports_type::tuple_accepted;
         using input_ports_type::tuple_rejected;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<successor_type *> successor_vector_type;
+        typedef typename sender<output_type>::built_successors_type built_successors_type;
+        typedef typename sender<output_type>::successor_list_type successor_list_type;
 #endif
 
     private:
@@ -1197,7 +1263,7 @@ namespace internal {
                 successor_type *my_succ;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
                 size_t cnt_val;
-                successor_vector_type *svec;
+                successor_list_type *slist;
 #endif
             };
             task *bypass_t;
@@ -1285,7 +1351,7 @@ namespace internal {
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
                 case blt_succ_cpy:
-                    my_successors.copy_successors(*(current->svec));
+                    my_successors.copy_successors(*(current->slist));
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
@@ -1334,6 +1400,8 @@ namespace internal {
         }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        /*override*/built_successors_type &built_successors() { return my_successors.built_successors(); }
+
         /*override*/void internal_add_built_successor( successor_type &r) {
             join_node_base_operation op_data(r, add_blt_succ);
             my_aggregator.execute(&op_data);
@@ -1350,19 +1418,26 @@ namespace internal {
             return op_data.cnt_val;
         }
 
-        /*override*/ void copy_successors(successor_vector_type &v) {
+        /*override*/ void copy_successors(successor_list_type &l) {
             join_node_base_operation op_data(blt_succ_cpy);
-            op_data.svec = &v;
+            op_data.slist = &l;
             my_aggregator.execute(&op_data);
         }
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
 
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        /*override*/void extract() {
+            input_ports_type::extract();
+            my_successors.built_successors().sender_extract(*this);
+        }
+#endif
+
     protected:
 
-        /*override*/void reset(__TBB_PFG_RESET_ARG(reset_flags f)) {
+        /*override*/void reset_node(__TBB_PFG_RESET_ARG(reset_flags f)) {
             input_ports_type::reset(__TBB_PFG_RESET_ARG(f));
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-            my_successors.reset(f);
+            if(f & rf_clear_edges) my_successors.clear();
 #endif
         }
 

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -146,21 +146,26 @@ void governor::setBlockingTerminate(const task_scheduler_init *tsi) {
     BlockingTSI = tsi;
 }
 
-generic_scheduler* governor::init_scheduler( unsigned num_threads, stack_size_type stack_size, bool auto_init ) {
+void governor::one_time_init() {
     if( !__TBB_InitOnce::initialization_done() )
         DoOneTimeInitializations();
+#if __TBB_SURVIVE_THREAD_SWITCH
+    atomic_do_once( &initialize_cilk_interop, cilkrts_load_state );
+#endif /* __TBB_SURVIVE_THREAD_SWITCH */
+}
+
+generic_scheduler* governor::init_scheduler( int num_threads, stack_size_type stack_size, bool auto_init ) {
+    one_time_init();
     generic_scheduler* s = theTLS.get();
     if( s ) {
         s->my_ref_count += 1;
         return s;
     }
-#if __TBB_SURVIVE_THREAD_SWITCH
-    atomic_do_once( &initialize_cilk_interop, cilkrts_load_state );
-#endif /* __TBB_SURVIVE_THREAD_SWITCH */
-    if( (int)num_threads == task_scheduler_init::automatic )
+    bool default_concurrency_requested = num_threads == task_scheduler_init::automatic;
+    if( default_concurrency_requested )
         num_threads = default_num_threads();
-    s = generic_scheduler::create_master( 
-            market::create_arena( num_threads - 1, stack_size ? stack_size : ThreadStackSize ) );
+    arena &a = market::create_arena( num_threads, stack_size, default_concurrency_requested );
+    s = generic_scheduler::create_master( a );
     __TBB_ASSERT(s, "Somehow a local scheduler creation for a master thread failed");
     s->my_auto_initialized = auto_init;
     return s;
@@ -169,11 +174,9 @@ generic_scheduler* governor::init_scheduler( unsigned num_threads, stack_size_ty
 void governor::terminate_scheduler( generic_scheduler* s, const task_scheduler_init* tsi_ptr ) {
     __TBB_ASSERT( s == theTLS.get(), "Attempt to terminate non-local scheduler instance" );
     if (--(s->my_ref_count)) {
-        if (BlockingTSI && BlockingTSI==tsi_ptr) {
-            // can't throw exception, because this is on dtor's call chain
-            fprintf(stderr, "Attempt to terminate nested scheduler in blocking mode\n");
-            exit(1);
-        }
+        // can't throw exception, because this is on dtor's call chain
+        __TBB_ASSERT_RELEASE( !BlockingTSI || BlockingTSI!=tsi_ptr,
+                              "Attempt to terminate nested scheduler in blocking mode" );
     } else {
 #if TBB_USE_ASSERT
         if (BlockingTSI) {
@@ -296,9 +299,9 @@ void task_scheduler_init::initialize( int number_of_threads, stack_size_type thr
             blocking_terminate = true;
             my_scheduler = NULL;
         }
-        __TBB_ASSERT( !my_scheduler, "task_scheduler_init already initialized" );
-        __TBB_ASSERT( number_of_threads==-1 || number_of_threads>=1,
-                    "number_of_threads for task_scheduler_init must be -1 or positive" );
+        __TBB_ASSERT_RELEASE( !my_scheduler, "task_scheduler_init already initialized" );
+        __TBB_ASSERT_RELEASE( number_of_threads==automatic || number_of_threads > 0,
+                    "number_of_threads for task_scheduler_init must be automatic or positive" );
         if (blocking_terminate)
             governor::setBlockingTerminate(this);
         internal::generic_scheduler *s = governor::init_scheduler( number_of_threads, thread_stack_size, /*auto_init=*/false );
@@ -317,7 +320,7 @@ void task_scheduler_init::initialize( int number_of_threads, stack_size_type thr
 #endif /* __TBB_TASK_GROUP_CONTEXT && TBB_USE_EXCEPTIONS */
             my_scheduler = s;
     } else {
-        __TBB_ASSERT( !thread_stack_size, "deferred initialization ignores stack size setting" );
+        __TBB_ASSERT_RELEASE( !thread_stack_size, "deferred initialization ignores stack size setting" );
     }
 }
 
@@ -328,7 +331,7 @@ void task_scheduler_init::terminate() {
 #endif /* __TBB_TASK_GROUP_CONTEXT && TBB_USE_EXCEPTIONS */
     generic_scheduler* s = static_cast<generic_scheduler*>(my_scheduler);
     my_scheduler = NULL;
-    __TBB_ASSERT( s, "task_scheduler_init::terminate without corresponding task_scheduler_init::initialize()");
+    __TBB_ASSERT_RELEASE( s, "task_scheduler_init::terminate without corresponding task_scheduler_init::initialize()");
 #if __TBB_TASK_GROUP_CONTEXT && TBB_USE_EXCEPTIONS
     if ( s->master_outermost_level() ) {
         uintptr_t &vt = s->default_context()->my_version_and_traits;

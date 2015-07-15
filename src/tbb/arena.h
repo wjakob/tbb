@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -81,10 +81,6 @@ struct arena_base : padded<intrusive_list_node> {
 
     //! Number of workers requested by the master thread owning the arena
     unsigned my_max_num_workers;
-
-#if __TBB_TRACK_PRIORITY_LEVEL_SATURATION
-    int my_num_workers_present;
-#endif /* __TBB_TRACK_PRIORITY_LEVEL_SATURATION */
 
     //! Current task pool state and estimate of available tasks amount.
     /** The estimate is either 0 (SNAPSHOT_EMPTY) or infinity (SNAPSHOT_FULL). 
@@ -184,10 +180,10 @@ private:
     arena ( market&, unsigned max_num_workers );
 
     //! Allocate an instance of arena.
-    static arena& allocate_arena( market&, unsigned max_num_workers );
+    static arena& allocate_arena( market&, unsigned num_slots );
 
-    static int unsigned num_slots_to_reserve ( unsigned max_num_workers ) {
-        return max(2u, max_num_workers + 1);
+    static int unsigned num_slots_to_reserve ( unsigned num_slots ) {
+        return max(2u, num_slots);
     }
 
     static int allocation_size ( unsigned max_num_workers ) {
@@ -314,7 +310,7 @@ inline void arena::on_thread_leaving ( ) {
     // In both cases we cannot dereference arena pointer after the refcount is
     // decremented, as our arena may already be destroyed.
     //
-    // If this is the master thread, market can be concurrently destroyed.
+    // If this is the master thread, the market is protected by refcount to it.
     // In case of workers market's liveness is ensured by the RML connection
     // rundown protocol, according to which the client (i.e. the market) lives
     // until RML server notifies it about connection termination, and this
@@ -327,7 +323,7 @@ inline void arena::on_thread_leaving ( ) {
     market* m = my_market;
     __TBB_ASSERT(my_references > int(!is_master), "broken arena reference counter");
     if ( (my_references -= is_master? 1:2 ) == 0 ) // worker's counter starts from bit 1
-        market::try_destroy_arena( m, this, aba_epoch, is_master );
+        m->try_destroy_arena( this, aba_epoch );
 }
 
 template<bool Spawned> void arena::advertise_new_work() {

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -35,13 +35,18 @@ struct empty_no_assign : private NoAssign {
 // A class to use as a fake predecessor of continue_node
 struct fake_continue_sender : public tbb::flow::sender<tbb::flow::continue_msg>
 {
+    typedef tbb::flow::receiver<tbb::flow::continue_msg> successor_type;
     // Define implementations of virtual methods that are abstract in the base class
     /*override*/ bool register_successor( successor_type& ) { return false; }
     /*override*/ bool remove_successor( successor_type& )   { return false; }  
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    typedef tbb::flow::sender<tbb::flow::continue_msg>::built_successors_type built_successors_type;
+    built_successors_type bst;
+    /*override*/ built_successors_type &built_successors() { return bst; }
     /*override*/void internal_add_built_successor( successor_type &) { }
     /*override*/void internal_delete_built_successor( successor_type &) { }
-    /*override*/void copy_successors(std::vector<successor_type *> &) {}
+    /*override*/void copy_successors(successor_list_type &) {}
+    /*override*/void clear_successors() {}
     /*override*/size_t successor_count() {return 0;}
 #endif
 };
@@ -79,7 +84,8 @@ void run_continue_nodes( int p, tbb::flow::graph& g, tbb::flow::continue_node< O
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         ASSERT(n.successor_count() == (size_t)num_receivers, NULL);
         ASSERT(n.predecessor_count() == 0, NULL);
-        typename tbb::flow::continue_node<OutputType>::successor_vector_type my_succs;
+        typename tbb::flow::continue_node<OutputType>::successor_list_type my_succs;
+        typedef typename tbb::flow::continue_node<OutputType>::successor_list_type::iterator sv_iter_type;
         n.copy_successors(my_succs);
         ASSERT(my_succs.size() == num_receivers, NULL);
 #endif
@@ -96,13 +102,15 @@ void run_continue_nodes( int p, tbb::flow::graph& g, tbb::flow::continue_node< O
             ASSERT( (int)c == p, NULL );
         }
 
-        for (size_t r = 0; r < num_receivers; ++r ) {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-            tbb::flow::remove_edge( n, *(my_succs[r]) );
-#else
-            tbb::flow::remove_edge( n, receivers[r] );
-#endif
+        for(sv_iter_type si=my_succs.begin(); si != my_succs.end(); ++si) {
+            tbb::flow::remove_edge( n, **si );
         }
+#else
+        for (size_t r = 0; r < num_receivers; ++r ) {
+            tbb::flow::remove_edge( n, receivers[r] );
+        }
+#endif
     }
 }
 

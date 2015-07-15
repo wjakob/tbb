@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -34,6 +34,9 @@
 #else
     #error Must define USE_PTHREAD or USE_WINTHREAD
 #endif
+
+// TODO: *BSD also has it
+#define BACKEND_HAS_MREMAP __linux__
 
 #include "tbb/tbb_config.h" // for __TBB_LIBSTDCPP_EXCEPTION_HEADERS_BROKEN
 #if __TBB_LIBSTDCPP_EXCEPTION_HEADERS_BROKEN
@@ -108,19 +111,6 @@ const uintptr_t slabSize = 16*1024;
  * It should be power of 2 for the fast checking.
  */
 const unsigned cacheCleanupFreq = 256;
-
-/*
- * Best estimate of cache line size, for the purpose of avoiding false sharing.
- * Too high causes memory overhead, too low causes false-sharing overhead.
- * Because, e.g., 32-bit code might run on a 64-bit system with a larger cache line size,
- * it would probably be better to probe at runtime where possible and/or allow for an environment variable override,
- * but currently this is still used for compile-time layout of class Block, so the change is not entirely trivial.
- */
-#if __powerpc64__ || __ppc64__ || __bgp__
-const uint32_t estimatedCacheLineSize = 128;
-#else
-const uint32_t estimatedCacheLineSize =  64;
-#endif
 
 /*
  * Alignment of large (>= minLargeObjectSize) objects.
@@ -569,7 +559,7 @@ struct LargeMemoryBlock : public BlockI {
                      *gNext;
     uintptr_t         age;           // age of block while in cache
     size_t            objectSize;    // the size requested by a client
-    size_t            unalignedSize; // the size requested from getMemory
+    size_t            unalignedSize; // the size requested from backend
     BackRefIdx        backRefIdx;    // cached here, used copy is in LargeObjectHdr
 };
 
@@ -577,52 +567,40 @@ struct LargeMemoryBlock : public BlockI {
 class BackendSync {
     // Class instances should reside in zero-initialized memory!
     // The number of blocks currently removed from a bin and not returned back
-    intptr_t  blocksInProcessing;  // to another
-    intptr_t  binsModifications;   // incremented on every bin modification
+    intptr_t inFlyBlocks;         // to another
+    intptr_t binsModifications;   // incremented on every bin modification
+    Backend *backend;
 public:
-    void blockConsumed() { AtomicIncrement(blocksInProcessing); }
+    void init(Backend *b) { backend = b; }
+    void blockConsumed() { AtomicIncrement(inFlyBlocks); }
     void binsModified() { AtomicIncrement(binsModifications); }
     void blockReleased() {
 #if __TBB_MALLOC_BACKEND_STAT
-        MALLOC_ITT_SYNC_RELEASING(&blocksInProcessing);
+        MALLOC_ITT_SYNC_RELEASING(&inFlyBlocks);
 #endif
         AtomicIncrement(binsModifications);
-        intptr_t prev = AtomicAdd(blocksInProcessing, -1);
+        intptr_t prev = AtomicAdd(inFlyBlocks, -1);
         MALLOC_ASSERT(prev > 0, ASSERT_TEXT);
         suppress_unused_warning(prev);
     }
     intptr_t getNumOfMods() const { return FencedLoad(binsModifications); }
     // return true if need re-do the blocks search
-    bool waitTillBlockReleased(intptr_t startModifiedCnt) {
-#if __TBB_MALLOC_BACKEND_STAT
-        MALLOC_ITT_SYNC_PREPARE(&blocksInProcessing);
-#endif
-        for (intptr_t myBlocksNum = FencedLoad(blocksInProcessing);
-             // no blocks in processing, stop waiting
-             myBlocksNum; ) {
-            SpinWaitWhileEq(blocksInProcessing, myBlocksNum);
-            WhiteboxTestingYield();
-            intptr_t newBlocksNum = FencedLoad(blocksInProcessing);
-            // stop waiting iff blocks were removed from processing,
-            // if blocks were added, there is no reason to stop waiting
-            if (newBlocksNum < myBlocksNum)
-                break;
-            myBlocksNum = newBlocksNum;
-        }
-#if __TBB_MALLOC_BACKEND_STAT
-        MALLOC_ITT_SYNC_ACQUIRED(&blocksInProcessing);
-#endif
-        // were bins modified since scanned?
-        return startModifiedCnt != getNumOfMods();
-    }
+    inline bool waitTillBlockReleased(intptr_t startModifiedCnt);
 };
 
 class CoalRequestQ { // queue of free blocks that coalescing was delayed
 private:
-    FreeBlock *blocksToFree;
+    FreeBlock   *blocksToFree;
+    BackendSync *bkndSync;
+    // counted blocks in blocksToFree and that are leaved blocksToFree
+    // and still in active coalescing
+    intptr_t     inFlyBlocks;
 public:
+    void init(BackendSync *bSync) { bkndSync = bSync; }
     FreeBlock *getAll(); // return current list of blocks and make queue empty
     void putBlock(FreeBlock *fBlock);
+    inline void blockWasProcessed();
+    intptr_t blocksInFly() const { return FencedLoad(inFlyBlocks); }
 };
 
 class MemExtendingSema {
@@ -657,6 +635,14 @@ enum MemRegionType {
     MEMREG_SEVERAL_BLOCKS,
     // The region holds only one block with a reqested size.
     MEMREG_ONE_BLOCK
+};
+
+class MemRegionList {
+    MallocMutex regionListLock;
+public:
+    MemRegion  *head;
+    void add(MemRegion *r);
+    void remove(MemRegion *r);
 };
 
 class Backend {
@@ -751,8 +737,7 @@ private:
 
     ExtMemoryPool *extMemPool;
     // used for release every region on pool destroying
-    MemRegion     *regionList;
-    MallocMutex    regionListLock;
+    MemRegionList  regionList;
 
     CoalRequestQ   coalescQ; // queue of coalescing requests
     BackendSync    bkndSync;
@@ -777,6 +762,8 @@ private:
     void startUseBlock(MemRegion *region, FreeBlock *fBlock, bool addToBin);
     void releaseRegion(MemRegion *region);
 
+    FreeBlock *releaseMemInCaches(intptr_t startModifiedCnt,
+                                  int *lockedBinsThreshold, int numOfLockedBins);
     FreeBlock *askMemFromOS(size_t totalReqSize, intptr_t startModifiedCnt,
                             int *lockedBinsThreshold, int numOfLockedBins,
                             bool *splittable);
@@ -788,8 +775,7 @@ private:
                             bool needAlignedRes);
 
     FreeBlock *doCoalesc(FreeBlock *fBlock, MemRegion **memRegion);
-    bool coalescAndPutList(FreeBlock *head, bool forceCoalescQDrop);
-    bool scanCoalescQ(bool forceCoalescQDrop);
+    bool coalescAndPutList(FreeBlock *head, bool forceCoalescQDrop, bool reportBlocksProcessed);
     void coalescAndPut(FreeBlock *fBlock, size_t blockSz);
 
     void removeBlockFromBin(FreeBlock *fBlock);
@@ -800,6 +786,8 @@ private:
     void putLargeBlock(LargeMemoryBlock *lmb);
     void releaseCachesToLimit();
 public:
+    bool scanCoalescQ(bool forceCoalescQDrop);
+    intptr_t blocksInCoalescing() const { return coalescQ.blocksInFly(); }
     void verify();
 #if __TBB_MALLOC_BACKEND_STAT
     void reportStat(FILE *f);
@@ -825,6 +813,8 @@ public:
 
     LargeMemoryBlock *getLargeBlock(size_t size);
     void returnLargeObject(LargeMemoryBlock *lmb);
+
+    void *remap(void *ptr, size_t oldSize, size_t newSize, size_t alignment);
 
     void setRecommendedMaxSize(size_t softLimit) {
         memSoftLimit = softLimit;
@@ -880,7 +870,8 @@ struct ExtMemoryPool {
     AllLocalCaches    allLocalCaches;
 
     intptr_t          poolId;
-    // to find all large objects
+    // To find all large objects. This used during user pool destruction,
+    // to release all backreferencies in large blocks (slab blocks do not have them).
     AllLargeBlocksList lmbList;
     // Callbacks to be used instead of MapMemory/UnmapMemory.
     rawAllocType      rawAlloc;
@@ -910,15 +901,16 @@ struct ExtMemoryPool {
         backend.reset();
     }
     void destroy() {
-        loc.reset();
-        allLocalCaches.reset();
+        if (!userPool()) {
+            loc.reset();
+            allLocalCaches.reset();
+        }
         // pthread_key_dtors must be disabled before memory unmapping
         // TODO: race-free solution
         tlsPointerKey.~TLSKey();
         if (rawFree || !userPool())
             backend.destroy();
     }
-    bool mustBeAddedToGlobalLargeBlockList() const { return userPool(); }
     void delayRegionsReleasing(bool mode) { delayRegsReleasing = mode; }
     inline bool regionsAreReleaseable() const;
 

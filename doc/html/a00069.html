@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::flow::interface7::indexer_node&lt; T0 &gt; Class Template Reference</title>
+<title>tbb::interface9::global_control Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,61 +33,47 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00233.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface7</b></li><li class="navelem"><a class="el" href="a00069.html">indexer_node< T0 ></a></li>  </ul>
+<li class="navelem"><a class="el" href="a00240.html">tbb</a></li><li class="navelem"><b>interface9</b></li><li class="navelem"><a class="el" href="a00069.html">global_control</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="a00348.html">List of all members</a>  </div>
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="a00408.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::flow::interface7::indexer_node&lt; T0 &gt; Class Template Reference</div>  </div>
+<div class="title">tbb::interface9::global_control Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="dynheader">
-Inheritance diagram for tbb::flow::interface7::indexer_node&lt; T0 &gt;:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="a00069.png" usemap="#tbb::flow::interface7::indexer_node&lt; T0 &gt;_map" alt=""/>
-  <map id="tbb::flow::interface7::indexer_node&lt; T0 &gt;_map" name="tbb::flow::interface7::indexer_node&lt; T0 &gt;_map">
-</map>
- </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:aa370ac336b849cad62ee587b615176dd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa370ac336b849cad62ee587b615176dd"></a>
-typedef tuple&lt; T0 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>InputTuple</b></td></tr>
-<tr class="separator:aa370ac336b849cad62ee587b615176dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae5188977d7e9ea063d72fd9076655e89"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5188977d7e9ea063d72fd9076655e89"></a>
-typedef internal::tagged_msg<br class="typebreak"/>
-&lt; size_t, T0 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>output_type</b></td></tr>
-<tr class="separator:ae5188977d7e9ea063d72fd9076655e89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19ea083d7b75d24ea588663b6d930592"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a19ea083d7b75d24ea588663b6d930592"></a>
-typedef <br class="typebreak"/>
-internal::unfolded_indexer_node<br class="typebreak"/>
-&lt; InputTuple &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>unfolded_type</b></td></tr>
-<tr class="separator:a19ea083d7b75d24ea588663b6d930592"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04221b8e619bef332234db90d31f3e5e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>parameter</b> { <b>max_allowed_parallelism</b>, 
+<b>thread_stack_size</b>, 
+<b>parameter_max</b>
+ }</td></tr>
+<tr class="separator:a04221b8e619bef332234db90d31f3e5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a76587038b89e9483e486c5a3b1fa4dd8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a76587038b89e9483e486c5a3b1fa4dd8"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>indexer_node</b> (<a class="el" href="a00063.html">graph</a> &amp;g)</td></tr>
-<tr class="separator:a76587038b89e9483e486c5a3b1fa4dd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2b3a2580e67582250cf1ef9f32f92d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2b3a2580e67582250cf1ef9f32f92d4"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>indexer_node</b> (const <a class="el" href="a00068.html">indexer_node</a> &amp;other)</td></tr>
-<tr class="separator:aa2b3a2580e67582250cf1ef9f32f92d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e8206427ce9adf2f6b88991e20fcca3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e8206427ce9adf2f6b88991e20fcca3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set_name</b> (const char *name)</td></tr>
-<tr class="separator:a1e8206427ce9adf2f6b88991e20fcca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5375ee43ca415f20f3c1f47db5220302"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5375ee43ca415f20f3c1f47db5220302"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>global_control</b> (parameter p, size_t value)</td></tr>
+<tr class="separator:a5375ee43ca415f20f3c1f47db5220302"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a8451d931cfc205d896ca2da26fe123ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8451d931cfc205d896ca2da26fe123ff"></a>
+static size_t&#160;</td><td class="memItemRight" valign="bottom"><b>active_value</b> (parameter p)</td></tr>
+<tr class="separator:a8451d931cfc205d896ca2da26fe123ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li><a class="el" href="a00190.html">flow_graph.h</a></li>
+<li>global_control.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
 <p></p>
-Copyright &copy; 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2015 Intel Corporation.  All Rights Reserved.
 <p></p>
 Intel, Pentium, Intel Xeon, Itanium, Intel XScale and VTune are
 registered trademarks or trademarks of Intel Corporation or its

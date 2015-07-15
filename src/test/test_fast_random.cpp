@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -28,10 +28,8 @@
 #define HARNESS_DEFAULT_MIN_THREADS 2
 #define HARNESS_DEFAULT_MAX_THREADS 32
 
-#include <algorithm> // include it first to avoid error on define below
-#define private public
+#define HARNESS_DEFINE_PRIVATE_PUBLIC 1
 #include "harness_inject_scheduler.h"
-#undef private
 
 #define TEST_TOTAL_SEQUENCE 0
 

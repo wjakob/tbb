@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -52,8 +52,13 @@ namespace internal {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         template<typename InputTuple>
         static inline void reset_inputs(InputTuple &my_input, reset_flags f) {
-            join_helper<N-1>::reset_inputs(my_input, f);
+            indexer_helper<TupleTypes,N-1>::reset_inputs(my_input, f);
             tbb::flow::get<N-1>(my_input).reset_receiver(f);
+        }
+        template<typename InputTuple>
+        static inline void extract(InputTuple &my_input) {
+            indexer_helper<TupleTypes,N-1>::extract(my_input);
+            tbb::flow::get<N-1>(my_input).extract_receiver();
         }
 #endif
     };
@@ -71,6 +76,10 @@ namespace internal {
         static inline void reset_inputs(InputTuple &my_input, reset_flags f) {
             tbb::flow::get<0>(my_input).reset_receiver(f);
         }
+        template<typename InputTuple>
+        static inline void extract(InputTuple &my_input) {
+            tbb::flow::get<0>(my_input).extract_receiver();
+        }
 #endif
     };
 
@@ -82,7 +91,8 @@ namespace internal {
         forward_function_ptr my_try_put_task;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         spin_mutex my_pred_mutex;
-        edge_container<sender<T> > my_built_predecessors;
+        typedef typename receiver<T>::built_predecessors_type built_predecessors_type;
+        built_predecessors_type my_built_predecessors;
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
     public:
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
@@ -95,7 +105,10 @@ namespace internal {
                 my_try_put_task = f;
             }
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<sender<T> *> predecessor_vector_type;
+        typedef typename receiver<T>::predecessor_list_type predecessor_list_type;
+
+        /*override*/ built_predecessors_type &built_predecessors() { return my_built_predecessors; }
+
         /*override*/size_t predecessor_count() {
             spin_mutex::scoped_lock l(my_pred_mutex);
             return my_built_predecessors.edge_count();
@@ -108,9 +121,13 @@ namespace internal {
             spin_mutex::scoped_lock l(my_pred_mutex);
             my_built_predecessors.delete_edge(p);
         }
-        /*override*/void copy_predecessors( predecessor_vector_type &v) {
+        /*override*/void copy_predecessors( predecessor_list_type &v) {
             spin_mutex::scoped_lock l(my_pred_mutex);
             return my_built_predecessors.copy_edges(v);
+        }
+        /*override*/void clear_predecessors() {
+            spin_mutex::scoped_lock l(my_pred_mutex);
+            my_built_predecessors.clear();
         }
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
     protected:
@@ -124,8 +141,9 @@ namespace internal {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     public:
         /*override*/void reset_receiver(__TBB_PFG_RESET_ARG(reset_flags f)) {
-            if(f&rf_extract) my_built_predecessors.receiver_extract(*this);
+            if(f&rf_clear_edges) my_built_predecessors.clear();
         }
+        void extract_receiver() { my_built_predecessors.receiver_extract(*this); }
 #else
         /*override*/void reset_receiver(__TBB_PFG_RESET_ARG(reset_flags /*f*/)) { }
 #endif
@@ -157,7 +175,8 @@ namespace internal {
         typedef receiver<output_type> successor_type;
         typedef indexer_node_FE<InputTuple, output_type,StructTypes> input_ports_type;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<successor_type *> successor_vector_type;
+        typedef typename sender<output_type>::built_successors_type built_successors_type;
+        typedef typename sender<output_type>::successor_list_type successor_list_type;
 #endif
 
     private:
@@ -180,7 +199,7 @@ namespace internal {
                 task *bypass_t;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
                 size_t cnt_val;
-                successor_vector_type *succv;
+                successor_list_type *succv;
 #endif
             };
             indexer_node_base_operation(const output_type* e, op_type t) :
@@ -269,6 +288,9 @@ namespace internal {
         }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+
+        built_successors_type &built_successors() { return my_successors.built_successors(); }
+
         void internal_add_built_successor( successor_type &r) {
             indexer_node_base_operation op_data(r, add_blt_succ);
             my_aggregator.execute(&op_data);
@@ -285,17 +307,23 @@ namespace internal {
             return op_data.cnt_val;
         }
 
-        void copy_successors( successor_vector_type &v) {
+        void copy_successors( successor_list_type &v) {
             indexer_node_base_operation op_data(blt_succ_cpy);
             op_data.succv = &v;
             my_aggregator.execute(&op_data);
         } 
+        void extract() {
+            my_successors.built_successors().sender_extract(*this);
+            indexer_helper<StructTypes,N>::extract(this->my_inputs);
+        }
 #endif /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
     protected:
-        /*override*/void reset(__TBB_PFG_RESET_ARG(reset_flags f)) {
+        /*override*/void reset_node(__TBB_PFG_RESET_ARG(reset_flags f)) {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-            my_successors.reset(f);
-            indexer_helper<StructTypes,N>::reset_inputs(this->my_inputs, f);
+            if(f & rf_clear_edges) {
+                my_successors.clear();
+                indexer_helper<StructTypes,N>::reset_inputs(this->my_inputs,f);
+            }
 #endif
         }
 

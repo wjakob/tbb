@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -61,10 +61,11 @@ static tbb::atomic<int> liveRegions;
 
 static void *getMallocMem(intptr_t /*pool_id*/, size_t &bytes)
 {
-    void *rawPtr = malloc(bytes+sizeof(MallocPoolHeader));
+    void *rawPtr = malloc(bytes+sizeof(MallocPoolHeader)+1);
     if (!rawPtr)
         return NULL;
-    void *ret = (void *)((uintptr_t)rawPtr+sizeof(MallocPoolHeader));
+    // +1 to check working with unaligned space
+    void *ret = (void *)((uintptr_t)rawPtr+sizeof(MallocPoolHeader)+1);
 
     MallocPoolHeader *hdr = (MallocPoolHeader*)ret-1;
     hdr->rawPtr = rawPtr;
@@ -308,29 +309,60 @@ static void *fixedBufGetMem(intptr_t /*pool_id*/, size_t &bytes)
     return buf;
 }
 
+class FixedPoolRun: NoAssign {
+    Harness::SpinBarrier *startB;
+    rml::MemoryPool *pool;
+    size_t reqSize;
+public:
+    FixedPoolRun(Harness::SpinBarrier *b, rml::MemoryPool *p, size_t sz) :
+        startB(b), pool(p), reqSize(sz) {}
+    void operator()( int /*id*/ ) const {
+        const int ITERS = 10000;
+        startB->wait();
+        for (int i=0; i<ITERS; i++) {
+            void *o = pool_malloc(pool, reqSize);
+            ASSERT(o, NULL);
+            pool_free(pool, o);
+        }
+    }
+};
+
 void TestFixedBufferPool()
 {
-    void *ptrs[7];
+    const int ITERS = 7;
+    const size_t MAX_OBJECT = 7*1024*1024;
+    void *ptrs[ITERS];
     rml::MemPoolPolicy pol(fixedBufGetMem, NULL, 0, /*fixedSizePool=*/true,
                            /*keepMemTillDestroy=*/false);
     rml::MemoryPool *pool;
 
     pool_create_v1(0, &pol, &pool);
-    void *largeObj = pool_malloc(pool, 7*1024*1024);
+    void *largeObj = pool_malloc(pool, MAX_OBJECT);
     ASSERT(largeObj, NULL);
     pool_free(pool, largeObj);
 
-    for (int i=0; i<7; i++) {
-        ptrs[i] = pool_malloc(pool, 1024*1024);
+    largeObj = pool_malloc(pool, MAX_OBJECT);
+    ASSERT(largeObj, NULL);
+    pool_free(pool, largeObj);
+
+    for (int i=0; i<ITERS; i++) {
+        ptrs[i] = pool_malloc(pool, MAX_OBJECT/ITERS);
         ASSERT(ptrs[i], NULL);
     }
-    for (int i=0; i<7; i++)
+    for (int i=0; i<ITERS; i++)
         pool_free(pool, ptrs[i]);
 
-    largeObj = pool_malloc(pool, 7*1024*1024);
+    largeObj = pool_malloc(pool, MAX_OBJECT);
     ASSERT(largeObj, NULL);
     pool_free(pool, largeObj);
 
+    // each thread asks for an MAX_OBJECT/p/2 object,
+    // /2 is to cover fragmentation
+    for (int p=MinThread; p<=MaxThread; p++) {
+        Harness::SpinBarrier startB(p);
+        NativeParallelFor( p, FixedPoolRun(&startB, pool,
+                                           MAX_OBJECT/p/2) );
+    }
     pool_destroy(pool);
 }
 
@@ -349,7 +381,7 @@ static int putGranMem(intptr_t /*pool_id*/, void *ptr, size_t bytes)
     return 0;
 }
 
-static void TestPoolGranularity()
+void TestPoolGranularity()
 {
     rml::MemPoolPolicy pol(getGranMem, putGranMem);
     const size_t grans[] = {4*1024, 2*1024*1024, 6*1024*1024, 10*1024*1024};
@@ -383,7 +415,7 @@ static int putMemPolicy(intptr_t /*pool_id*/, void *ptr, size_t /*bytes*/)
     return 0;
 }
 
-static void TestPoolKeepTillDestroy()
+void TestPoolKeepTillDestroy()
 {
     const int ITERS = 50*1024;
     void *ptrs[2*ITERS+1];
@@ -437,7 +469,7 @@ static bool memEqual(char *buf, size_t size, int val)
     return memEq;
 }
 
-static void TestEntries()
+void TestEntries()
 {
     const int SZ = 4;
     const int ALGN = 4;
@@ -473,7 +505,7 @@ static void TestEntries()
     pool_destroy(pool);
 }
 
-static void TestPoolCreation()
+void TestPoolCreation()
 {
     using namespace rml;
 

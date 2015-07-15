@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -65,13 +65,17 @@ namespace internal {
         //! The input type of this receiver
         typedef Input input_type;
         typedef sender<Input> predecessor_type;
+        typedef predecessor_cache<input_type, null_mutex > predecessor_cache_type;
+        typedef function_input_queue<input_type, A> input_queue_type;
+        typedef typename A::template rebind< input_queue_type >::other queue_allocator_type;
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<predecessor_type *> predecessor_vector_type;
+        typedef typename predecessor_cache_type::built_predecessors_type built_predecessors_type;
+        typedef typename receiver<input_type>::predecessor_list_type predecessor_list_type;
 #endif
 
         //! Constructor for function_input_base
-        function_input_base( graph &g, size_t max_concurrency, function_input_queue<input_type,A> *q = NULL )
+        function_input_base( graph &g, size_t max_concurrency, input_queue_type *q = NULL)
             : my_graph(g), my_max_concurrency(max_concurrency), my_concurrency(0),
               my_queue(q), forwarder_busy(false) {
             my_predecessors.set_owner(this);
@@ -79,7 +83,7 @@ namespace internal {
         }
         
         //! Copy constructor
-        function_input_base( const function_input_base& src, function_input_queue<input_type,A> *q = NULL ) :
+        function_input_base( const function_input_base& src, input_queue_type *q = NULL) :
             receiver<Input>(), tbb::internal::no_assign(),
             my_graph(src.my_graph), my_max_concurrency(src.my_max_concurrency),
             my_concurrency(0), my_queue(q), forwarder_busy(false)
@@ -89,6 +93,9 @@ namespace internal {
         }
 
         //! Destructor
+        // The queue is allocated by the constructor for {multi}function_node.
+        // TODO: pass the graph_buffer_policy to the base so it can allocate the queue instead.
+        // This would be an interface-breaking change.
         virtual ~function_input_base() { 
             if ( my_queue ) delete my_queue;
         }
@@ -144,10 +151,14 @@ namespace internal {
             return op_data.cnt_val;
         }
 
-        /*override*/ void copy_predecessors(predecessor_vector_type &v) {
+        /*override*/ void copy_predecessors(predecessor_list_type &v) {
             my_operation op_data(blt_pred_cpy);
             op_data.predv = &v;
             my_aggregator.execute(&op_data);
+        }
+
+        /*override*/built_predecessors_type &built_predecessors() {
+            return my_predecessors.built_predecessors();
         }
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
 
@@ -165,13 +176,17 @@ namespace internal {
         graph& my_graph;
         const size_t my_max_concurrency;
         size_t my_concurrency;
-        function_input_queue<input_type, A> *my_queue;
+        input_queue_type *my_queue;
         predecessor_cache<input_type, null_mutex > my_predecessors;
         
         /*override*/void reset_receiver( __TBB_PFG_RESET_ARG(reset_flags f)) {
-            my_predecessors.reset(__TBB_PFG_RESET_ARG(f));
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-            __TBB_ASSERT(!(f & rf_extract) || my_predecessors.empty(), "function_input_base reset failed");
+            if( f & rf_clear_edges) my_predecessors.clear();
+            else
+#endif
+                my_predecessors.reset();
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+            __TBB_ASSERT(!(f & rf_clear_edges) || my_predecessors.empty(), "function_input_base reset failed");
 #endif
         }
 
@@ -188,7 +203,7 @@ namespace internal {
                 predecessor_type *r;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
                 size_t cnt_val;
-                predecessor_vector_type *predv;
+                predecessor_list_type *predv;
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
             };
             tbb::task *bypass_t;
@@ -404,10 +419,9 @@ namespace internal {
         typedef function_input_base<Input, A, my_class> base_type;
         typedef function_input_queue<input_type, A> input_queue_type;
 
-
         // constructor
         template<typename Body>
-        function_input( graph &g, size_t max_concurrency, Body& body, function_input_queue<input_type,A> *q = NULL ) :
+        function_input( graph &g, size_t max_concurrency, Body& body, input_queue_type *q = NULL ) :
             base_type(g, max_concurrency, q),
             my_body( new internal::function_body_leaf< input_type, output_type, Body>(body) ) {
         }
@@ -458,31 +472,39 @@ namespace internal {
 
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-    // helper templates to reset the successor edges of the output ports of an multifunction_node
-    template<int N>
-    struct reset_element {
-        template<typename P>
-        static void reset_this(P &p, reset_flags f) {
-            (void)tbb::flow::get<N-1>(p).successors().reset(f);
-            reset_element<N-1>::reset_this(p, f);
+    // helper templates to clear the successor edges of the output ports of an multifunction_node
+    template<int N> struct clear_element {
+        template<typename P> static void clear_this(P &p) {
+            (void)tbb::flow::get<N-1>(p).successors().clear();
+            clear_element<N-1>::clear_this(p);
         }
-        template<typename P>
-        static bool this_empty(P &p) {
+        template<typename P> static bool this_empty(P &p) {
             if(tbb::flow::get<N-1>(p).successors().empty()) 
-                return reset_element<N-1>::this_empty(p);
+                return clear_element<N-1>::this_empty(p);
             return false;
         }
     };
 
-    template<>
-    struct reset_element<1> {
-        template<typename P>
-        static void reset_this(P &p, reset_flags f) {
-            (void)tbb::flow::get<0>(p).successors().reset(f);
+    template<> struct clear_element<1> {
+        template<typename P> static void clear_this(P &p) {
+            (void)tbb::flow::get<0>(p).successors().clear();
         }
-        template<typename P>
-        static bool this_empty(P &p) {
+        template<typename P> static bool this_empty(P &p) {
             return tbb::flow::get<0>(p).successors().empty();
+        }
+    };
+
+    // helper templates to extract the output ports of an multifunction_node from graph
+    template<int N> struct extract_element {
+        template<typename P> static void extract_this(P &p) {
+            (void)tbb::flow::get<N-1>(p).successors().built_successors().sender_extract(tbb::flow::get<N-1>(p));
+            extract_element<N-1>::extract_this(p);
+        }
+    };
+
+    template<> struct extract_element<1> {
+        template<typename P> static void extract_this(P &p) {
+            (void)tbb::flow::get<0>(p).successors().built_successors().sender_extract(tbb::flow::get<0>(p));
         }
     };
 #endif
@@ -499,14 +521,13 @@ namespace internal {
         typedef function_input_base<Input, A, my_class> base_type;
         typedef function_input_queue<input_type, A> input_queue_type;
 
-
         // constructor
         template<typename Body>
-        multifunction_input( 
-                graph &g, 
-                size_t max_concurrency, 
+        multifunction_input(
+                graph &g,
+                size_t max_concurrency,
                 Body& body,
-                function_input_queue<input_type,A> *q = NULL ) :
+                input_queue_type *q = NULL ) :
             base_type(g, max_concurrency, q),
             my_body( new internal::multifunction_body_leaf<input_type, output_ports_type, Body>(body) ) {
         }
@@ -540,13 +561,18 @@ namespace internal {
         output_ports_type &output_ports(){ return my_output_ports; }
 
     protected:
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        /*override*/void extract() {
+            extract_element<N>::extract_this(my_output_ports);
+        }
+#endif
 
         /*override*/void reset(__TBB_PFG_RESET_ARG(reset_flags f)) { 
             base_type::reset_function_input_base(__TBB_PFG_RESET_ARG(f));
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-            reset_element<N>::reset_this(my_output_ports, f);
+            if(f & rf_clear_edges)clear_element<N>::clear_this(my_output_ports);
             if(f & rf_reset_bodies) my_body->reset_body();
-            __TBB_ASSERT(!(f & rf_extract) || reset_element<N>::this_empty(my_output_ports), "multifunction_node reset failed");
+            __TBB_ASSERT(!(f & rf_clear_edges) || clear_element<N>::this_empty(my_output_ports), "multifunction_node reset failed");
 #endif
         }
 
@@ -653,6 +679,65 @@ namespace internal {
         }
 
     };  // continue_input
+
+#if __TBB_PREVIEW_ASYNC_NODE
+
+    //! Implements methods for a async node that takes a type Input as input and 
+    //  submit it to Asynchronous activity
+    template < typename Input, typename A, typename AsyncGatewayType >
+    class async_input : public function_input_base<Input, A, async_input<Input, A, AsyncGatewayType> > {
+    public:
+        typedef Input input_type;
+        typedef AsyncGatewayType async_gateway_type;
+        typedef async_input< Input, A, async_gateway_type > my_class;
+        typedef function_input_base<Input, A, my_class> base_type;
+
+        // constructor
+        template<typename Body>
+        async_input( graph &g, Body& body ) : 
+            base_type( g, unlimited ),
+            my_body( new internal::async_body_leaf< input_type, Body, async_gateway_type >(body) ){
+        }
+
+        //! Copy constructor
+        async_input( const async_input& src ) : 
+            base_type( src ),
+            my_body( src.my_body->clone() ) {
+        }
+
+        ~async_input() {
+            delete my_body;
+        }
+
+        template< typename Body >
+        Body copy_function_object() {
+            internal::async_body<input_type, async_gateway_type> &body_ref = *this->my_body;
+            return dynamic_cast< internal::async_body_leaf<input_type, Body, async_gateway_type> & >(body_ref).get_body(); 
+        }
+
+        task * apply_body_impl_bypass( const input_type &i) {
+            // TODO: This FGT instrumentation only captures the submission of the work
+            // but not the async thread activity.
+            // We will have to think about the best way to capture that.
+            tbb::internal::fgt_begin_body( my_body );
+            (*my_body)( i, async_gateway() );
+            tbb::internal::fgt_end_body( my_body );
+            return NULL;
+        }
+
+        virtual async_gateway_type& async_gateway() = 0;
+
+    protected:
+        void reset_async_input(__TBB_PFG_RESET_ARG(reset_flags f)) {
+            base_type::reset_function_input_base(__TBB_PFG_RESET_ARG(f));
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+            if(f & rf_reset_bodies) my_body->reset_body();
+#endif
+        }
+
+        async_body< input_type, async_gateway_type > *my_body;
+    };
+#endif // __TBB_PREVIEW_ASYNC_NODE
         
     //! Implements methods for both executable and function nodes that puts Output to its successors
     template< typename Output >
@@ -660,13 +745,14 @@ namespace internal {
     public:
         
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        template<int N> friend struct reset_element;
+        template<int N> friend struct clear_element;
 #endif
         typedef Output output_type;
         typedef receiver<output_type> successor_type;
         typedef broadcast_cache<output_type> broadcast_cache_type;
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-        typedef std::vector<successor_type *> successor_vector_type;
+        typedef typename sender<output_type>::built_successors_type built_successors_type;
+        typedef typename sender<output_type>::successor_list_type successor_list_type;
 #endif
         
         function_output() { my_successors.set_owner(this); }
@@ -687,6 +773,9 @@ namespace internal {
         }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        built_successors_type &built_successors() { return successors().built_successors(); }
+
+
         /*override*/ void internal_add_built_successor( receiver<output_type> &r) {
             successors().internal_add_built_successor( r );
         }
@@ -699,7 +788,7 @@ namespace internal {
             return successors().successor_count();
         }
 
-        /*override*/ void  copy_successors( successor_vector_type &v) {
+        /*override*/ void  copy_successors( successor_list_type &v) {
             successors().copy_successors(v);
         }
 #endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
@@ -710,12 +799,13 @@ namespace internal {
         //
         //    get<I>(output_ports).try_put(output_value);
         //
+        // if task pointer is returned will always spawn and return true, else
         // return value will be bool returned from successors.try_put.
         task *try_put_task(const output_type &i) { return my_successors.try_put_task(i); }
           
+        broadcast_cache_type &successors() { return my_successors; } 
     protected:
         broadcast_cache_type my_successors;
-        broadcast_cache_type &successors() { return my_successors; } 
         
     };  // function_output
 

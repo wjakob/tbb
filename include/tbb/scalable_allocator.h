@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -216,6 +216,23 @@ namespace tbb {
     #pragma warning (disable: 4100)
 #endif
 
+//! @cond INTERNAL
+namespace internal {
+
+#if TBB_USE_EXCEPTIONS
+// forward declaration is for inlining prevention
+template<typename E> __TBB_NOINLINE( void throw_exception(const E &e) );
+#endif
+
+// keep throw in a separate function to prevent code bloat
+template<typename E>
+void throw_exception(const E &e) {
+    __TBB_THROW(e);
+}
+
+} // namespace internal
+//! @endcond
+
 //! Meets "allocator" requirements of ISO C++ Standard, Section 20.1.5
 /** The members are ordered the same way they are in section 20.4.1
     of the ISO C++ standard.
@@ -243,7 +260,10 @@ public:
 
     //! Allocate space for n objects.
     pointer allocate( size_type n, const void* /*hint*/ =0 ) {
-        return static_cast<pointer>( scalable_malloc( n * sizeof(value_type) ) );
+        pointer p = static_cast<pointer>( scalable_malloc( n * sizeof(value_type) ) );
+        if (!p)
+            internal::throw_exception(std::bad_alloc());
+        return p;
     }
 
     //! Free previously allocated block of memory

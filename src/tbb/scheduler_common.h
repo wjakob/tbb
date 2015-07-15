@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -241,7 +241,11 @@ inline bool CancellationInfoPresent ( task& t ) {
 
 #if TBB_USE_CAPTURED_EXCEPTION
     inline tbb_exception* TbbCurrentException( task_group_context*, tbb_exception* src) { return src->move(); }
-    inline tbb_exception* TbbCurrentException( task_group_context*, captured_exception* src) { return src; }
+    inline tbb_exception* TbbCurrentException( task_group_context* c, captured_exception* src) {
+        if( c->my_version_and_traits & task_group_context::exact_exception )
+            runtime_warning( "Exact exception propagation is requested by application but the linked library is built without support for it");
+        return src;
+    }
 #else
     // Using macro instead of an inline function here allows to avoid evaluation of the
     // TbbCapturedException expression when exact propagation is enabled for the context.

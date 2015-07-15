@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -26,7 +26,7 @@
 #define TBB_VERSION_MINOR 3
 
 // Engineering-focused interface version
-#define TBB_INTERFACE_VERSION 8002
+#define TBB_INTERFACE_VERSION 8006
 #define TBB_INTERFACE_VERSION_MAJOR TBB_INTERFACE_VERSION/1000
 
 // The oldest major interface version still supported
@@ -130,22 +130,13 @@
 //! Type for an assertion handler
 typedef void(*assertion_handler_type)( const char* filename, int line, const char* expression, const char * comment );
 
-#if TBB_USE_ASSERT
-
-     #define __TBB_ASSERT_NS(predicate,message,ns) ((predicate)?((void)0) : ns::assertion_failure(__FILE__,__LINE__,#predicate,message))
-    //! Assert that x is true.
-    /** If x is false, print assertion failure message.
-        If the comment argument is not NULL, it is printed as part of the failure message.
-        The comment argument has no other effect. */
 #if __TBBMALLOC_BUILD
 namespace rml { namespace internal {
-    #define __TBB_ASSERT(predicate,message) __TBB_ASSERT_NS(predicate,message,rml::internal)
+ #define __TBB_ASSERT_RELEASE(predicate,message) ((predicate)?((void)0) : rml::internal::assertion_failure(__FILE__,__LINE__,#predicate,message))
 #else
 namespace tbb {
-    #define __TBB_ASSERT(predicate,message) __TBB_ASSERT_NS(predicate,message,tbb)
+ #define __TBB_ASSERT_RELEASE(predicate,message) ((predicate)?((void)0) : tbb::assertion_failure(__FILE__,__LINE__,#predicate,message))
 #endif
-
-    #define __TBB_ASSERT_EX __TBB_ASSERT
 
     //! Set assertion handler and return previous value of it.
     assertion_handler_type __TBB_EXPORTED_FUNC set_assertion_handler( assertion_handler_type new_handler );
@@ -161,6 +152,17 @@ namespace tbb {
 #else
 } // namespace tbb
 #endif
+
+#if TBB_USE_ASSERT
+
+    //! Assert that x is true.
+    /** If x is false, print assertion failure message.
+        If the comment argument is not NULL, it is printed as part of the failure message.
+        The comment argument has no other effect. */
+    #define __TBB_ASSERT(predicate,message) __TBB_ASSERT_RELEASE(predicate,message)
+
+    #define __TBB_ASSERT_EX __TBB_ASSERT
+
 #else /* !TBB_USE_ASSERT */
 
     //! No-op version of __TBB_ASSERT.
@@ -472,12 +474,42 @@ struct select_size_t_constant {
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
 using std::move;
+using std::forward;
 #elif defined(_LIBCPP_NAMESPACE)
-// libc++ defines "pre-C++11 move" similarly to our; use it to avoid name conflicts in some cases.
+// libc++ defines "pre-C++11 move and forward" similarly to ours; use it to avoid name conflicts in some cases.
 using std::_LIBCPP_NAMESPACE::move;
+using std::_LIBCPP_NAMESPACE::forward;
 #else
+// It is assumed that cv qualifiers, if any, are part of the deduced type.
 template <typename T>
 T& move( T& x ) { return x; }
+template <typename T>
+T& forward( T& x ) { return x; }
+#endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
+
+// Helper macros to simplify writing templates working with both C++03 and C++11.
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+#define  __TBB_FORWARDING_REF(A) A&&
+#else
+// It is assumed that cv qualifiers, if any, are part of a deduced type.
+// Thus this macro should not be used in public interfaces.
+#define  __TBB_FORWARDING_REF(A) A&
+#endif
+#if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+#define __TBB_PARAMETER_PACK ...
+#define __TBB_PACK_EXPANSION(A) A...
+#else
+#define __TBB_PARAMETER_PACK 
+#define __TBB_PACK_EXPANSION(A) A
+#endif /* __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT */
+
+#if __TBB_CPP11_DECLTYPE_PRESENT
+#if __TBB_CPP11_DECLVAL_BROKEN
+// Ad-hoc implementation of std::declval
+template <class T> __TBB_FORWARDING_REF(T) declval() /*noexcept*/;
+#else
+using std::declval;
+#endif
 #endif
 
 template <bool condition>

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -29,6 +29,7 @@
 #define TBB_PREVIEW_AGGREGATOR 1
 #define TBB_PREVIEW_CONCURRENT_LRU_CACHE 1
 #define TBB_PREVIEW_VARIADIC_PARALLEL_INVOKE 1
+#define TBB_PREVIEW_FLOW_GRAPH_NODES 1 
 #endif
 
 #include "harness_defs.h"
@@ -150,6 +151,9 @@ static void TestPreviewNames() {
     TestTypeDefinitionPresence( aggregator );
     TestTypeDefinitionPresence( aggregator_ext<Handler> );
     TestTypeDefinitionPresence2(concurrent_lru_cache<int, int> );
+    #if __TBB_PREVIEW_COMPOSITE_NODE
+    TestTypeDefinitionPresence2( composite_node<tbb::flow::tuple<int>, tbb::flow::tuple<int> > );
+    #endif
 }
 #endif
 

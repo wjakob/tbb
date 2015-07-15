@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2015 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -155,7 +155,7 @@ void TestAlignedMsize()
             for (int i=0; i<NUM; i++) {
                 for (unsigned j=0; j<allocSz[s]; j++)
                     ASSERT(((char*)p[i])[j] == i, "Error: data broken");
-                for (unsigned j=allocSz[s]; j<2*allocSz[s]; j++)
+                for (size_t j=allocSz[s]; j<2*allocSz[s]; j++)
                     ASSERT(((char*)p[i])[j] == i+1, "Error: data broken");
             }
             for (int i=0; i<NUM; i++)
