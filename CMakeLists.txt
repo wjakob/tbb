@@ -10,18 +10,18 @@ endif()
 
 include_directories(include src src/rml/include)
 
-option(TBB_BUILD_SHARED          ON "Build TBB shared library")
-option(TBB_BUILD_STATIC          ON "Build TBB static library")
-option(TBB_BUILD_TBBMALLOC       ON "Build TBB malloc library")
-option(TBB_BUILD_TBBMALLOC_PROXY ON "Build TBB malloc proxy library")
+option(TBB_BUILD_SHARED          "Build TBB shared library" ON)
+option(TBB_BUILD_STATIC          "Build TBB static library" ON)
+option(TBB_BUILD_TBBMALLOC       "Build TBB malloc library" ON)
+option(TBB_BUILD_TBBMALLOC_PROXY "Build TBB malloc proxy library" ON)
 
 if(APPLE)
   set(CMAKE_MACOSX_RPATH ON)
 endif()
 
-file(GLOB tbb_src "src/tbb/*.cpp" "src/old/*.cpp")
-list(APPEND tbb_src src/rml/client/rml_tbb.cpp)
-file(GLOB to_remove "src/old/test*.cpp")
+file(GLOB tbb_src "${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/old/*.cpp")
+list(APPEND tbb_src ${CMAKE_CURRENT_SOURCE_DIR}/src/rml/client/rml_tbb.cpp)
+file(GLOB to_remove "${CMAKE_CURRENT_SOURCE_DIR}/src/old/test*.cpp")
 list(REMOVE_ITEM tbb_src ${to_remove})
 
 set(tbbmalloc_static_src
