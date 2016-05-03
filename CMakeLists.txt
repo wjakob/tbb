@@ -71,12 +71,14 @@ elseif(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GS- /Zc:wchar_t /Zc:forScope /DUSE_WINTHREAD")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600 /volatile:iso")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4267 /wd4800 /wd4146 /wd4244 /wd4018")
+  # Enable SAFESEH feature for assembly
+  set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /safeseh")
 
   if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     list(APPEND tbb_src src/tbb/intel64-masm/atomic_support.asm
       src/tbb/intel64-masm/itsx.asm src/tbb/intel64-masm/intel64_misc.asm)
     list(APPEND tbbmalloc_src src/tbb/intel64-masm/atomic_support.asm)
-    set(CMAKE_ASM_MASM_FLAGS "/DEM64T=1")
+    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS}/DEM64T=1")
     set(ARCH_PREFIX "win64")
   else()
     list(APPEND tbb_src src/tbb/ia32-masm/atomic_support.asm
