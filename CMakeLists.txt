@@ -76,12 +76,14 @@ elseif(WIN32)
     list(APPEND tbb_src src/tbb/intel64-masm/atomic_support.asm
       src/tbb/intel64-masm/itsx.asm src/tbb/intel64-masm/intel64_misc.asm)
     list(APPEND tbbmalloc_src src/tbb/intel64-masm/atomic_support.asm)
-    set(CMAKE_ASM_MASM_FLAGS "/DEM64T=1")
+    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /DEM64T=1")
     set(ARCH_PREFIX "win64")
   else()
     list(APPEND tbb_src src/tbb/ia32-masm/atomic_support.asm
       src/tbb/ia32-masm/itsx.asm src/tbb/ia32-masm/lock_byte.asm)
     list(APPEND tbbmalloc_src src/tbb/ia32-masm/atomic_support.asm)
+    # Enable SAFESEH feature for assembly (x86 builds only).
+    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /safeseh")
     set(ARCH_PREFIX "win32")
   endif()
   set(ENABLE_RTTI "/EHsc /GR ")
