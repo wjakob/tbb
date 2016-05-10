@@ -195,3 +195,18 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
 endif()
 
 install(DIRECTORY include/tbb DESTINATION include)
+
+# version_string.ver
+if (UNIX)
+  execute_process (COMMAND date "+%a, %d %b %Y %H:%M:%S %z"
+                   OUTPUT_VARIABLE _configure_date
+                   OUTPUT_STRIP_TRAILING_WHITESPACE)
+elseif (WIN32)
+  execute_process (COMMAND cmd " /C date /T"
+                   OUTPUT_VARIABLE _configure_date
+                   OUTPUT_STRIP_TRAILING_WHITESPACE)
+else ()
+  set (_configure_date "Unknown")
+endif()
+include_directories (${CMAKE_BINARY_DIR})
+configure_file (version_string.ver.in version_string.ver @ONLY)
