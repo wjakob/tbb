@@ -81,7 +81,6 @@ elseif(WIN32)
   else()
     list(APPEND tbb_src src/tbb/ia32-masm/atomic_support.asm
       src/tbb/ia32-masm/itsx.asm src/tbb/ia32-masm/lock_byte.asm)
-    list(APPEND tbbmalloc_src src/tbb/ia32-masm/atomic_support.asm)
     # Enable SAFESEH feature for assembly (x86 builds only).
     set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /safeseh")
     set(ARCH_PREFIX "win32")
@@ -164,6 +163,7 @@ if(TBB_BUILD_TBBMALLOC)
     set_property(TARGET tbbmalloc APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     add_dependencies(tbbmalloc tbb_def_files)
+
     if (APPLE)
       set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
     elseif(UNIX)
