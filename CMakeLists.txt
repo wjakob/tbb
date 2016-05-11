@@ -38,7 +38,7 @@ set(tbbmalloc_proxy_src
   src/tbbmalloc/proxy.cpp
   src/tbbmalloc/tbb_function_replacement.cpp)
 
-if (NOT APPLE)
+if (NOT APPLE AND NOT MINGW)
   add_definitions(-DDO_ITT_NOTIFY)
 else()
   # Disable annoying "has no symbols" warnings
@@ -53,44 +53,55 @@ if (UNIX)
   if(NOT CMAKE_CXX_FLAGS MATCHES "-mno-rtm")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mrtm")
   endif()
-  if (APPLE)
-    set(ARCH_PREFIX "mac")
-  else()
-    set(ARCH_PREFIX "lin")
-  endif()
-  if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(ARCH_PREFIX "${ARCH_PREFIX}64")
-  else()
-    set(ARCH_PREFIX "${ARCH_PREFIX}32")
-  endif()
-  set(ENABLE_RTTI "-frtti -fexceptions ")
-  set(DISABLE_RTTI "-fno-rtti -fno-exceptions ")
 elseif(WIN32)
-  cmake_minimum_required (VERSION 3.1)
-  enable_language(ASM_MASM)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GS- /Zc:wchar_t /Zc:forScope /DUSE_WINTHREAD")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600 /volatile:iso")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4267 /wd4800 /wd4146 /wd4244 /wd4018")
+  if (MSVC)
+    cmake_minimum_required (VERSION 3.1)
+    enable_language(ASM_MASM)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GS- /Zc:wchar_t /Zc:forScope /DUSE_WINTHREAD")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600 /volatile:iso")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4267 /wd4800 /wd4146 /wd4244 /wd4018")
 
-  if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-    list(APPEND tbb_src src/tbb/intel64-masm/atomic_support.asm
-      src/tbb/intel64-masm/itsx.asm src/tbb/intel64-masm/intel64_misc.asm)
-    list(APPEND tbbmalloc_src src/tbb/intel64-masm/atomic_support.asm)
-    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /DEM64T=1")
-    set(ARCH_PREFIX "win64")
-  else()
-    list(APPEND tbb_src src/tbb/ia32-masm/atomic_support.asm
-      src/tbb/ia32-masm/itsx.asm src/tbb/ia32-masm/lock_byte.asm)
-    # Enable SAFESEH feature for assembly (x86 builds only).
-    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /safeseh")
-    set(ARCH_PREFIX "win32")
-  endif()
-  set(ENABLE_RTTI "/EHsc /GR ")
-  set(DISABLE_RTTI "/EHs- /GR- ")
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+      list(APPEND tbb_src src/tbb/intel64-masm/atomic_support.asm
+        src/tbb/intel64-masm/itsx.asm src/tbb/intel64-masm/intel64_misc.asm)
+      list(APPEND tbbmalloc_src src/tbb/intel64-masm/atomic_support.asm)
+      set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /DEM64T=1")
+    else()
+      list(APPEND tbb_src src/tbb/ia32-masm/atomic_support.asm
+        src/tbb/ia32-masm/itsx.asm src/tbb/ia32-masm/lock_byte.asm)
+      # Enable SAFESEH feature for assembly (x86 builds only).
+      set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /safeseh")
+    endif()
+  elseif (MINGW)
+    add_definitions(-DUSE_WINTHREAD)
+    add_definitions(-D_WIN32_WINNT=0x0600)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads")
+  endif ()
 endif()
 
+if (MSVC)
+  set(ENABLE_RTTI "/EHsc /GR ")
+  set(DISABLE_RTTI "/EHs- /GR- ")
+elseif (UNIX)
+  set(ENABLE_RTTI "-frtti -fexceptions ")
+  set(DISABLE_RTTI "-fno-rtti -fno-exceptions ")
+endif ()
+
 # Linker export definitions
-if (WIN32)
+if (APPLE)
+  set (ARCH_PREFIX "mac")
+elseif(MSVC)
+  set (ARCH_PREFIX "win")
+else ()
+  # MinGW uses gcc def format
+  set (ARCH_PREFIX "lin")
+endif ()
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(ARCH_PREFIX "${ARCH_PREFIX}64")
+else()
+  set(ARCH_PREFIX "${ARCH_PREFIX}32")
+endif()
+if (MSVC)
   add_custom_command(OUTPUT tbb.def
     COMMAND ${CMAKE_CXX_COMPILER} /TC /EP ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/${ARCH_PREFIX}-tbb-export.def  -I ${CMAKE_CURRENT_SOURCE_DIR}/include > tbb.def
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/${ARCH_PREFIX}-tbb-export.def
@@ -131,14 +142,18 @@ if (TBB_BUILD_SHARED)
   set_property(TARGET tbb APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
   add_dependencies(tbb tbb_def_files)
+
   if (APPLE)
     set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
-  elseif(UNIX)
-    set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
-  elseif(WIN32)
+  elseif (MSVC)
     set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
+  else ()
+    set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
   endif()
-  install(TARGETS tbb DESTINATION lib)
+  install(TARGETS tbb
+          LIBRARY DESTINATION lib
+          ARCHIVE DESTINATION lib
+          RUNTIME DESTINATION bin)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -163,15 +178,17 @@ if(TBB_BUILD_TBBMALLOC)
     set_property(TARGET tbbmalloc APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     add_dependencies(tbbmalloc tbb_def_files)
-
     if (APPLE)
       set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
-    elseif(UNIX)
-      set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
-    elseif(WIN32)
+    elseif (MSVC)
       set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
+    else ()
+      set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
     endif()
-    install(TARGETS tbbmalloc DESTINATION lib)
+    install(TARGETS tbbmalloc
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            RUNTIME DESTINATION bin)
   endif()
 endif()
 
@@ -190,7 +207,10 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     set_property(TARGET tbbmalloc_proxy APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_proxy APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     link_libraries(tbbmalloc_proxy tbbmalloc)
-    install(TARGETS tbbmalloc_proxy DESTINATION lib)
+    install(TARGETS tbbmalloc_proxy
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            RUNTIME DESTINATION bin)
   endif()
 endif()
 
