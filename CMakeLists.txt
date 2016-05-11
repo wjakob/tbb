@@ -40,7 +40,9 @@ set(tbbmalloc_proxy_src
 
 if (NOT APPLE AND NOT MINGW)
   add_definitions(-DDO_ITT_NOTIFY)
-else()
+endif()
+
+if (APPLE)
   # Disable annoying "has no symbols" warnings
   set(CMAKE_C_ARCHIVE_CREATE   "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
   set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
@@ -229,4 +231,4 @@ else ()
   set (_configure_date "Unknown")
 endif()
 include_directories (${CMAKE_BINARY_DIR})
-configure_file (version_string.ver.in version_string.ver @ONLY)
+configure_file (build/version_string.ver.in version_string.ver @ONLY)

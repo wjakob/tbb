@@ -1,0 +1,45 @@
+language: cpp
+sudo: false
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+      - g++-4.8-multilib
+      - g++-multilib
+      - binutils-mingw-w64-x86-64 
+      - gcc-mingw-w64-x86-64
+matrix:
+  include:
+    - os: linux
+      compiler: gcc-4.8
+      script:
+        - CXXFLAGS="-mno-rtm" cmake -DCMAKE_CXX_COMPILER=g++-4.8 .
+        - make -j 2
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.8
+            - g++-4.8-multilib
+            - g++-multilib
+    - os: osx
+      compiler: clang
+      script:
+        - cmake .
+        - make -j 2
+    - os: linux
+      compiler: x86_64-w64-mingw32-g++
+      script:
+        - cmake -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ -DCMAKE_TOOLCHAIN_FILE=build/mingw_cross_toolchain.cmake -DGNU_HOST=x86_64-w64-mingw32 .
+        - make -j 2
+      addons:
+        apt:
+          packages:
+            - gcc-mingw-w64-base
+            - binutils-mingw-w64-x86-64
+            - gcc-mingw-w64-x86-64
+            - g++-mingw-w64-x86-64
+            - gcc-mingw-w64

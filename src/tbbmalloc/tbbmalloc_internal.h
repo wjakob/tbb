@@ -40,8 +40,12 @@
 
 #include "tbb/tbb_config.h" // for __TBB_LIBSTDCPP_EXCEPTION_HEADERS_BROKEN
 #if __TBB_LIBSTDCPP_EXCEPTION_HEADERS_BROKEN
-  #define _EXCEPTION_PTR_H /* prevents exception_ptr.h inclusion */
-  #define _GLIBCXX_NESTED_EXCEPTION_H /* prevents nested_exception.h inclusion */
+  #ifndef _EXCEPTION_PTR_H
+  #  define _EXCEPTION_PTR_H /* prevents exception_ptr.h inclusion */
+  #endif
+  #ifndef __TBB_LIBSTDCPP_EXCEPTION_HEADERS_BROKEN
+  #  define _GLIBCXX_NESTED_EXCEPTION_H /* prevents nested_exception.h inclusion */
+  #endif
 #endif
 
 #include <stdio.h>
