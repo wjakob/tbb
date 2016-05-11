@@ -195,3 +195,27 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
 endif()
 
 install(DIRECTORY include/tbb DESTINATION include)
+
+# version_string.ver
+include_directories (${CMAKE_BINARY_DIR})
+if (UNIX)
+  execute_process (COMMAND date "+%a, %d %b %Y %H:%M:%S %z"
+                   OUTPUT_VARIABLE _configure_date
+                   OUTPUT_STRIP_TRAILING_WHITESPACE)
+elseif (WIN32)
+  execute_process (COMMAND cmd " /C date /T"
+                   OUTPUT_VARIABLE _configure_date
+                   OUTPUT_STRIP_TRAILING_WHITESPACE)
+else ()
+  set (_configure_date "Unknown")
+endif()
+file (WRITE  ${CMAKE_BINARY_DIR}/version_string.ver "#define __TBB_VERSION_STRINGS(N) \\\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#N\": BUILD_HOST         ${CMAKE_HOST_SYSTEM_NAME}\" ENDL \\\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#N\": BUILD_OS           ${CMAKE_SYSTEM}\" ENDL \\\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#N\": BUILD_KERNEL       ${CMAKE_HOST_SYSTEM_VERSION}\" ENDL \\\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#N\": BUILD_GCC          ${CMAKE_CXX_COMPILER_ID}\" ENDL \\\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#N\": BUILD_LIBC         Unknown\" ENDL \\\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#N\": BUILD_LD           Unknown\" ENDL \\\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#N\": BUILD_TARGET       ${CMAKE_SYSTEM}\" ENDL \\\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#N\": BUILD_COMMAND      ${CMAKE_CXX_COMPILER}\" ENDL\n\n")
+file (APPEND ${CMAKE_BINARY_DIR}/version_string.ver "#define __TBB_DATETIME \"${_configure_date}\"\n")
