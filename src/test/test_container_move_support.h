@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -27,6 +27,8 @@
 #include "tbb/atomic.h"
 #include "tbb/aligned_space.h"
 #include <stdexcept>
+#include <string>
+#include <functional>
 
 #if __TBB_NOEXCEPT_PRESENT
 #define __TBB_NOTHROW __TBB_NOEXCEPT(true)
@@ -98,9 +100,6 @@ namespace Harness{
 tbb::atomic<size_t> FooCount;
 size_t MaxFooCount = 0;
 
-//! Problem size
-const size_t N = 500000;
-
 //! Exception for concurrent_container
 class Foo_exception : public std::bad_alloc {
 public:
@@ -141,21 +140,23 @@ public:
         ASSERT( is_valid(), NULL );
         return my_bar;
     }
-	operator intptr_t() const{ return this->bar();}
+    operator intptr_t() const{
+        return this->bar();
+    }
     Foo( intptr_t barr ): StateTrackable(0){
         my_bar = barr;
         FooCount++;
     }
     Foo(){
         my_bar = initial_value_of_bar;
-        FooCount++;        
+        FooCount++;
     }
-    Foo( const Foo& foo ): StateTrackable(foo){
+    Foo( const Foo& foo ): FooLimit(), StateTrackable(foo){
         my_bar = foo.my_bar;
         FooCount++;
     }
 #if __TBB_CPP11_RVALUE_REF_PRESENT
-    Foo( Foo&& foo ): StateTrackable(std::move(foo)){
+    Foo( Foo&& foo ): FooLimit(), StateTrackable(std::move(foo)){
         my_bar = foo.my_bar;
         //TODO: consider not using constant here, instead something like ~my_bar
         foo.my_bar = -1;
@@ -166,15 +167,23 @@ public:
         my_bar = ~initial_value_of_bar;
         if(state != ZeroInitialized) --FooCount;
     }
-    bool operator==(const Foo &f) const{
-        ASSERT( is_valid_or_zero(),   "comparing invalid objects ?" );
-        ASSERT( f.is_valid_or_zero(), "comparing invalid objects ?" );
-        return my_bar == f.my_bar;
+    friend bool operator==(const int &lhs, const Foo &rhs) {
+        ASSERT( rhs.is_valid_or_zero(), "comparing invalid objects ?" );
+        return lhs == rhs.my_bar;
     }
-    bool operator<(const Foo &f) const{
-        ASSERT( is_valid_or_zero(),   "comparing invalid objects ?" );
-        ASSERT( f.is_valid_or_zero(), "comparing invalid objects ?" );
-        return my_bar < f.my_bar;
+    friend bool operator==(const Foo &lhs, const int &rhs) {
+        ASSERT( lhs.is_valid_or_zero(),   "comparing invalid objects ?" );
+        return lhs.my_bar == rhs;
+    }
+    friend bool operator==(const Foo &lhs, const Foo &rhs) {
+        ASSERT( lhs.is_valid_or_zero(),   "comparing invalid objects ?" );
+        ASSERT( rhs.is_valid_or_zero(), "comparing invalid objects ?" );
+        return lhs.my_bar == rhs.my_bar;
+    }
+    friend bool operator<(const Foo &lhs, const Foo &rhs) {
+        ASSERT( lhs.is_valid_or_zero(),   "comparing invalid objects ?" );
+        ASSERT( rhs.is_valid_or_zero(), "comparing invalid objects ?" );
+        return lhs.my_bar < rhs.my_bar;
     }
     bool is_const() const {return true;}
     bool is_const() {return false;}
@@ -334,15 +343,16 @@ void TestFoo(){
 
 #define ASSERT_THROWS(expression, exception_type, message)  ASSERT_THROWS_IN_TEST(expression, exception_type, message, "")
 
-template<Harness::StateTrackableBase::State desired_stated, bool allow_zero_initialized_state>
-bool is_state(Harness::StateTrackable<allow_zero_initialized_state> const& f){ return f.state == desired_stated;}
+template<Harness::StateTrackableBase::State desired_state, bool allow_zero_initialized_state>
+bool is_state(Harness::StateTrackable<allow_zero_initialized_state> const& f){ return f.state == desired_state;}
 
-template<Harness::StateTrackableBase::State desired_stated>
+template<Harness::StateTrackableBase::State desired_state>
 struct is_state_f {
     template <bool allow_zero_initialized_state>
-    bool operator()(Harness::StateTrackable<allow_zero_initialized_state> const& f){ return is_state<desired_stated>(f); }
+    bool operator()(Harness::StateTrackable<allow_zero_initialized_state> const& f){ return is_state<desired_state>(f); }
     //TODO: cu_map defines key as a const thus by default it is not moved, instead it is copied. Investigate how std::unordered_map behaves
-    bool operator()(std::pair<const FooWithAssign, FooWithAssign> const& p){ return /*is_state<desired_stated>(p.first) && */is_state<desired_stated>(p.second); }
+    template<typename T1, typename T2>
+    bool operator()(std::pair<T1, T2> const& p){ return /*is_state<desired_state>(p.first) && */is_state<desired_state>(p.second); }
 };
 
 template<typename iterator, typename unary_predicate>
@@ -481,6 +491,7 @@ struct memory_locations {
 };
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
+#include <algorithm>
 void TestMemoryLocaionsHelper(){
     const size_t test_sequence_len =  15;
     std::vector<char> source(test_sequence_len, 0);
@@ -596,9 +607,8 @@ struct move_fixture : NoCopy{
     }
 
     void verify_part_of_content_deep_moved(container_t const& dst, size_t number_of_constructed_items){
-        typedef Harness::StateTrackableBase::State state;
         ASSERT_IN_TEST(content_location_changed(dst),                "Vector actually did not changed element locations for unequal allocators, while should", test_name);
-        ASSERT_IN_TEST(::all_of(dst.begin(), dst.begin() + number_of_constructed_items, is_state_f<state::MoveInitialized>()), "Vector did not move construct some elements?", test_name);
+        ASSERT_IN_TEST(::all_of(dst.begin(), dst.begin() + number_of_constructed_items, is_state_f<Foo::MoveInitialized>()), "Vector did not move construct some elements?", test_name);
         if (dst.size() != number_of_constructed_items) {
             ASSERT_IN_TEST(::all_of(dst.begin() + number_of_constructed_items, dst.end(), is_state_f<Foo::ZeroInitialized>()), "Failed to zero-initialize items left not constructed after the exception?", test_name );
         }

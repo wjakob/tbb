@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -29,6 +29,9 @@
 #define TBB_PREVIEW_AGGREGATOR 1
 #define TBB_PREVIEW_CONCURRENT_LRU_CACHE 1
 #define TBB_PREVIEW_VARIADIC_PARALLEL_INVOKE 1
+#define TBB_PREVIEW_FLOW_GRAPH_NODES 1
+#define TBB_PREVIEW_GLOBAL_CONTROL 1
+#define TBB_PREVIEW_STATIC_PARTITIONER 1
 #endif
 
 #include "harness_defs.h"
@@ -94,7 +97,7 @@ struct Body3 {
 
 template <typename E>
 void TestExceptionClassExports ( const E& exc, tbb::internal::exception_id eid ) {
-    // The assertion here serves to shut up warnings about "eid not used". 
+    // The assertion here serves to shut up warnings about "eid not used".
     ASSERT( eid<tbb::internal::eid_max, NULL );
 #if TBB_USE_EXCEPTIONS
     for ( int i = 0; i < 2; ++i ) {
@@ -150,11 +153,15 @@ static void TestPreviewNames() {
     TestTypeDefinitionPresence( aggregator );
     TestTypeDefinitionPresence( aggregator_ext<Handler> );
     TestTypeDefinitionPresence2(concurrent_lru_cache<int, int> );
+    #if __TBB_FLOW_GRAPH_CPP11_FEATURES
+    TestTypeDefinitionPresence2( flow::composite_node<tbb::flow::tuple<int>, tbb::flow::tuple<int> > );
+    #endif
+    TestTypeDefinitionPresence( static_partitioner );
 }
 #endif
 
 #if __TBB_TEST_SECONDARY
-/* This mode is used to produce a secondary object file that is linked with 
+/* This mode is used to produce a secondary object file that is linked with
    the main one in order to detect "multiple definition" linker error.
 */
 void secondary()
@@ -199,6 +206,9 @@ int TestMain ()
     TestTypeDefinitionPresence( flow::priority_queue_node<int> );
     TestTypeDefinitionPresence( flow::limiter_node<int> );
     TestTypeDefinitionPresence2(flow::indexer_node<int, int> );
+#if __TBB_FLOW_GRAPH_CPP11_FEATURES
+    TestTypeDefinitionPresence2( flow::composite_node<tbb::flow::tuple<int>, tbb::flow::tuple<int> > );
+#endif
     using tbb::flow::queueing;
     TestTypeDefinitionPresence2( flow::join_node< intpair, queueing > );
     /* Mutex names */
@@ -250,6 +260,13 @@ int TestMain ()
     TestTypeDefinitionPresence( tbb_allocator<int> );
     TestTypeDefinitionPresence( zero_allocator<int> );
     TestTypeDefinitionPresence( tick_count );
+#if TBB_PREVIEW_GLOBAL_CONTROL
+    TestTypeDefinitionPresence( global_control );
+#endif
+#if TBB_PREVIEW_STATIC_PARTITIONER
+    TestFuncDefinitionPresence( parallel_for, (int, int, int, const Body1&, const tbb::static_partitioner&), void );
+    TestFuncDefinitionPresence( parallel_reduce, (const tbb::blocked_range<int>&, Body2&, const tbb::static_partitioner&), void );
+#endif
 
 #if __TBB_CPF_BUILD
     TestPreviewNames();

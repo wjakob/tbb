@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -60,7 +60,7 @@ PIC_KEY =
 WARNING_AS_ERROR_KEY = -Werror
 WARNING_KEY = -Wall
 TEST_WARNING_KEY = -Wextra -Wshadow -Wcast-qual -Woverloaded-virtual -Wnon-virtual-dtor -Wno-uninitialized
-WARNING_SUPPRESS = -Wno-parentheses -Wno-uninitialized
+WARNING_SUPPRESS = -Wno-parentheses -Wno-uninitialized -Wno-non-virtual-dtor
 DYLIB_KEY = -shared
 LIBDL =
 EXPORT_KEY = -Wl,--version-script,
@@ -74,10 +74,6 @@ LIBS = -lpsapi
 
 LINK_FLAGS = -Wl,--enable-auto-import
 LIB_LINK_FLAGS = $(DYLIB_KEY)
-# gcc 4.4 and higher support -std=c++0x
-ifeq (ok,$(call detect_js,/minversion gcc 4.4))
-    CPP11_FLAGS = -std=c++0x -D_TBB_CPP0X
-endif
 
 # gcc 4.8 and later support RTM intrinsics, but require command line switch to enable them
 ifeq (ok,$(call detect_js,/minversion gcc 4.8))
@@ -89,10 +85,6 @@ ifeq ($(cfg), release)
 endif
 ifeq ($(cfg), debug)
         CPLUS_FLAGS = -g -O0 -DTBB_USE_DEBUG
-endif
-
-ifneq (00,$(lambdas)$(cpp0x))
-    CXX_ONLY_FLAGS += $(CPP11_FLAGS)
 endif
 
 CPLUS_FLAGS += -DUSE_WINTHREAD

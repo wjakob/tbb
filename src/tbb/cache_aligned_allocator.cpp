@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -165,8 +165,9 @@ static void dummy_padded_free( void * ptr ) {
     initialize_cache_aligned_allocator();
     __TBB_ASSERT( padded_free_handler!=&dummy_padded_free, NULL );
     (*padded_free_handler)( ptr );
-}    
+}
 
+// TODO: use CPUID to find actual line size, though consider backward compatibility
 static size_t NFS_LineSize = 128;
 
 size_t NFS_GetLineSize() {
@@ -179,23 +180,24 @@ size_t NFS_GetLineSize() {
 #endif
 
 void* NFS_Allocate( size_t n, size_t element_size, void* /*hint*/ ) {
-    size_t m = NFS_LineSize;
-    __TBB_ASSERT( m<=NFS_MaxLineSize, "illegal value for NFS_LineSize" );
-    __TBB_ASSERT( (m & (m-1))==0, "must be power of two" );
+    //TODO: make this functionality  available via an adaptor over generic STL like allocator
+    const size_t nfs_cache_line_size = NFS_LineSize;
+    __TBB_ASSERT( nfs_cache_line_size <= NFS_MaxLineSize, "illegal value for NFS_LineSize" );
+    __TBB_ASSERT( is_power_of_two(nfs_cache_line_size), "must be power of two" );
     size_t bytes = n*element_size;
 
-    if (bytes<n || bytes+m<bytes) {
+    if (bytes<n || bytes+nfs_cache_line_size<bytes) {
         // Overflow
         throw_exception(eid_bad_alloc);
     }
     // scalable_aligned_malloc considers zero size request an error, and returns NULL
     if (bytes==0) bytes = 1;
-    
-    void* result = (*padded_allocate_handler)( bytes, m );
+
+    void* result = (*padded_allocate_handler)( bytes, nfs_cache_line_size );
     if (!result)
         throw_exception(eid_bad_alloc);
 
-    __TBB_ASSERT( ((size_t)result&(m-1)) == 0, "The address returned isn't aligned to cache line size" );
+    __TBB_ASSERT( is_aligned(result, nfs_cache_line_size), "The address returned isn't aligned to cache line size" );
     return result;
 }
 
@@ -203,16 +205,16 @@ void NFS_Free( void* p ) {
     (*padded_free_handler)( p );
 }
 
-static void* padded_allocate( size_t bytes, size_t alignment ) {    
+static void* padded_allocate( size_t bytes, size_t alignment ) {
     unsigned char* result = NULL;
     unsigned char* base = (unsigned char*)malloc(alignment+bytes);
-    if( base ) {        
+    if( base ) {
         // Round up to the next line
         result = (unsigned char*)((uintptr_t)(base+alignment)&-alignment);
         // Record where block actually starts.
         ((uintptr_t*)result)[-1] = uintptr_t(base);
     }
-    return result;    
+    return result;
 }
 
 static void padded_free( void* p ) {
@@ -225,7 +227,7 @@ static void padded_free( void* p ) {
     }
 }
 
-void* __TBB_EXPORTED_FUNC allocate_via_handler_v3( size_t n ) {    
+void* __TBB_EXPORTED_FUNC allocate_via_handler_v3( size_t n ) {
     void* result = (*MallocHandler) (n);
     if (!result) {
         throw_exception(eid_bad_alloc);
@@ -234,7 +236,7 @@ void* __TBB_EXPORTED_FUNC allocate_via_handler_v3( size_t n ) {
 }
 
 void __TBB_EXPORTED_FUNC deallocate_via_handler_v3( void *p ) {
-    if( p ) {        
+    if( p ) {
         (*FreeHandler)( p );
     }
 }

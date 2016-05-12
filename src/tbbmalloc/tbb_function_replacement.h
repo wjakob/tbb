@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -73,5 +73,8 @@ const __int64 MAX_DISTANCE = (((__int64)1 << 31) - 1) - MAX_PROBE_SIZE;
 
 // The maximum number of distinct buffers in memory
 const ptrdiff_t MAX_NUM_BUFFERS = 256;
+
+// Expect JMP relative instruction in place of function
+#define PROCESS_JMP ((const char**)1)
 
 #endif //__TBB_function_replacement_H

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -75,7 +75,7 @@ protected:
     char pad[128 - sizeof(arg_t) - sizeof(int)*2 - sizeof(void*)*2 ];
 
 public:
-    //! init tester base. @arg ntests is number of embeded tests in this tester.
+    //! init tester base. @arg ntests is number of embedded tests in this tester.
     TesterBase(int ntests)
         : barrier(NULL), tests_count(ntests)
     {}
@@ -143,7 +143,7 @@ class NanosecPerValue : public Tester {
         Timer timer;
         Tester::test(testn, threadn);
         // return time (ns) per value
-        return timer.get_time()*1000000.0/double(Tester::value);
+        return timer.get_time()*1e+9/double(Tester::value);
     }
 };
 

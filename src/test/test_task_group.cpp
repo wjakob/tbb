@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -63,6 +63,9 @@
 
     typedef unsigned int uint_t;
 
+    // Bug in this ConcRT version results in task_group::wait() rethrowing
+    // internal cancellation exception propagated by the scheduler from the nesting
+    // task group.
     #define __TBB_SILENT_CANCELLATION_BROKEN  (_MSC_VER == 1600)
 
 #endif /* !TBBTEST_USE_TBB */
@@ -71,6 +74,7 @@
 
 #include "tbb/atomic.h"
 #include "tbb/aligned_space.h"
+#include "harness.h"
 #include "harness_concurrency_tracker.h"
 
 unsigned g_MaxConcurrency = 0;
@@ -806,6 +810,18 @@ void TestStructuredWait () {
     sg.wait();
 }
 
+struct test_functor_t {
+    void operator()() { ASSERT( false, "Non-const operator called" ); }
+    void operator()() const { /* library requires this overload only */ }
+};
+
+void TestConstantFunctorRequirement() {
+    tbb::task_group g;
+    test_functor_t tf;
+    g.run( tf ); g.wait();
+    g.run_and_wait( tf );
+}
+
 int TestMain () {
     REMARK ("Testing %s task_group functionality\n", TBBTEST_USE_TBB ? "TBB" : "PPL");
     for( int p=MinThread; p<=MaxThread; ++p ) {
@@ -841,7 +857,7 @@ int TestMain () {
         TestEh2();
         TestStructuredWait();
         TestStructuredCancellation2<true>();
-#if !__TBB_THROW_FROM_DTOR_BROKEN
+#if !(__TBB_THROW_FROM_DTOR_BROKEN || __TBB_STD_UNCAUGHT_EXCEPTION_BROKEN)
         TestStructuredCancellation2<false>();
 #else
         REPORT("Known issue: TestStructuredCancellation2<false>() is skipped.\n");
@@ -851,6 +867,7 @@ int TestMain () {
         s->Release();
 #endif
     }
+    TestConstantFunctorRequirement();
 #if __TBB_THROW_ACROSS_MODULE_BOUNDARY_BROKEN
     REPORT("Known issue: exception handling tests are skipped.\n");
 #endif

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -27,11 +27,12 @@
 #ifndef harness_assert_H
 #define harness_assert_H
 
-void ReportError( const char* filename, int line, const char* expression, const char* message); 
-void ReportWarning( const char* filename, int line, const char* expression, const char* message); 
+void ReportError( const char* filename, int line, const char* expression, const char* message);
+void ReportWarning( const char* filename, int line, const char* expression, const char* message);
 
-#define ASSERT(p,message) ((p)?(void)0:ReportError(__FILE__,__LINE__,#p,message))
-#define ASSERT_WARNING(p,message) ((p)?(void)0:ReportWarning(__FILE__,__LINE__,#p,message))
+#define ASSERT_CUSTOM(p,message,file,line)  ((p)?(void)0:ReportError(file,line,#p,message))
+#define ASSERT(p,message)                   ASSERT_CUSTOM(p,message,__FILE__,__LINE__)
+#define ASSERT_WARNING(p,message)           ((p)?(void)0:ReportWarning(__FILE__,__LINE__,#p,message))
 
 //! Compile-time error if x and y have different types
 template<typename T>

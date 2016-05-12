@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -85,7 +85,8 @@ public:
     bool custom_wait(const WaitEq &onWaitCallback, const Callback &onOpenBarrierCallback)
     { // return true if last thread
         unsigned myEpoch = epoch;
-        int threadsLeft = numThreads - numThreadsFinished.fetch_and_increment() - 1;
+        unsigned myNumThreads = numThreads; // read it before the increment
+        int threadsLeft = myNumThreads - numThreadsFinished.fetch_and_increment() - 1;
         ASSERT(threadsLeft>=0, "Broken barrier");
         if (threadsLeft > 0) {
             /* not the last threading reaching barrier, wait until epoch changes & return 0 */
@@ -95,12 +96,16 @@ public:
         onOpenBarrierCallback();
         /* No more threads left to enter, so I'm the last one reaching this epoch;
            reset the barrier, increment epoch, and return non-zero */
-        threadsLeft = numThreadsFinished -= numThreads;
+        threadsLeft = numThreadsFinished -= myNumThreads;
         ASSERT( threadsLeft == 0, "Broken barrier");
         /* wakes up threads waiting to exit this epoch */
         myEpoch -= epoch++;
         ASSERT( myEpoch == 0, "Broken barrier");
         return true;
+    }
+    bool timed_wait_noerror(double n_seconds) {
+        custom_wait(TimedWaitWhileEq(n_seconds), DummyCallback());
+        return n_seconds >= 0.0001;
     }
     bool timed_wait(double n_seconds, const char *msg="Time is out while waiting on a barrier") {
         bool is_last = custom_wait(TimedWaitWhileEq(n_seconds), DummyCallback());

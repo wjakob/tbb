@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -22,11 +22,19 @@
 #include "tbb/parallel_for.h"
 #include "tbb/tick_count.h"
 #include "harness.h"
+#include "test_container_move_support.h"
 // Test that unordered containers do not require keys have default constructors.
 #define __HARNESS_CHECKTYPE_DEFAULT_CTOR 0
 #include "harness_checktype.h"
 #undef  __HARNESS_CHECKTYPE_DEFAULT_CTOR
 #include "harness_allocator.h"
+
+template<typename T>
+struct degenerate_hash {
+    size_t operator()(const T& /*a*/) const {
+        return 1;
+    }
+};
 
 // TestInitListSupportWithoutAssign with an empty initializer list causes internal error in Intel Compiler.
 #define __TBB_ICC_EMPTY_INIT_LIST_TESTS_BROKEN (__INTEL_COMPILER && __INTEL_COMPILER <= 1500)
@@ -49,12 +57,19 @@ inline void CheckAllocator(MyTable &table, size_t expected_allocs, size_t expect
     }
 }
 
+template<typename T>
+struct strip_const { typedef T type; };
+
+template<typename T>
+struct strip_const<const T> { typedef T type; };
+
 // value generator for cumap
 template <typename K, typename V = std::pair<const K, K> >
 struct ValueFactory {
+    typedef typename strip_const<K>::type Kstrip;
     static V make(const K &value) { return V(value, value); }
-    static K key(const V &value) { return value.first; }
-    static K get(const V& value) { return value.second; }
+    static Kstrip key(const V &value) { return value.first; }
+    static Kstrip get(const V &value) { return (Kstrip)value.second; }
 };
 
 // generator for cuset
@@ -74,15 +89,15 @@ struct Value : ValueFactory<typename T::key_type, typename T::value_type> {};
 #endif
 
 template<typename ContainerType, typename Iterator, typename RangeType>
-std::pair<int,int> CheckRecursiveRange(RangeType range) {
-    std::pair<int,int> sum(0, 0); // count, sum
+std::pair<intptr_t,intptr_t> CheckRecursiveRange(RangeType range) {
+    std::pair<intptr_t,intptr_t> sum(0, 0); // count, sum
     for( Iterator i = range.begin(), e = range.end(); i != e; ++i ) {
         ++sum.first; sum.second += Value<ContainerType>::get(*i);
     }
     if( range.is_divisible() ) {
         RangeType range2( range, tbb::split() );
-        std::pair<int,int> sum1 = CheckRecursiveRange<ContainerType,Iterator, RangeType>( range );
-        std::pair<int,int> sum2 = CheckRecursiveRange<ContainerType,Iterator, RangeType>( range2 );
+        std::pair<intptr_t,intptr_t> sum1 = CheckRecursiveRange<ContainerType,Iterator, RangeType>( range );
+        std::pair<intptr_t,intptr_t> sum2 = CheckRecursiveRange<ContainerType,Iterator, RangeType>( range2 );
         sum1.first += sum2.first; sum1.second += sum2.second;
         ASSERT( sum == sum1, "Mismatched ranges after division");
     }
@@ -100,7 +115,7 @@ bool equal_containers( container_type const& lhs, container_type const& rhs ) {
     if ( lhs.size() != rhs.size() ) {
         return false;
     }
-    return std::equal( lhs.begin(), lhs.end(), lhs.begin(), Harness::IsEqual() );
+    return std::equal( lhs.begin(), lhs.end(), rhs.begin(), Harness::IsEqual() );
 }
 
 #include "test_initializer_list.h"
@@ -122,8 +137,91 @@ void TestInitList( std::initializer_list<typename Table::value_type> il ) {
 }
 #endif //if __TBB_INITIALIZER_LISTS_PRESENT
 
-template<typename T>
-void test_basic(const char * str)
+template<Harness::StateTrackableBase::State desired_state, typename T>
+void check_value_state(/* typename do_check_element_state =*/ tbb::internal::true_type, T const& t, const char* filename, int line )
+{
+    ASSERT_CUSTOM(is_state_f<desired_state>()(t), "", filename, line);
+}
+
+template<Harness::StateTrackableBase::State desired_state, typename T>
+void check_value_state(/* typename do_check_element_state =*/ tbb::internal::false_type, T const&, const char* , int ) {/*do nothing*/}
+#define ASSERT_VALUE_STATE(do_check_element_state,state,value) check_value_state<state>(do_check_element_state,value,__FILE__,__LINE__)
+
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+template<typename T, typename do_check_element_state>
+void test_rvalue_insert()
+{
+    typedef T container_t;
+
+    container_t cont;
+
+    std::pair<typename container_t::iterator, bool> ins = cont.insert(Value<container_t>::make(1));
+    ASSERT(ins.second == true && Value<container_t>::get(*(ins.first)) == 1, "Element 1 has not been inserted properly");
+    ASSERT_VALUE_STATE(do_check_element_state(),Harness::StateTrackableBase::MoveInitialized,*ins.first);
+
+    typename container_t::iterator it2 = cont.insert(ins.first, Value<container_t>::make(2));
+    ASSERT(Value<container_t>::get(*(it2)) == 2, "Element 2 has not been inserted properly");
+    ASSERT_VALUE_STATE(do_check_element_state(),Harness::StateTrackableBase::MoveInitialized,*it2);
+
+}
+#if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+
+namespace emplace_helpers {
+template<typename container_t, typename arg_t, typename value_t>
+std::pair<typename container_t::iterator, bool> call_emplace_impl(container_t& c, arg_t&& k, value_t *){
+    //this a set
+    return c.emplace(std::forward<arg_t>(k));
+}
+
+template<typename container_t, typename arg_t, typename first_t, typename second_t>
+std::pair<typename container_t::iterator, bool> call_emplace_impl(container_t& c, arg_t&& k, std::pair<first_t, second_t> *){
+    //this is a map
+    return c.emplace(k, std::forward<arg_t>(k));
+}
+
+template<typename container_t, typename arg_t>
+std::pair<typename container_t::iterator, bool> call_emplace(container_t& c, arg_t&& k){
+    typename container_t::value_type * selector = NULL;
+    return call_emplace_impl(c, std::forward<arg_t>(k), selector);
+}
+
+template<typename container_t, typename arg_t, typename value_t>
+typename container_t::iterator call_emplace_hint_impl(container_t& c, typename container_t::const_iterator hint, arg_t&& k, value_t *){
+    //this a set
+    return c.emplace_hint(hint, std::forward<arg_t>(k));
+}
+
+template<typename container_t, typename arg_t, typename first_t, typename second_t>
+typename container_t::iterator call_emplace_hint_impl(container_t& c, typename container_t::const_iterator hint, arg_t&& k, std::pair<first_t, second_t> *){
+    //this is a map
+    return c.emplace_hint(hint, k, std::forward<arg_t>(k));
+}
+
+template<typename container_t, typename arg_t>
+typename container_t::iterator call_emplace_hint(container_t& c, typename container_t::const_iterator hint, arg_t&& k){
+    typename container_t::value_type * selector = NULL;
+    return call_emplace_hint_impl(c, hint, std::forward<arg_t>(k), selector);
+}
+}
+template<typename T, typename do_check_element_state>
+void test_emplace_insert(){
+    typedef T container_t;
+
+    container_t cont;
+
+    std::pair<typename container_t::iterator, bool> ins = emplace_helpers::call_emplace(cont, 1);
+    ASSERT(ins.second == true && Value<container_t>::get(*(ins.first)) == 1, "Element 1 has not been inserted properly");
+    ASSERT_VALUE_STATE(do_check_element_state(),Harness::StateTrackableBase::DirectInitialized,*ins.first);
+
+    typename container_t::iterator it2 = emplace_helpers::call_emplace_hint(cont, ins.first, 2);
+    ASSERT(Value<container_t>::get(*(it2)) == 2, "Element 2 has not been inserted properly");
+    ASSERT_VALUE_STATE(do_check_element_state(),Harness::StateTrackableBase::DirectInitialized,*it2);
+}
+#endif //__TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+#endif // __TBB_CPP11_RVALUE_REF_PRESENT
+
+template<typename T, typename do_check_element_state>
+void test_basic(const char * str, do_check_element_state)
 {
     T cont;
     const T &ccont(cont);
@@ -146,6 +244,13 @@ void test_basic(const char * str)
     //std::pair<iterator, bool> insert(const value_type& obj);
     std::pair<typename T::iterator, bool> ins = cont.insert(Value<T>::make(1));
     ASSERT(ins.second == true && Value<T>::get(*(ins.first)) == 1, "Element 1 has not been inserted properly");
+
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+    test_rvalue_insert<T,do_check_element_state>();
+#if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+    test_emplace_insert<T,do_check_element_state>();
+#endif // __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+#endif // __TBB_CPP11_RVALUE_REF_PRESENT
 
     // bool empty() const;
     ASSERT(!ccont.empty(), "Concurrent container is empty after adding an element");
@@ -322,24 +427,16 @@ void test_basic(const char * str)
         ASSERT(buck < 16, "Wrong bucket mapping");
     }
 
+    typename T::size_type bucketSizeSum = 0;
+    typename T::size_type iteratorSizeSum = 0;
+
     for (unsigned int i = 0; i < 16; i++)
     {
-        // size_type unsafe_bucket_size(size_type n);
-        ASSERT(cont.unsafe_bucket_size(i) == 16, "Wrong number of elements are in a bucket");
-
-        // local_iterator unsafe_begin(size_type n);
-        // const_local_iterator unsafe_begin(size_type n) const;
-        // local_iterator unsafe_end(size_type n);
-        // const_local_iterator unsafe_end(size_type n) const;
-        // const_local_iterator unsafe_cbegin(size_type n) const;
-        // const_local_iterator unsafe_cend(size_type n) const;
-        unsigned int count = 0;
-        for (typename T::iterator bit = cont.unsafe_begin(i); bit != cont.unsafe_end(i); bit++)
-        {
-            count++;
-        }
-        ASSERT(count == 16, "Bucket iterators are invalid");
+        bucketSizeSum += cont.unsafe_bucket_size(i);
+        for (typename T::iterator bit = cont.unsafe_begin(i); bit != cont.unsafe_end(i); bit++) iteratorSizeSum++;
     }
+    ASSERT(bucketSizeSum == 256, "sum of bucket counts incorrect");
+    ASSERT(iteratorSizeSum == 256, "sum of iterator counts incorrect");
 
     // void swap(T&);
     cont.swap(newcont);
@@ -360,6 +457,11 @@ void test_basic(const char * str)
 #endif
 
     SpecialTests<T>::Test(str);
+}
+
+template<typename T>
+void test_basic(const char * str){
+    test_basic<T>(str, tbb::internal::false_type());
 }
 
 void test_machine() {
@@ -438,14 +540,14 @@ template<typename ContainerType, typename RangeType>
 struct ParallelTraverseBody: NoAssign {
     const int n;
     AtomicByte* const array;
-    ParallelTraverseBody( AtomicByte an_array[], int a_n ) : 
+    ParallelTraverseBody( AtomicByte an_array[], int a_n ) :
         n(a_n), array(an_array)
     {}
     void operator()( const RangeType& range ) const {
         for( typename RangeType::iterator i = range.begin(); i!=range.end(); ++i ) {
             int k = Value<ContainerType>::key(*i);
             ASSERT( k == Value<ContainerType>::get(*i), NULL );
-            ASSERT( 0<=k && k<n, NULL ); 
+            ASSERT( 0<=k && k<n, NULL );
             array[k]++;
         }
     }
@@ -492,16 +594,6 @@ public:
 };
 
 template<typename T>
-class AssignBody: NoAssign {
-    T &table;
-public:
-    AssignBody(T &t) : NoAssign(), table(t) {}
-    void operator()(int i) const {
-        table[i] = i;
-    }
-};
-
-template<typename T>
 void test_concurrent(const char *tablename, bool asymptotic = false) {
 #if TBB_USE_ASSERT
     int items = 2000;
@@ -537,7 +629,7 @@ void test_concurrent(const char *tablename, bool asymptotic = false) {
         memset( array, 0, items*sizeof(AtomicByte) );
 
         typename T::range_type r = table.range();
-        std::pair<int,int> p = CheckRecursiveRange<T,typename T::iterator>(r);
+        std::pair<intptr_t,intptr_t> p = CheckRecursiveRange<T,typename T::iterator>(r);
         ASSERT((nItemsInserted == p.first), NULL);
         tbb::parallel_for( r, ParallelTraverseBody<T, typename T::const_range_type>( array, items ));
         CheckRange( array, items, T::allow_multimapping, (nThreads - 1)/2 );
@@ -556,10 +648,6 @@ void test_concurrent(const char *tablename, bool asymptotic = false) {
     table.clear();
     CheckAllocatorA(table, items+1, items); // one dummy is always allocated
 
-    for(int i=0; i<1000; ++i) {
-        tbb::parallel_for( 0, 8, AssignBody<T>( table ) );
-        table.clear();
-    }
 }
 
 // The helper to call a function only when a doCall == true.

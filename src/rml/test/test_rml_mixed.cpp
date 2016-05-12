@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -38,7 +38,7 @@ int TestMain () {
 // non-deterministic. Thus dynamic_link fails on some systems when the
 // application changes its current directory after the library (TBB/OpenMP/...)
 // is loaded but before the static constructors in the library are executed.
-#define CHDIR_SUPPORT_BROKEN ( __GNUC__ == 4 && __GNUC_MINOR__ >= 6 && __GNUC_MINOR__ <= 9 )
+#define CHDIR_SUPPORT_BROKEN ( (__TBB_GCC_VERSION >= 40600 && __TBB_GCC_VERSION < 50200) || (__linux__ && __TBB_CLANG_VERSION == 30500) )
 
 const int OMP_ParallelRegionSize = 16;
 int TBB_MaxThread = 4;           // Includes master
@@ -254,7 +254,7 @@ void TBBWork() {
             TBB_RunTime.server->adjust_job_count_estimate(-(TBB_MaxThread-1));
             ++CompletionCount;
         } else if( k>=0 ) {
-            for( int k=0; k<4; ++k ) {
+            for( int j=0; j<4; ++j ) {
                 OMP_Team team( *OMP_RunTime.server );
                 int n = OMP_RunTime.server->try_increase_load( OMP_ParallelRegionSize-1, /*strict=*/false );
                 team.barrier = 0;
@@ -305,7 +305,7 @@ int TestMain () {
 #if CHDIR_SUPPORT_BROKEN
     REPORT("Known issue: dynamic_link does not support current directory changing before its initialization.\n");
 #endif
-    for( int TBB_MaxThread=MinThread; TBB_MaxThread<=MaxThread; ++TBB_MaxThread ) {
+    for( TBB_MaxThread=MinThread; TBB_MaxThread<=MaxThread; ++TBB_MaxThread ) {
         REMARK("Testing with TBB_MaxThread=%d\n", TBB_MaxThread);
         TBB_RunTime.create_connection();
         OMP_RunTime.create_connection();

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -24,7 +24,7 @@
 #include "tbb/task_scheduler_init.h"
 #include "../rml/include/rml_tbb.h"
 
-#include "tbb_misc.h" // for AvailableHwConcurrency and ThreadStackSize
+#include "tbb_misc.h" // for AvailableHwConcurrency
 #include "tls.h"
 
 #if __TBB_SURVIVE_THREAD_SWITCH
@@ -50,11 +50,12 @@ class tbb_client;
 /** It also supports automatic on-demand initialization of the TBB scheduler.
     The class contains only static data members and methods.*/
 class governor {
+private:
     friend class __TBB_InitOnce;
     friend class market;
 
     //! TLS for scheduler instances associated with individual threads
-    static basic_tls<generic_scheduler*> theTLS;
+    static basic_tls<uintptr_t> theTLS;
 
     //! Caches the maximal level of parallelism supported by the hardware
     static unsigned DefaultNumberOfThreads;
@@ -91,48 +92,64 @@ public:
         return DefaultNumberOfThreads ? DefaultNumberOfThreads :
                                         DefaultNumberOfThreads = AvailableHwConcurrency();
     }
+    static void one_time_init();
     //! Processes scheduler initialization request (possibly nested) in a master thread
     /** If necessary creates new instance of arena and/or local scheduler.
         The auto_init argument specifies if the call is due to automatic initialization. **/
-    static generic_scheduler* init_scheduler( unsigned num_threads, stack_size_type stack_size, bool auto_init = false );
+    static generic_scheduler* init_scheduler( int num_threads, stack_size_type stack_size, bool auto_init = false );
+
+    //! Automatic initialization of scheduler in a master thread with default settings without arena
+    static generic_scheduler* init_scheduler_weak();
 
     //! Processes scheduler termination request (possibly nested) in a master thread
     static void terminate_scheduler( generic_scheduler* s, const task_scheduler_init *tsi_ptr );
 
     //! Register TBB scheduler instance in thread-local storage.
-    static void sign_on(generic_scheduler* s);
+    static void sign_on( generic_scheduler* s );
 
     //! Unregister TBB scheduler instance from thread-local storage.
-    static void sign_off(generic_scheduler* s);
+    static void sign_off( generic_scheduler* s );
 
     //! Used to check validity of the local scheduler TLS contents.
-    static bool is_set ( generic_scheduler* s ) { return theTLS.get() == s; }
+    static bool is_set( generic_scheduler* s );
 
     //! Temporarily set TLS slot to the given scheduler
-    static void assume_scheduler( generic_scheduler* s ) { theTLS.set( s ); }
+    static void assume_scheduler( generic_scheduler* s );
+
+    //! Computes the value of the TLS
+    static uintptr_t tls_value_of( generic_scheduler* s );
+
+    // TODO IDEA: refactor bit manipulations over pointer types to a class?
+    //! Converts TLS value to the scheduler pointer
+    static generic_scheduler* tls_scheduler_of( uintptr_t v ) {
+        return (generic_scheduler*)(v & ~uintptr_t(1));
+    }
 
     //! Obtain the thread-local instance of the TBB scheduler.
     /** If the scheduler has not been initialized yet, initialization is done automatically.
         Note that auto-initialized scheduler instance is destroyed only when its thread terminates. **/
     static generic_scheduler* local_scheduler () {
-        generic_scheduler* s = theTLS.get();
-        return s ? s : init_scheduler( (unsigned)task_scheduler_init::automatic, 0, true );
+        uintptr_t v = theTLS.get();
+        return (v&1) ? tls_scheduler_of(v) : init_scheduler( task_scheduler_init::automatic, 0, true );
+    }
+
+    static generic_scheduler* local_scheduler_weak () {
+        uintptr_t v = theTLS.get();
+        return v ? tls_scheduler_of(v) : init_scheduler_weak();
     }
 
     static generic_scheduler* local_scheduler_if_initialized () {
-        return theTLS.get();
+        return tls_scheduler_of( theTLS.get() );
     }
 
     //! Undo automatic initialization if necessary; call when a thread exits.
     static void terminate_auto_initialized_scheduler() {
-        auto_terminate( theTLS.get() );
+        auto_terminate( local_scheduler_if_initialized() );
     }
 
     static void print_version_info ();
 
     static void initialize_rml_factory ();
-
-    static bool needsWaitWorkers () { return BlockingTSI!=NULL; }
 
     static bool does_client_join_workers (const tbb::internal::rml::tbb_client &client);
 

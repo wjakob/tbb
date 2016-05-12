@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -39,7 +39,7 @@ namespace internal {
 // Methods of allocate_root_proxy
 //------------------------------------------------------------------------
 task& allocate_root_proxy::allocate( size_t size ) {
-    internal::generic_scheduler* v = governor::local_scheduler();
+    internal::generic_scheduler* v = governor::local_scheduler_weak();
     __TBB_ASSERT( v, "thread did not activate a task_scheduler_init object?" );
 #if __TBB_TASK_GROUP_CONTEXT
     task_prefix& p = v->my_innermost_running_task->prefix();
@@ -51,7 +51,7 @@ task& allocate_root_proxy::allocate( size_t size ) {
 }
 
 void allocate_root_proxy::free( task& task ) {
-    internal::generic_scheduler* v = governor::local_scheduler();
+    internal::generic_scheduler* v = governor::local_scheduler_weak();
     __TBB_ASSERT( v, "thread does not have initialized task_scheduler_init object?" );
 #if __TBB_TASK_GROUP_CONTEXT
     // No need to do anything here as long as there is no context -> task connection
@@ -64,7 +64,7 @@ void allocate_root_proxy::free( task& task ) {
 // Methods of allocate_root_with_context_proxy
 //------------------------------------------------------------------------
 task& allocate_root_with_context_proxy::allocate( size_t size ) const {
-    internal::generic_scheduler* s = governor::local_scheduler();
+    internal::generic_scheduler* s = governor::local_scheduler_weak();
     __TBB_ASSERT( s, "Scheduler auto-initialization failed?" );
     __TBB_ASSERT( &my_context, "allocate_root(context) argument is a dereferenced NULL pointer" );
     task& t = s->allocate_task( size, NULL, &my_context );
@@ -82,14 +82,14 @@ task& allocate_root_with_context_proxy::allocate( size_t size ) const {
 #if __TBB_FP_CONTEXT
     if ( __TBB_load_relaxed(my_context.my_kind) == task_group_context::isolated &&
             !(my_context.my_version_and_traits & task_group_context::fp_settings) )
-        my_context.copy_fp_settings( *s->my_arena->my_default_ctx );
+        my_context.copy_fp_settings( *s->default_context() );
 #endif
     ITT_STACK_CREATE(my_context.itt_caller);
     return t;
 }
 
 void allocate_root_with_context_proxy::free( task& task ) const {
-    internal::generic_scheduler* v = governor::local_scheduler();
+    internal::generic_scheduler* v = governor::local_scheduler_weak();
     __TBB_ASSERT( v, "thread does not have initialized task_scheduler_init object?" );
     // No need to do anything here as long as unbinding is performed by context destructor only.
     v->free_task<local_task>( task );
@@ -102,7 +102,7 @@ void allocate_root_with_context_proxy::free( task& task ) const {
 task& allocate_continuation_proxy::allocate( size_t size ) const {
     task& t = *((task*)this);
     assert_task_valid(t);
-    generic_scheduler* s = governor::local_scheduler();
+    generic_scheduler* s = governor::local_scheduler_weak();
     task* parent = t.parent();
     t.prefix().parent = NULL;
     return s->allocate_task( size, __TBB_CONTEXT_ARG(parent, t.prefix().context) );
@@ -111,7 +111,7 @@ task& allocate_continuation_proxy::allocate( size_t size ) const {
 void allocate_continuation_proxy::free( task& mytask ) const {
     // Restore the parent as it was before the corresponding allocate was called.
     ((task*)this)->prefix().parent = mytask.parent();
-    governor::local_scheduler()->free_task<local_task>(mytask);
+    governor::local_scheduler_weak()->free_task<local_task>(mytask);
 }
 
 //------------------------------------------------------------------------
@@ -120,12 +120,12 @@ void allocate_continuation_proxy::free( task& mytask ) const {
 task& allocate_child_proxy::allocate( size_t size ) const {
     task& t = *((task*)this);
     assert_task_valid(t);
-    generic_scheduler* s = governor::local_scheduler();
+    generic_scheduler* s = governor::local_scheduler_weak();
     return s->allocate_task( size, __TBB_CONTEXT_ARG(&t, t.prefix().context) );
 }
 
 void allocate_child_proxy::free( task& mytask ) const {
-    governor::local_scheduler()->free_task<local_task>(mytask);
+    governor::local_scheduler_weak()->free_task<local_task>(mytask);
 }
 
 //------------------------------------------------------------------------
@@ -133,7 +133,7 @@ void allocate_child_proxy::free( task& mytask ) const {
 //------------------------------------------------------------------------
 task& allocate_additional_child_of_proxy::allocate( size_t size ) const {
     parent.increment_ref_count();
-    generic_scheduler* s = governor::local_scheduler();
+    generic_scheduler* s = governor::local_scheduler_weak();
     return s->allocate_task( size, __TBB_CONTEXT_ARG(&parent, parent.prefix().context) );
 }
 
@@ -146,7 +146,7 @@ void allocate_additional_child_of_proxy::free( task& task ) const {
     // reference count might have become zero before the corresponding call to
     // allocate_additional_child_of_proxy::allocate.
     parent.internal_decrement_ref_count();
-    governor::local_scheduler()->free_task<local_task>(task);
+    governor::local_scheduler_weak()->free_task<local_task>(task);
 }
 
 //------------------------------------------------------------------------
@@ -205,7 +205,7 @@ internal::reference_count task::internal_decrement_ref_count() {
 }
 
 task& task::self() {
-    generic_scheduler *v = governor::local_scheduler();
+    generic_scheduler *v = governor::local_scheduler_weak();
     v->assert_task_pool_valid();
     __TBB_ASSERT( v->my_innermost_running_task, NULL );
     return *v->my_innermost_running_task;
@@ -231,7 +231,7 @@ void interface5::internal::task_base::destroy( task& victim ) {
         parent->internal_decrement_ref_count();
         // Even if the last reference to *parent is removed, it should not be spawned (documented behavior).
     }
-    governor::local_scheduler()->free_task<no_cache>( victim );
+    governor::local_scheduler_weak()->free_task<no_cache>( victim );
 }
 
 void task::spawn_and_wait_for_all( task_list& list ) {
@@ -254,7 +254,7 @@ void task::note_affinity( affinity_id ) {
 #if __TBB_TASK_GROUP_CONTEXT
 void task::change_group ( task_group_context& ctx ) {
     prefix().context = &ctx;
-    internal::generic_scheduler* s = governor::local_scheduler();
+    internal::generic_scheduler* s = governor::local_scheduler_weak();
     if ( __TBB_load_relaxed(ctx.my_kind) == task_group_context::binding_required ) {
         // If we are in the outermost task dispatch loop of a master thread, then
         // there is nothing to bind this context to, and we skip the binding part
@@ -267,7 +267,7 @@ void task::change_group ( task_group_context& ctx ) {
 #if __TBB_FP_CONTEXT
     if ( __TBB_load_relaxed(ctx.my_kind) == task_group_context::isolated &&
             !(ctx.my_version_and_traits & task_group_context::fp_settings) )
-        ctx.copy_fp_settings( *s->my_arena->my_default_ctx );
+        ctx.copy_fp_settings( *s->default_context() );
 #endif
     ITT_STACK_CREATE(ctx.itt_caller);
 }

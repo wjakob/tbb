@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -49,9 +49,6 @@ extern "C" void callDll()
     }
     for (int i=0; i<NUM; i++)
         scalable_free(ptrs[i]);
-#if __TBB_SOURCE_DIRECTLY_INCLUDED && (_WIN32||_WIN64)
-    __TBB_mallocThreadShutdownNotification();
-#endif
 }
 
 #if __TBB_SOURCE_DIRECTLY_INCLUDED

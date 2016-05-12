@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -68,6 +68,17 @@ extern "C" int64_t __TBB_machine_cmpswp8__TBB_full_fence(volatile void *ptr, int
     if (result == comparand)
         *(int64_t*)ptr = value;
     pthread_mutex_unlock(&cas_mutex);
+    return result;
+}
+
+pthread_mutex_t fetchstore_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+int64_t __TBB_machine_fetchstore8__TBB_full_fence (volatile void *ptr, int64_t value)
+{
+    pthread_mutex_lock(&fetchstore_mutex);
+    int64_t result = *(int64_t*)ptr;
+    *(int64_t*)ptr = value;
+    pthread_mutex_unlock(&fetchstore_mutex);
     return result;
 }
 

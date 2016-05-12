@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -111,7 +111,7 @@ else
   # Add the dependency on target libraries
   $(call addsuffixes, _debug _release,$(LIB_TARGETS)): %: %_mic
 
-  # tbb_build_prefix should be overriden since we want to restart make in "clear" enviroment
+  # tbb_build_prefix should be overriden since we want to restart make in "clear" environment
   $(call addsuffixes, _debug_mic _release_mic,$(LIB_TARGETS)): override tbb_build_prefix=
   $(call addsuffixes, _debug_mic _release_mic,$(LIB_TARGETS)): %_mic:
 	@$(MAKE) --no-print-directory -C "$(full_tbb_root)/src" $* target=mic tbb_root=..

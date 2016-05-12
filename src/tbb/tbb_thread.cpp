@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -22,10 +22,11 @@
 #include <process.h>        // _beginthreadex()
 #endif
 #include <errno.h>
-#include "tbb_misc.h"       // handle_win_error(), ThreadStackSize
+#include "tbb_misc.h"       // handle_win_error()
 #include "tbb/tbb_stddef.h"
 #include "tbb/tbb_thread.h"
 #include "tbb/tbb_allocator.h"
+#include "tbb/global_control.h" // thread_stack_size
 #include "governor.h"       // default_num_threads()
 #if __TBB_WIN8UI_SUPPORT
 #include <thread>
@@ -104,8 +105,8 @@ void tbb_thread_v3::internal_start( __TBB_NATIVE_THREAD_ROUTINE_PTR(start_routin
     unsigned thread_id;
     // The return type of _beginthreadex is "uintptr_t" on new MS compilers,
     // and 'unsigned long' on old MS compilers.  uintptr_t works for both.
-    uintptr_t status = _beginthreadex( NULL, ThreadStackSize, start_routine,
-                                     closure, 0, &thread_id );
+    uintptr_t status = _beginthreadex( NULL, (unsigned)global_control::active_value(global_control::thread_stack_size),
+                                       start_routine, closure, 0, &thread_id );
     if( status==0 )
         handle_perror(errno,"__beginthreadex");
     else {
@@ -120,7 +121,7 @@ void tbb_thread_v3::internal_start( __TBB_NATIVE_THREAD_ROUTINE_PTR(start_routin
     status = pthread_attr_init( &stack_size );
     if( status )
         handle_perror( status, "pthread_attr_init" );
-    status = pthread_attr_setstacksize( &stack_size, ThreadStackSize );
+    status = pthread_attr_setstacksize( &stack_size, global_control::active_value(global_control::thread_stack_size) );
     if( status )
         handle_perror( status, "pthread_attr_setstacksize" );
 
@@ -146,7 +147,7 @@ tbb_thread_v3::id thread_get_id_v3() {
     return tbb_thread_v3::id( pthread_self() );
 #endif // _WIN32||_WIN64
 }
-    
+
 void move_v3( tbb_thread_v3& t1, tbb_thread_v3& t2 )
 {
     if (t1.joinable())

@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -41,7 +41,7 @@ ifeq (,$(findstring skip,$(target:android=skip) $(offload:mic=skip)))
 test: rml_test_debug rml_test_release
 endif
 
-tbb_test_no_depends: tbbmalloc_test_release_no_depends $(if $(use_proxy),tbbproxy_test_release_no_depends) tbb_test_release_no_depends tbbmalloc_test_debug_no_depends $(if $(use_proxy),tbbproxy_test_debug_no_depends) tbb_test_debug_no_depends
+test_no_depends: tbbmalloc_test_release_no_depends $(if $(use_proxy),tbbproxy_test_release_no_depends) tbb_test_release_no_depends tbbmalloc_test_debug_no_depends $(if $(use_proxy),tbbproxy_test_debug_no_depends) tbb_test_debug_no_depends
 	@echo done
 
 release: tbb_release tbbmalloc_release $(if $(use_proxy),tbbproxy_release)
@@ -68,7 +68,7 @@ endif
 ifeq ($(arch),intel64)
 	$(MAKE) -sir --no-print-directory -f Makefile tbb_root=.. arch=ia32 clean all
 endif
-# it doesn't test compiler=icc arch=ia32 on intel64 systems due to enviroment settings of icc
+# it doesn't test compiler=icc arch=ia32 on intel64 systems due to environment settings of icc
 
 native_examples: tbb tbbmalloc
 	$(MAKE) -C $(examples_root) -r -f Makefile tbb_root=.. compiler=$(native_compiler) debug test
@@ -84,7 +84,7 @@ debug_rml_% test_rml_%:: TESTFILE=rml
 debug_runtime_load% test_runtime_load%:: TESTFILE=tbbproxy
 debug_% test_% stress_% time_% perf_%:: TESTFILE?=test
 debug_% test_% stress_% time_% perf_%::
-	$(MAKE) -C "$(work_dir)_$(cfg)" -r -f $(tbb_root)/build/Makefile.$(TESTFILE) cfg=$(cfg) $@
+	$(MAKE) -C "$(work_dir)_$(cfg)" -r -f $(tbb_root)/build/Makefile.$(TESTFILE) cfg=$(cfg) $(subst .cpp,,$@)
 
 clean_%::
 ifeq ($(origin cfg),file)
@@ -102,6 +102,8 @@ tbb_release: mkdir_release
 
 tbb_debug: mkdir_debug
 	$(MAKE) -C "$(work_dir)_debug"  -r -f $(tbb_root)/build/Makefile.tbb cfg=debug
+
+tbb_test: tbb_test_release tbb_test_debug
 
 tbb_test_release: $(call cross_cfg,tbb_release) $(if $(use_proxy),$(call cross_cfg,tbbproxy_release)) tbb_test_release_no_depends
 tbb_test_release_no_depends:$(call cross_cfg,mkdir_release)
@@ -175,6 +177,8 @@ rml_release: mkdir_release
 
 rml_debug: mkdir_debug
 	$(MAKE) -C "$(work_dir)_debug"  -r -f $(tbb_root)/build/Makefile.rml cfg=debug rml
+
+rml_test: rml_test_release rml_test_debug
 
 rml_test_release: $(call cross_cfg,rml_release) rml_test_release_no_depends
 rml_test_release_no_depends: $(call cross_cfg,mkdir_release)

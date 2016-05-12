@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -55,7 +55,9 @@ int TestMain() {
 
 #if defined (_WIN32) || defined (_WIN64)
 #define TEST_SYSTEM_COMMAND "test_tbb_version.exe @"
-#define putenv _putenv
+#elif __APPLE__
+// DYLD_LIBRARY_PATH is purged for OS X 10.11, set it again
+#define TEST_SYSTEM_COMMAND "DYLD_LIBRARY_PATH=. ./test_tbb_version.exe @"
 #else
 #define TEST_SYSTEM_COMMAND "./test_tbb_version.exe @"
 #endif
@@ -163,7 +165,7 @@ int main(int argc, char *argv[] ) {
 
         //Setting TBB_VERSION in case it is not set
         if ( !getenv("TBB_VERSION") ){
-            putenv(const_cast<char*>("TBB_VERSION=1"));
+            Harness::SetEnv("TBB_VERSION","1");
         }
 
         if( ( system(TEST_SYSTEM_COMMAND) ) != 0 ){
@@ -195,7 +197,7 @@ int main(int argc, char *argv[] ) {
             REPORT( "Error (step 1):Internal test error (stderr open)\n" );
             exit( 1 );
         }
-        
+
         while( !feof( stream_err ) ) {
             if( fgets( psBuffer, psBuffer_len, stream_err ) != NULL ){
                 if (strstr( psBuffer, "TBBmalloc: " )) {
@@ -234,19 +236,21 @@ int main(int argc, char *argv[] ) {
 }
 
 
-// Fill dictionary with version strings for platforms 
+// Fill dictionary with version strings for platforms
 void initialize_strings_vector(std::vector <string_pair>* vector)
 {
-    vector->push_back(string_pair("TBB: VERSION\t\t4.3", required));          // check TBB_VERSION
-    vector->push_back(string_pair("TBB: INTERFACE VERSION\t8002", required)); // check TBB_INTERFACE_VERSION
+    vector->push_back(string_pair("TBB: VERSION\t\t4.4", required));          // check TBB_VERSION
+    vector->push_back(string_pair("TBB: INTERFACE VERSION\t9004", required)); // check TBB_INTERFACE_VERSION
     vector->push_back(string_pair("TBB: BUILD_DATE", required));
     vector->push_back(string_pair("TBB: BUILD_HOST", required));
     vector->push_back(string_pair("TBB: BUILD_OS", required));
 #if _WIN32||_WIN64
 #if !__MINGW32__
     vector->push_back(string_pair("TBB: BUILD_CL", required));
-#endif
     vector->push_back(string_pair("TBB: BUILD_COMPILER", required));
+#else
+    vector->push_back(string_pair("TBB: BUILD_GCC", required));
+#endif
 #elif __APPLE__
     vector->push_back(string_pair("TBB: BUILD_KERNEL", required));
     vector->push_back(string_pair("TBB: BUILD_CLANG", required));
@@ -257,20 +261,18 @@ void initialize_strings_vector(std::vector <string_pair>* vector)
     vector->push_back(string_pair("TBB: BUILD_SUNCC", required));
     vector->push_back(string_pair("TBB: BUILD_COMPILER", optional)); //if( getenv("COMPILER_VERSION") )
 #else // We use version_info_linux.sh for unsupported OSes
-#if __ANDROID__
-    vector->push_back(string_pair("TBB: BUILD_TARGET_OS", required));
-    vector->push_back(string_pair("TBB: BUILD_TARGET_KERNEL", required));
-#else
+#if !__ANDROID__
     vector->push_back(string_pair("TBB: BUILD_KERNEL", required));
-#endif // !__ANDROID__
+#endif
     vector->push_back(string_pair("TBB: BUILD_GCC", required));
     vector->push_back(string_pair("TBB: BUILD_COMPILER", optional)); //if( getenv("COMPILER_VERSION") )
 #if __ANDROID__
     vector->push_back(string_pair("TBB: BUILD_NDK", optional));
+    vector->push_back(string_pair("TBB: BUILD_LD", optional));
 #else
     vector->push_back(string_pair("TBB: BUILD_LIBC", required));
-#endif // !__ANDROID__
     vector->push_back(string_pair("TBB: BUILD_LD", required));
+#endif // !__ANDROID__
 #endif // OS
     vector->push_back(string_pair("TBB: BUILD_TARGET", required));
     vector->push_back(string_pair("TBB: BUILD_COMMAND", required));

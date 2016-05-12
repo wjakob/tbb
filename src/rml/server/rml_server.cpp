@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -1526,7 +1526,7 @@ void tbb_connection_v2::adjust_job_count_estimate( int delta ) {
                 // No unrealized threads left.
                 break;
             // Eagerly start the thread off.
-            fpa.protect_affinity_mask();
+            fpa.protect_affinity_mask( /*restore_process_mask=*/true );
             my_thread_map.bind_one_thread( *this, *k );
             server_thread& t = k->thread();
             __TBB_ASSERT( !t.link, NULL );
@@ -1632,7 +1632,7 @@ activate_threads:
     if( index==request_size )
         return;
 
-    // If we come to this point, it must be becuase dynamic==false
+    // If we come to this point, it must be because dynamic==false
     // Create Oversubscribers..
 
     // Note that our policy is such that MinConcurrency==MaxConcurrency.

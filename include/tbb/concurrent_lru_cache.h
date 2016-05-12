@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -126,8 +126,8 @@ private:
         }
         static handle_move_t move(handle_object& h){
             __TBB_ASSERT(h.my_cache_pointer,"move from the same object twice ?");
-            concurrent_lru_cache * cache_pointer = NULL;
-            std::swap(cache_pointer,h.my_cache_pointer);
+            concurrent_lru_cache * cache_pointer = h.my_cache_pointer;
+            h.my_cache_pointer = NULL;
             return handle_move_t(*cache_pointer,h.my_map_record_ref);
         }
     private:

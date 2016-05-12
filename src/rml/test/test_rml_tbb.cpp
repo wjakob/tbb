@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -194,7 +194,7 @@ void Initialize()
 
 int TestMain () {
     VerifyInitialization<MyFactory,MyClient>( MaxThread );
-    if ( default_concurrency<1 ) {
+    if ( server_concurrency<1 ) {
          REPORT("The test is not intended to run on 1 thread\n");
          return Harness::Skipped;
     }

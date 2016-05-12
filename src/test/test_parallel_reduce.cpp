@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -17,6 +17,9 @@
     by the GNU General Public License. This exception does not however invalidate any other
     reasons why the executable file might be covered by the GNU General Public License.
 */
+
+// Static partitioner is a pure addition and thus can be always "on" in the test
+#define TBB_PREVIEW_STATIC_PARTITIONER 1
 
 #include "tbb/parallel_reduce.h"
 #include "tbb/atomic.h"
@@ -62,11 +65,11 @@ private:
     FooBody() {++FooBodyCount;}
 public:
     ~FooBody() {
-        forked = 0xDEADBEEF; 
+        forked = 0xDEADBEEF;
         sum=0xDEADBEEF;
         join_count=0xDEADBEEF;
         --FooBodyCount;
-    } 
+    }
     FooBody( FooBody& other, tbb::split ) {
         ++FooBodyCount;
         ++ForkCount;
@@ -79,7 +82,7 @@ public:
     void join( FooBody& s ) {
         ASSERT( s.forked==1, NULL );
         ASSERT( this!=&s, NULL );
-        ASSERT( this==s.parent, NULL ); 
+        ASSERT( this==s.parent, NULL );
         ASSERT( end==s.begin, NULL );
         end = s.end;
         sum += s.sum;
@@ -105,7 +108,7 @@ public:
 void Flog( int nthread, bool interference=false ) {
     for (int mode = 0;  mode < 4; mode++) {
         tbb::tick_count T0 = tbb::tick_count::now();
-        long join_count = 0;        
+        long join_count = 0;
         tbb::affinity_partitioner ap;
         for( size_t i=0; i<=1000; ++i ) {
             FooBody f;
@@ -127,7 +130,7 @@ void Flog( int nthread, bool interference=false ) {
                 case 2:
                     tbb::parallel_reduce( MinimalRange(i), f, tbb::auto_partitioner() );
                     break;
-                case 3: 
+                case 3:
                     tbb::parallel_reduce( MinimalRange(i), f, ap );
                     break;
             }
@@ -166,31 +169,70 @@ struct Accumulator {
     }
 };
 
-void ParallelSum () {
-    const ValueType I = 0,
-                    N = 1000000,
-                    R = N * (N + 1) / 2;
-    ValueType *array = new ValueType[N + 1];
-    for ( ValueType i = 0; i < N; ++i )
-        array[i] = i + 1;
-    tbb::blocked_range<ValueType*> range(array, array + N);
-    ValueType r1 = tbb::parallel_reduce( range, I, Accumulator(), Sum() );
-    ASSERT( r1 == R, NULL );
+class ParallelSumTester: public NoAssign {
+public:
+    ParallelSumTester() {
+        m_array = new ValueType[unsigned(N)];
+        for ( ValueType i = 0; i < N; ++i )
+            m_array[i] = i + 1;
+        m_range = tbb::blocked_range<ValueType*>( m_array, m_array + N );
+    }
+    ~ParallelSumTester() { delete[] m_array; }
+    template<typename Partitioner>
+    void CheckParallelReduce() {
+        Partitioner partitioner;
+        ValueType r1 = tbb::parallel_reduce( m_range, I, Accumulator(), Sum(), partitioner );
+        ASSERT( r1 == R, NULL );
 #if __TBB_LAMBDAS_PRESENT
-    ValueType r2 = tbb::parallel_reduce( range, I, 
-        [](const tbb::blocked_range<ValueType*>& r, ValueType value) -> ValueType { 
-            for ( ValueType* pv = r.begin(); pv != r.end(); ++pv )
-                value += *pv;
-            return value;
-        },
-        Sum()
-    );
-    ASSERT( r2 == R, NULL );
+        ValueType r2 = tbb::parallel_reduce(
+            m_range, I,
+            [](const tbb::blocked_range<ValueType*>& r, ValueType value) -> ValueType {
+                for ( const ValueType* pv = r.begin(); pv != r.end(); ++pv )
+                    value += *pv;
+                return value;
+            },
+            Sum(),
+            partitioner
+        );
+        ASSERT( r2 == R, NULL );
 #endif /* LAMBDAS */
-    delete[] array;
-}
+    }
+    void CheckParallelReduceDefault() {
+        ValueType r1 = tbb::parallel_reduce( m_range, I, Accumulator(), Sum() );
+        ASSERT( r1 == R, NULL );
+#if __TBB_LAMBDAS_PRESENT
+        ValueType r2 = tbb::parallel_reduce(
+            m_range, I,
+            [](const tbb::blocked_range<ValueType*>& r, ValueType value) -> ValueType {
+                for ( const ValueType* pv = r.begin(); pv != r.end(); ++pv )
+                    value += *pv;
+                return value;
+            },
+            Sum()
+        );
+        ASSERT( r2 == R, NULL );
+#endif /* LAMBDAS */
+    }
+private:
+    ValueType* m_array;
+    tbb::blocked_range<ValueType*> m_range;
+    static const ValueType I, N, R;
+};
 
-const int N = 1000;
+const ValueType ParallelSumTester::I = 0;
+const ValueType ParallelSumTester::N = 1000000;
+const ValueType ParallelSumTester::R = N * (N + 1) / 2;
+
+void ParallelSum () {
+    ParallelSumTester pst;
+    pst.CheckParallelReduceDefault();
+    pst.CheckParallelReduce<tbb::simple_partitioner>();
+    pst.CheckParallelReduce<tbb::auto_partitioner>();
+    pst.CheckParallelReduce<tbb::affinity_partitioner>();
+#if TBB_PREVIEW_STATIC_PARTITIONER
+    pst.CheckParallelReduce<tbb::static_partitioner>();
+#endif
+}
 
 #include "harness_concurrency_tracker.h"
 
@@ -217,6 +259,7 @@ struct ReduceBody {
 
 template <class Op>
 void TestDeterministicReduction () {
+    const int N = 1000;
     typedef typename Op::Type Type;
     const tbb::blocked_range<int> range(0, N);
     ReduceBody<Op> body;
@@ -227,7 +270,7 @@ void TestDeterministicReduction () {
         tbb::parallel_deterministic_reduce( range,body2 );
         ASSERT( body2.my_value == R, NULL );
 #if __TBB_LAMBDAS_PRESENT
-        Type r = tbb::parallel_deterministic_reduce( range, Type(), 
+        Type r = tbb::parallel_deterministic_reduce( range, Type(),
             [](const tbb::blocked_range<int>& br, Type value) -> Type {
                 Harness::ConcurrencyTracker ct;
                 for ( int ii = br.begin(); ii != br.end(); ++ii ) {
@@ -279,6 +322,15 @@ void test() {
     parallel_reduce(Range5(false, true), body, ap);
     parallel_reduce(Range6(false, true), body, ap);
 
+#if TBB_PREVIEW_STATIC_PARTITIONER
+    parallel_reduce(Range1(true, false), body, tbb::static_partitioner());
+    parallel_reduce(Range2(true, false), body, tbb::static_partitioner());
+    parallel_reduce(Range3(true, false), body, tbb::static_partitioner());
+    parallel_reduce(Range4(false, true), body, tbb::static_partitioner());
+    parallel_reduce(Range5(false, true), body, tbb::static_partitioner());
+    parallel_reduce(Range6(false, true), body, tbb::static_partitioner());
+#endif
+
     parallel_reduce(Range1(false, true), body, tbb::simple_partitioner());
     parallel_reduce(Range2(false, true), body, tbb::simple_partitioner());
     parallel_reduce(Range3(false, true), body, tbb::simple_partitioner());
@@ -311,7 +363,6 @@ int TestMain () {
         // Test that all workers sleep when no work
         TestCPUUserTime(p);
     }
-
     interaction_with_range_and_partitioner::test();
     return Harness::Done;
 }

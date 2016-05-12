@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -132,7 +132,7 @@ int TestMain() {
         }
 
         {
-            SAY( "Create a proxy object and call load() with good arguments but not availabe version." );
+            SAY( "Create a proxy object and call load() with good arguments but not available version." );
             char const * path[] = { ".", NULL };
             tbb::runtime_loader rtl( tbb::runtime_loader::em_status );
             SAY( "Min version too big." );

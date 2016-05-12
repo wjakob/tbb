@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -27,6 +27,7 @@
 // Hence we include a few other headers before doing the abusive edit.
 #include "tbb/tbb_stddef.h" /* Defines runtime_warning */
 #include "harness_assert.h" /* Prerequisite for defining hooked_warning */
+#include "test_container_move_support.h"
 
 // The symbol internal::runtime_warning is normally an entry point into the TBB library.
 // Here for sake of testing, we define it to be hooked_warning, a routine peculiar to this unit test.
@@ -106,7 +107,7 @@ public:
     }
     int value_of() const {return key;}
 };
-
+//TODO: unify with Harness::Foo ?
 tbb::atomic<long> MyDataCount;
 long MyDataCountLimit = 0;
 
@@ -208,6 +209,8 @@ typedef local_counting_allocator<std::allocator<MyData> > MyAllocator;
 typedef tbb::concurrent_hash_map<MyKey,MyData,MyHashCompare,MyAllocator> MyTable;
 typedef tbb::concurrent_hash_map<MyKey,MyData2,MyHashCompare> MyTable2;
 typedef tbb::concurrent_hash_map<MyKey,MyData,YourHashCompare> YourTable;
+typedef tbb::concurrent_hash_map<MyKey,MyData,MyHashCompare,MyAllocator> MyTable;
+typedef tbb::concurrent_hash_map<MyKey,Foo,MyHashCompare> DataStateTrackedTable;
 
 template<typename MyTable>
 inline void CheckAllocator(MyTable &table, size_t expected_allocs, size_t expected_frees, bool exact = true) {
@@ -251,6 +254,28 @@ struct Insert {
         }
     }
 };
+
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+struct RvalueInsert {
+    static void apply( DataStateTrackedTable& table, int i ) {
+        DataStateTrackedTable::accessor a;
+        ASSERT( (table.insert( a, std::make_pair(MyKey::make(i), Foo(i + 1)))),"already present while should not ?" );
+        ASSERT( (*a).second == i + 1, NULL );
+        ASSERT( (*a).second.state == Harness::StateTrackableBase::MoveInitialized, "");
+    }
+};
+
+#if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+struct Emplace {
+    static void apply( DataStateTrackedTable& table, int i ) {
+        DataStateTrackedTable::accessor a;
+        ASSERT( (table.emplace( a, MyKey::make(i), (i + 1))),"already present while should not ?" );
+        ASSERT( (*a).second == i + 1, NULL );
+        ASSERT( (*a).second.state == Harness::StateTrackableBase::DirectInitialized, "");
+    }
+};
+#endif // __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+#endif // __TBB_CPP11_RVALUE_REF_PRESENT
 
 #if __TBB_INITIALIZER_LISTS_PRESENT
 struct InsertInitList {
@@ -371,7 +396,7 @@ struct FakeExclusive : NoAssign {
     void operator()( int i ) const {
         if(i) {
             YourTable::const_accessor real_ca;
-            // const accessor on non-const table aquired as reader (shared)
+            // const accessor on non-const table acquired as reader (shared)
             ASSERT( table.find(real_ca,MyKey::make(1)), NULL );
             barrier.wait(); // item can be erased
             Harness::Sleep(10); // let it enter the erase
@@ -379,9 +404,9 @@ struct FakeExclusive : NoAssign {
         } else {
             YourTable::accessor fake_ca;
             const YourTable &const_table = table;
-            // non-const accessor on const table aquired as reader (shared)
+            // non-const accessor on const table acquired as reader (shared)
             ASSERT( const_table.find(fake_ca,MyKey::make(1)), NULL );
-            barrier.wait(); // readers aquired
+            barrier.wait(); // readers acquired
             // can mistakenly remove the item while other readers still refers to it
             table.erase( fake_ca );
         }
@@ -1238,7 +1263,7 @@ void TestCPP11Types() {
     for ( int i=0; i<NUMBER; ++i ) arrIntInt.push_back( int_int_t(i, NUMBER-i) );
     TypeTester</*default_construction_present = */true>( arrIntInt );
 
-#if __TBB_CPP11_REFERENCE_WRAPPER_PRESENT
+#if __TBB_CPP11_REFERENCE_WRAPPER_PRESENT && !__TBB_REFERENCE_WRAPPER_COMPILATION_BROKEN
     typedef std::pair<const std::reference_wrapper<const int>, int> ref_int_t;
     std::list<ref_int_t> arrRefInt;
     for ( std::list<int_int_t>::iterator it = arrIntInt.begin(); it != arrIntInt.end(); ++it )
@@ -1252,7 +1277,7 @@ void TestCPP11Types() {
     TypeTester</*default_construction_present = */false>( arrIntRef );
 #else
     REPORT("Known issue: C++11 reference wrapper tests are skipped.\n");
-#endif /* __TBB_CPP11_REFERENCE_WRAPPER_PRESENT */
+#endif /* __TBB_CPP11_REFERENCE_WRAPPER_PRESENT && !__TBB_REFERENCE_WRAPPER_COMPILATION_BROKEN*/
 
     typedef std::pair< const int, tbb::atomic<int> > int_tbb_t;
     std::list<int_tbb_t> arrIntTbb;
@@ -1266,7 +1291,10 @@ void TestCPP11Types() {
 #if __TBB_CPP11_SMART_POINTERS_PRESENT
     typedef std::pair< const std::shared_ptr<int>, std::shared_ptr<int> > shr_shr_t;
     std::list<shr_shr_t> arrShrShr;
-    for ( int i=0; i<NUMBER; ++i ) arrShrShr.push_back( shr_shr_t( std::make_shared<int>(i), std::make_shared<int>(NUMBER-i) ) );
+    for ( int i=0; i<NUMBER; ++i ) {
+        const int NUMBER_minus_i = NUMBER - i;
+        arrShrShr.push_back( shr_shr_t( std::make_shared<int>(i), std::make_shared<int>(NUMBER_minus_i) ) );
+    }
     TypeTester< /*default_construction_present = */true>( arrShrShr );
 
     typedef std::pair< const std::weak_ptr<int>, std::weak_ptr<int> > wk_wk_t;
@@ -1359,6 +1387,22 @@ int TestMain () {
 #endif /* TBB_USE_EXCEPTIONS */
 
     TestMoveSupport();
+    {
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+        tbb::task_scheduler_init init( 1 );
+        int n=250000;
+        {
+            DataStateTrackedTable table;
+            DoConcurrentOperations<RvalueInsert, DataStateTrackedTable>( table, n, "rvalue ref insert", 1 );
+        }
+#if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+        {
+            DataStateTrackedTable table;
+            DoConcurrentOperations<Emplace, DataStateTrackedTable>( table, n, "emplace", 1 );
+        }
+#endif //__TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+#endif // __TBB_CPP11_RVALUE_REF_PRESENT
+    }
 
     // Do concurrency tests.
     for( int nthread=MinThread; nthread<=MaxThread; ++nthread ) {

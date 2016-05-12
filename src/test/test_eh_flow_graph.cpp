@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -121,15 +121,15 @@ protected:
 // for nodes with limited concurrency, if that concurrency is < g_NumThreads, we need
 // to make sure enough other nodes wait for concurrency to peak.  If we are attached to
 // N successors, for each item we pass to a successor, we will get N executions of the
-// "absorbers" (because we broadcast to successors.)  for an odd number of threads we 
-// need (g_NumThreads - limited + 1) / 2 items (that will give us one extra execution 
+// "absorbers" (because we broadcast to successors.)  for an odd number of threads we
+// need (g_NumThreads - limited + 1) / 2 items (that will give us one extra execution
 // of an "absorber", but we can't change that without changing the behavior of the node.)
 template<>
 class WaitThrow<limited_type,nonThrowing> {
 protected:
     void WaitAndThrow(int cnt, const char * /*name*/) {
         if(cnt <= (g_NumThreads - (int)limited_type + 1)/2) {
-            return; 
+            return;
         }
         Harness::ConcurrencyTracker ct;
         WaitUntilConcurrencyPeaks();
@@ -142,7 +142,7 @@ protected:
     void WaitAndThrow(int cnt, const char * /*name*/) {
         Harness::ConcurrencyTracker ct;
         if(cnt <= (g_NumThreads - (int)limited_type + 1)/2) {
-            return; 
+            return;
         }
         WaitUntilConcurrencyPeaks();
         ThrowTestException(1);
@@ -182,12 +182,16 @@ class test_source_body : WaitThrow<serial_type, TType> {
     tbb::atomic<int> *my_current_val;
     int my_mult;
 public:
-    test_source_body(tbb::atomic<int> &my_cnt, int multiplier = 1) : my_current_val(&my_cnt), my_mult(multiplier) { }
+    test_source_body(tbb::atomic<int> &my_cnt, int multiplier = 1) : my_current_val(&my_cnt), my_mult(multiplier) {
+        REMARK("- --------- - - -   constructed %lx\n", (size_t)(my_current_val));
+    }
 
     bool operator()(OutputType & out) {
         UPDATE_COUNTS();
         out = OutputType(my_mult * ++(*my_current_val));
+        REMARK("xx(%lx) out == %d\n", (size_t)(my_current_val), (int)out);
         if(*my_current_val > g_NumItems) {
+            REMARK(" ------ End of the line!\n");
             *my_current_val = g_NumItems;
             return false;
         }
@@ -310,7 +314,7 @@ class tag_func {
 public:
     tag_func(TT multiplier) : my_mult(multiplier) { }
     void operator=( const tag_func& other){my_mult = other.my_mult;}
-    // operator() will return [0 .. Count) 
+    // operator() will return [0 .. Count)
     tbb::flow::tag_value operator()( TT v) {
         tbb::flow::tag_value t = tbb::flow::tag_value(v / my_mult);
         return t;
@@ -405,7 +409,7 @@ void run_one_source_node_test(bool throwException, bool flog) {
             ASSERT(src_cnt == g_NumItems, "Incorrect # source_node items emitted");
             ASSERT(sink_cnt == src_cnt, "Incorrect # source_node items received");
         }
-        g.reset();  // resets the body of the source_node and the absorb_nodes. 
+        g.reset();  // resets the body of the source_node and the absorb_nodes.
         source_body_count = 0;
         absorber_body_count = 0;
         ASSERT(!g.exception_thrown(), "Reset didn't clear exception_thrown()");
@@ -555,14 +559,14 @@ run_one_functype_node_test(bool throwException, bool flog, const char * /*name*/
             ASSERT(t_cnt == 2*g_NumItems, "Not all items reached test node");
             ASSERT(nb0_cnt == 2*g_NumItems && nb1_cnt == 2*g_NumItems, "Missing items in absorbers");
         }
-        g.reset();  // resets the body of the source_nodes, test_node and the absorb_nodes. 
+        g.reset();  // resets the body of the source_nodes, test_node and the absorb_nodes.
         source0_count = source1_count = sink0_count = sink1_count = test_count = 0;
         ASSERT(0 == tbb::flow::copy_body<SourceNodeBodyType0>(source0).count_value(),"Reset source 0 failed");
         ASSERT(0 == tbb::flow::copy_body<SourceNodeBodyType1>(source1).count_value(),"Reset source 1 failed");
         ASSERT(0 == tbb::flow::copy_body<TestNodeBodyType>(node_to_test).count_value(),"Reset test_node failed");
         ASSERT(0 == tbb::flow::copy_body<SinkNodeBodyType0>(sink0).count_value(),"Reset sink 0 failed");
         ASSERT(0 == tbb::flow::copy_body<SinkNodeBodyType1>(sink1).count_value(),"Reset sink 1 failed");
-        
+
         g_Wakeup_Msg = saved_msg;
     }
 #if USE_TASK_SCHEDULER_OBSERVER
@@ -571,7 +575,7 @@ run_one_functype_node_test(bool throwException, bool flog, const char * /*name*/
 }
 
 //  Test function_node
-// 
+//
 // graph being tested is
 //
 //        source_node -\                 /- parallel function_node
@@ -581,8 +585,8 @@ run_one_functype_node_test(bool throwException, bool flog, const char * /*name*/
 //        source_node -/                 \- parallel function_node
 //
 //    After each run the graph is reset(), to test the reset functionality.
-// 
-template< 
+//
+template<
     TestNodeTypeEnum SType1,                          // does source node 1 throw?
     TestNodeTypeEnum SType2,                          // does source node 2 throw?
     class Item12,                                     // type of item passed between sources and test node
@@ -590,7 +594,7 @@ template<
     class Item23,                                     // type passed from function_node to sink nodes
     TestNodeTypeEnum NType1,                          // does sink node 1 throw?
     TestNodeTypeEnum NType2,                          // does sink node 1 throw?
-    tbb::flow::graph_buffer_policy NodePolicy,        // rejecting,queueing
+    class NodePolicy,                                 // rejecting,queueing
     size_t Conc                                       // is node concurrent? {serial | limited | unlimited}
 >
 void run_function_node_test() {
@@ -673,7 +677,7 @@ void test_function_node() {
 
 // ----------------------------------- multifunction_node ----------------------------------
 //  Test multifunction_node.
-// 
+//
 // graph being tested is
 //
 //        source_node -\                      /- parallel function_node
@@ -685,8 +689,8 @@ void test_function_node() {
 //    After each run the graph is reset(), to test the reset functionality.  The
 //    multifunction_node will put an item to each successor for every item
 //    received.
-// 
-template< 
+//
+template<
     TestNodeTypeEnum SType0,                          // does source node 1 throw?
     TestNodeTypeEnum SType1,                          // does source node 2 thorw?
     class Item12,                                 // type of item passed between sources and test node
@@ -694,7 +698,7 @@ template<
     class ItemTuple,                              // tuple of types passed from multifunction_node to sink nodes
     TestNodeTypeEnum NType1,                          // does sink node 1 throw?
     TestNodeTypeEnum NType2,                          // does sink node 2 throw?
-    tbb::flow::graph_buffer_policy NodePolicy,    // rejecting,queueing
+    class  NodePolicy,                            // rejecting,queueing
     size_t Conc                                   // is node concurrent? {serial | limited | unlimited}
 >
 void run_multifunction_node_test() {
@@ -794,7 +798,7 @@ void test_multifunction_node() {
 //
 // The continue_node has unlimited parallelism, no input buffering, and broadcasts to successors.
 // The absorber is parallel, so each item emitted by the source will result in one thread
-// spinning.  So for N threads we pass N-1 continue_messages, then spin wait and then throw if 
+// spinning.  So for N threads we pass N-1 continue_messages, then spin wait and then throw if
 // we are allowed to.
 
 template < class SourceNodeType, class SourceNodeBodyType, class TTestNodeType, class TestNodeBodyType,
@@ -853,7 +857,7 @@ void run_one_continue_node_test (bool throwException, bool flog) {
             ASSERT(t_cnt == g_NumItems, "Not all items reached test node");
             ASSERT(nb_cnt == g_NumItems, "Missing items in absorbers");
         }
-        g.reset();  // resets the body of the source_nodes, test_node and the absorb_nodes. 
+        g.reset();  // resets the body of the source_nodes, test_node and the absorb_nodes.
         source_count = test_count = sink_count = 0;
         ASSERT(0 == (int)test_count, "Atomic wasn't reset properly");
         ASSERT(0 == tbb::flow::copy_body<SourceNodeBodyType>(source).count_value(),"Reset source failed");
@@ -894,7 +898,7 @@ void run_continue_node_test() {
     }
 }
 
-// 
+//
 void test_continue_node() {
     REMARK("Testing continue_node\n");
     g_Wakeup_Msg = "buffer_node(non,is,non): Missed wakeup or machine is overloaded?";
@@ -914,7 +918,7 @@ void test_continue_node() {
 // ---------- buffer_node queue_node overwrite_node --------------
 
 template<
-    class BufferItemType,       // 
+    class BufferItemType,       //
     class SourceNodeType,
     class SourceNodeBodyType,
     class TestNodeType,
@@ -1053,7 +1057,7 @@ void test_buffer_queue_and_overwrite_node() {
 
 
 template<
-    class BufferItemType,       // 
+    class BufferItemType,       //
     class SourceNodeType,
     class SourceNodeBodyType,
     class TestNodeType,
@@ -1293,10 +1297,10 @@ void test_priority_queue_node() {
 }
 
 // ------------------- join_node ----------------
-template<tbb::flow::graph_buffer_policy JP> struct graph_policy_name{
+template<class JP> struct graph_policy_name{
     static const char* name() {return "unknown"; }
 };
-template<> struct graph_policy_name<tbb::flow::queueing>  { 
+template<> struct graph_policy_name<tbb::flow::queueing>  {
     static const char* name() {return "queueing"; }
 };
 template<> struct graph_policy_name<tbb::flow::reserving> {
@@ -1308,14 +1312,14 @@ template<> struct graph_policy_name<tbb::flow::tag_matching> {
 
 
 template<
-    tbb::flow::graph_buffer_policy JP,
+    class JP,
     class OutputTuple,
     class SourceType0,
     class SourceBodyType0,
-    class SourceType1, 
+    class SourceType1,
     class SourceBodyType1,
     class TestJoinType,
-    class SinkType, 
+    class SinkType,
     class SinkBodyType
     >
 struct run_one_join_node_test {
@@ -1370,7 +1374,13 @@ struct run_one_join_node_test {
             else {
                 ASSERT(!g.exception_thrown(), "Exception flag in flow::graph set but no throw occurred");
                 ASSERT(!g.is_cancelled(), "canceled flag set but no throw occurred");
-                ASSERT(sb0_cnt == g_NumItems, "Missing invocations of source_node0");
+                if(sb0_cnt != g_NumItems) {
+                    REMARK("throwException == %s\n", throwException ? "true" : "false");
+                    REMARK("iter == %d\n", (int)iter);
+                    REMARK("sb0_cnt == %d\n", (int)sb0_cnt);
+                    REMARK("g_NumItems == %d\n", (int)g_NumItems);
+                }
+                ASSERT(sb0_cnt == g_NumItems, "Missing invocations of source_node0");  // this one
                 ASSERT(sb1_cnt == g_NumItems, "Missing invocations of source_node1");
                 ASSERT(nb_cnt == g_NumItems, "Missing items in absorbers");
             }
@@ -1405,10 +1415,10 @@ template<
     class OutputTuple,
     class SourceType0,
     class SourceBodyType0,
-    class SourceType1, 
+    class SourceType1,
     class SourceBodyType1,
     class TestJoinType,
-    class SinkType, 
+    class SinkType,
     class SinkBodyType
     >
 struct run_one_join_node_test<
@@ -1420,7 +1430,7 @@ struct run_one_join_node_test<
         SourceBodyType1,
         TestJoinType,
         SinkType,
-        SinkBodyType 
+        SinkBodyType
     > {
     run_one_join_node_test() {}
     static void execute_test(bool throwException,bool flog) {
@@ -1483,7 +1493,7 @@ struct run_one_join_node_test<
                 tbb::flow::input_port<0>(node_to_test).try_put(ItemType0(g_NumItems + 4));
                 tbb::flow::input_port<1>(node_to_test).try_put(ItemType1(g_NumItems + 2));
                 g.wait_for_all();   // have to wait for the graph to stop again....
-                g.reset();  // resets the body of the source_nodes, test_node and the absorb_nodes. 
+                g.reset();  // resets the body of the source_nodes, test_node and the absorb_nodes.
                 source0_count = source1_count = sink_count = 0;
                 make_edge(node_to_test, sink);
                 g.wait_for_all();   // have to wait for the graph to stop again....
@@ -1505,7 +1515,7 @@ struct run_one_join_node_test<
     }
 };  // run_one_join_node_test<tag_matching>
 
-template<tbb::flow::graph_buffer_policy JP, class OutputTuple,
+template<class JP, class OutputTuple,
              TestNodeTypeEnum SourceThrowType,
              TestNodeTypeEnum SinkThrowType>
 void run_join_node_test() {
@@ -1537,7 +1547,7 @@ void run_join_node_test() {
     }
 }
 
-template<tbb::flow::graph_buffer_policy JP>
+template<class JP>
 void test_join_node() {
     REMARK("Testing join_node<%s>\n", graph_policy_name<JP>::name());
     // only doing two-input joins
@@ -1555,7 +1565,7 @@ void test_join_node() {
 // ------------------- limiter_node -------------
 
 template<
-    class BufferItemType,       // 
+    class BufferItemType,       //
     class SourceNodeType,
     class SourceNodeBodyType,
     class TestNodeType,
@@ -1733,7 +1743,7 @@ void run_one_split_node_test(bool throwException, bool flog) {
             ASSERT(sb_cnt == g_NumItems, "Missing invocations of source_nodes");
             ASSERT(nb0_cnt == g_NumItems && nb1_cnt == g_NumItems, "Missing items in absorbers");
         }
-        g.reset();  // resets the body of the source_nodes and the absorb_nodes. 
+        g.reset();  // resets the body of the source_nodes and the absorb_nodes.
         source_count = sink0_count = sink1_count = 0;
         ASSERT(0 == tbb::flow::copy_body<SourceBodyType>(source).count_value(),"Reset source failed");
         ASSERT(0 == tbb::flow::copy_body<SinkBodyType0>(sink0).count_value(),"Reset sink 0 failed");
@@ -1936,7 +1946,7 @@ public:
     }
 };
 
-// test from user ahelwer: http://software.intel.com/en-us/forums/showthread.php?t=103786 
+// test from user ahelwer: http://software.intel.com/en-us/forums/showthread.php?t=103786
 // exception thrown in graph node, not caught in wait_for_all()
 void
 test_flow_graph_exception0() {
@@ -1949,7 +1959,7 @@ test_flow_graph_exception0() {
     // Construct graph and nodes
     tbb::flow::graph g;
     tbb::flow::broadcast_node<tbb::flow::continue_msg> start(g);
-    tbb::flow::continue_node<tbb::flow::continue_msg> fooNode(g, f); 
+    tbb::flow::continue_node<tbb::flow::continue_msg> fooNode(g, f);
 
     // Construct edge
     tbb::flow::make_edge(start, fooNode);
@@ -1989,7 +1999,7 @@ void TestOneThreadNum(int nThread) {
     REMARK("Testing %d threads\n", nThread);
     g_NumItems = ((nThread > NUM_ITEMS) ? nThread *2 : NUM_ITEMS);
     g_NumThreads = nThread;
-    tbb::task_scheduler_init init(nThread); 
+    tbb::task_scheduler_init init(nThread);
     // whole-graph exception catch and rethrow test
     test_flow_graph_exception0();
     for(int i = 0; i < 4; ++i) {

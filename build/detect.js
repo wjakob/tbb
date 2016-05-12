@@ -1,4 +1,4 @@
-// Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+// Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 //
 // This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 // you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -99,6 +99,7 @@ function doWork() {
 			var vc100=/MSVCR100\.DLL/mgi;
 			var vc110=/MSVCR110\.DLL/mgi;
 			var vc120=/MSVCR120\.DLL/mgi;
+			var vc140=/VCRUNTIME140\.DLL/mgi;
 			var psdk=/MSVCRT\.DLL/mgi;
 			if ( mapContext.match(vc71) ) {
 				WScript.Echo( "vc7.1" );
@@ -112,6 +113,8 @@ function doWork() {
 				WScript.Echo( "vc11" );
 			} else if ( mapContext.match(vc120) ) {
 				WScript.Echo( "vc12" );
+			} else if ( mapContext.match(vc140) ) {
+				WScript.Echo( "vc14" );
 			} else {
 				WScript.Echo( "unknown" );
 			}

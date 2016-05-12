@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -20,7 +20,7 @@
 
 // Header that includes TSX-specific test functions
 
-#if __TBB_TSX_AVAILABLE 
+#if __TBB_TSX_AVAILABLE
 #define __TBB_TSX_TESTING_ENABLED_FOR_THIS_COMPILER (__INTEL_COMPILER || __GNUC__ || _MSC_VER || __SUNPRO_CC)
 #if __TBB_TSX_TESTING_ENABLED_FOR_THIS_COMPILER
 
@@ -44,8 +44,8 @@ bool have_TSX() {
     const int reg_ebx = 1;
     int old_ecx = 0;
     __cpuidex(info, 7, old_ecx);
-    result = (info[reg_ebx] & hle_ebx_mask)!=0;
-    if( result ) ASSERT( (info[reg_ebx] & rtm_ebx_mask)!=0, NULL );
+    result = (info[reg_ebx] & rtm_ebx_mask)!=0;
+    if( result ) ASSERT( (info[reg_ebx] & hle_ebx_mask)!=0, NULL );
 #elif __GNUC__ || __SUNPRO_CC
     int32_t reg_ebx = 0;
     int32_t reg_eax = 7;
@@ -60,8 +60,8 @@ bool have_TSX() {
 #endif
                            "edx"
                            );
-    result = (reg_ebx & hle_ebx_mask)!=0 ;
-    if( result ) ASSERT( (reg_ebx & rtm_ebx_mask)!=0, NULL );
+    result = (reg_ebx & rtm_ebx_mask)!=0 ;
+    if( result ) ASSERT( (reg_ebx & hle_ebx_mask)!=0, NULL );
 #endif
     return result;
 }

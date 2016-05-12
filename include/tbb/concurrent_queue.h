@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@ namespace strict_ppl {
 /** Multiple threads may each push and pop concurrently.
     Assignment construction is not allowed.
     @ingroup containers */
-template<typename T, typename A = cache_aligned_allocator<T> > 
+template<typename T, typename A = cache_aligned_allocator<T> >
 class concurrent_queue: public internal::concurrent_queue_base_v3<T> {
     template<typename Container, typename Value> friend class internal::concurrent_queue_iterator;
 
@@ -43,7 +43,7 @@ class concurrent_queue: public internal::concurrent_queue_base_v3<T> {
     /*override*/ virtual void *allocate_block( size_t n ) {
         void *b = reinterpret_cast<void*>(my_allocator.allocate( n ));
         if( !b )
-            internal::throw_exception(internal::eid_bad_alloc); 
+            internal::throw_exception(internal::eid_bad_alloc);
         return b;
     }
 
@@ -185,10 +185,8 @@ concurrent_queue<T,A>::~concurrent_queue() {
 
 template<typename T, class A>
 void concurrent_queue<T,A>::clear() {
-    while( !empty() ) {
-        T value;
-        this->internal_try_pop(&value);
-    }
+    T value;
+    while( !empty() ) try_pop(value);
 }
 
 } // namespace strict_ppl
@@ -292,7 +290,7 @@ public:
     typedef std::ptrdiff_t difference_type;
 
     //! Construct empty queue
-    explicit concurrent_bounded_queue(const allocator_type& a = allocator_type()) : 
+    explicit concurrent_bounded_queue(const allocator_type& a = allocator_type()) :
         concurrent_queue_base_v8( sizeof(T) ), my_allocator( a )
     {
     }
@@ -402,8 +400,8 @@ public:
     }
 
     //! Return number of pushes minus number of pops.
-    /** Note that the result can be negative if there are pops waiting for the 
-        corresponding pushes.  The result can also exceed capacity() if there 
+    /** Note that the result can be negative if there are pops waiting for the
+        corresponding pushes.  The result can also exceed capacity() if there
         are push operations in flight. */
     size_type size() const {return internal_size();}
 
@@ -439,7 +437,7 @@ public:
     const_iterator unsafe_begin() const {return const_iterator(*this);}
     const_iterator unsafe_end() const {return const_iterator();}
 
-}; 
+};
 
 template<typename T, class A>
 concurrent_bounded_queue<T,A>::~concurrent_bounded_queue() {
@@ -449,10 +447,8 @@ concurrent_bounded_queue<T,A>::~concurrent_bounded_queue() {
 
 template<typename T, class A>
 void concurrent_bounded_queue<T,A>::clear() {
-    while( !empty() ) {
-        T value;
-        internal_pop_if_present(&value);
-    }
+    T value;
+    while( try_pop(value) ) /*noop*/;
 }
 
 using strict_ppl::concurrent_queue;

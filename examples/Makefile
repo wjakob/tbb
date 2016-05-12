@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -36,9 +36,14 @@ ifeq ($(filter /% $(SLASH)%, $(subst :, ,$(tbb_root)) ),)
     export TBBROOT := $(tbb_root)
 endif
 
-ifneq (00,$(lambdas)$(cpp0x))
-	override CXXFLAGS += $(CPP11_FLAGS)
+override CXXFLAGS += $(CXX_STD_FLAGS)
+
+# give stdver priotity over autodetection
+ifneq (,$(stdver))
+    CXX0XFLAGS=-std=$(stdver) -D_TBB_CPP0X
 endif
+# empty CXX0XFLAGS exported as well, to have control over C++ autodetection
+export CXX0XFLAGS
 
 ifeq ($(tbb_os),windows)
     ifeq ($(UNIXMODE),1)
@@ -68,7 +73,7 @@ else
     ifeq ($(arch),ia64)
         override CXXFLAGS += $(PIC_KEY)
     endif
-    ifeq ($(subst suncc,gcc,$(compiler)),gcc)
+    ifneq ($(filter suncc gcc clang,$(compiler)),)
         ifeq ($(compiler),suncc)
             override CXXFLAGS += -I$(tbb_root)$(SLASH)include -library=stlport4 -M$(tbb_root)/build/suncc.map.pause -erroff=unassigned,attrskipunsup,badargtype2w,badbinaryopw,wbadasg,wvarhidemem,wbadinit
         endif
@@ -107,6 +112,7 @@ else
     endif
     ifeq ($(tbb_os),macos)
         export DYLD_LIBRARY_PATH := $(DYLD_LIBRARY_PATH):$(work_dir)_release:$(work_dir)_debug
+        override CXXFLAGS += -Wl,-rpath,$(work_dir)_release -Wl,-rpath,$(work_dir)_debug
     else
         export LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(work_dir)_release:$(work_dir)_debug
         ifeq ($(findstring mic,$(offload) $(target)),mic)

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -20,8 +20,8 @@
 
 // Test mixing OpenMP and TBB
 
-/* SCR #471 
- Below is workaround to compile test within enviroment of Intel Compiler
+/* SCR #471
+ Below is workaround to compile test within environment of Intel Compiler
  but by Microsoft Compiler. So, there is wrong "omp.h" file included and
  manifest section is missed from .exe file - restoring here.
 
@@ -40,42 +40,42 @@
 
     #if defined(_DEBUG)
         #if defined(_M_IX86)
-            #pragma comment(linker,"/manifestdependency:\"type='win32' "            \
-                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".DebugOpenMP' "         \
+            #pragma comment(linker,"/manifestdependency:\"type='win32' "        \
+                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".DebugOpenMP' "      \
                 "version='" _CRT_ASSEMBLY_VERSION "' "                          \
                 "processorArchitecture='x86' "                                  \
                 "publicKeyToken='" _VC_ASSEMBLY_PUBLICKEYTOKEN "'\"")
         #elif defined(_M_X64)
-            #pragma comment(linker,"/manifestdependency:\"type='win32' "            \
-                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".DebugOpenMP' "         \
+            #pragma comment(linker,"/manifestdependency:\"type='win32' "        \
+                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".DebugOpenMP' "      \
                 "version='" _CRT_ASSEMBLY_VERSION "' "                          \
-                "processorArchitecture='amd64' "                                  \
+                "processorArchitecture='amd64' "                                \
                 "publicKeyToken='" _VC_ASSEMBLY_PUBLICKEYTOKEN "'\"")
         #elif defined(_M_IA64)
-            #pragma comment(linker,"/manifestdependency:\"type='win32' "            \
-                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".DebugOpenMP' "         \
+            #pragma comment(linker,"/manifestdependency:\"type='win32' "        \
+                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".DebugOpenMP' "      \
                 "version='" _CRT_ASSEMBLY_VERSION "' "                          \
-                "processorArchitecture='ia64' "                                  \
+                "processorArchitecture='ia64' "                                 \
                 "publicKeyToken='" _VC_ASSEMBLY_PUBLICKEYTOKEN "'\"")
         #endif
     #else   // _DEBUG
         #if defined(_M_IX86)
-            #pragma comment(linker,"/manifestdependency:\"type='win32' "            \
-                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".OpenMP' "              \
+            #pragma comment(linker,"/manifestdependency:\"type='win32' "        \
+                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".OpenMP' "           \
                 "version='" _CRT_ASSEMBLY_VERSION "' "                          \
                 "processorArchitecture='x86' "                                  \
                 "publicKeyToken='" _VC_ASSEMBLY_PUBLICKEYTOKEN "'\"")
         #elif defined(_M_X64)
-            #pragma comment(linker,"/manifestdependency:\"type='win32' "            \
-                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".OpenMP' "              \
+            #pragma comment(linker,"/manifestdependency:\"type='win32' "        \
+                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".OpenMP' "           \
                 "version='" _CRT_ASSEMBLY_VERSION "' "                          \
-                "processorArchitecture='amd64' "                                  \
+                "processorArchitecture='amd64' "                                \
                 "publicKeyToken='" _VC_ASSEMBLY_PUBLICKEYTOKEN "'\"")
         #elif defined(_M_IA64)
-            #pragma comment(linker,"/manifestdependency:\"type='win32' "            \
-                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".OpenMP' "              \
+            #pragma comment(linker,"/manifestdependency:\"type='win32' "        \
+                "name='" __LIBRARIES_ASSEMBLY_NAME_PREFIX ".OpenMP' "           \
                 "version='" _CRT_ASSEMBLY_VERSION "' "                          \
-                "processorArchitecture='ia64' "                                  \
+                "processorArchitecture='ia64' "                                 \
                 "publicKeyToken='" _VC_ASSEMBLY_PUBLICKEYTOKEN "'\"")
         #endif
     #endif  // _DEBUG
@@ -90,9 +90,9 @@ typedef short T;
 void SerialConvolve( T c[], const T a[], int m, const T b[], int n ) {
     for( int i=0; i<m+n-1; ++i ) {
         int start = i<n ? 0 : i-n+1;
-        int finish = i<m ? i+1 : m; 
+        int finish = i<m ? i+1 : m;
         T sum = 0;
-        for( int j=start; j<finish; ++j ) 
+        for( int j=start; j<finish; ++j )
             sum += a[j]*b[i-j];
         c[i] = sum;
     }
@@ -126,11 +126,11 @@ public:
     {}
     InnerBody( InnerBody& x, split ) :
         my_a(x.my_a), my_b(x.my_b), i(x.i), sum(0)
-    { 
+    {
     }
     void join( InnerBody& x ) {sum += x.sum;}
     void operator()( const blocked_range<int>& range ) {
-        for( int j=range.begin(); j!=range.end(); ++j ) 
+        for( int j=range.begin(); j!=range.end(); ++j )
             sum += my_a[j]*my_b[i-j];
     }
 };
@@ -142,13 +142,13 @@ public:
 //! Test OpenMMP loop around TBB loop
 void OpenMP_TBB_Convolve( T c[], const T a[], int m, const T b[], int n ) {
     REMARK("testing OpenMP loop around TBB loop\n");
-#pragma omp parallel 
+#pragma omp parallel
     {
         task_scheduler_init init;
 #pragma omp for
         for( int i=0; i<m+n-1; ++i ) {
             int start = i<n ? 0 : i-n+1;
-            int finish = i<m ? i+1 : m; 
+            int finish = i<m ? i+1 : m;
             InnerBody body(c,a,b,i);
             parallel_reduce( blocked_range<int>(start,finish,10), body );
             c[i] = body.sum;
@@ -163,17 +163,16 @@ class OuterBody: NoAssign {
     const int m;
     const int n;
 public:
-    T sum;
     OuterBody( T c[], const T a[], int m_, const T b[], int n_ ) :
         my_a(a), my_b(b), my_c(c), m(m_), n(n_)
     {}
     void operator()( const blocked_range<int>& range ) const {
         for( int i=range.begin(); i!=range.end(); ++i ) {
             int start = i<n ? 0 : i-n+1;
-            int finish = i<m ? i+1 : m; 
+            int finish = i<m ? i+1 : m;
             T sum = 0;
 #pragma omp parallel for reduction(+:sum)
-            for( int j=start; j<finish; ++j ) 
+            for( int j=start; j<finish; ++j )
                 sum += my_a[j]*my_b[i-j];
             my_c[i] = sum;
         }
@@ -186,29 +185,56 @@ void TBB_OpenMP_Convolve( T c[], const T a[], int m, const T b[], int n ) {
     parallel_for( blocked_range<int>(0,m+n-1,10), OuterBody( c, a, m, b, n ) );
 }
 
-#include <stdio.h>
+#if __INTEL_COMPILER
+// A regression test on OpenMP affinity settings affecting TBB.
+// Testing only with __INTEL_COMPILER because we do not provide interoperability with other OpenMP implementations.
+
+#define __TBB_NUM_THREADS_AFFECTED_BY_LIBIOMP (KMP_VERSION_BUILD<20150922)
+
+void TestNumThreads() {
+#if __TBB_NUM_THREADS_AFFECTED_BY_LIBIOMP
+    REPORT("Known issue: the default number of threads is affected by OpenMP affinity\n");
+#else
+    REMARK("Compare default number of threads for OpenMP and TBB\n");
+    Harness::SetEnv("KMP_AFFINITY","compact");
+    // Make an OpenMP call before initializing TBB
+    int omp_nthreads = omp_get_max_threads();
+    #pragma omp parallel
+    {}
+    int tbb_nthreads = tbb::task_scheduler_init::default_num_threads();
+    REMARK("# of threads (OpenMP): %d\n", omp_nthreads);
+    REMARK("# of threads (TBB): %d\n", tbb_nthreads);
+    // For the purpose of testing, assume that OpenMP and TBB should utilize the same # of threads.
+    // If it's not true on some platforms, the test will need to be adjusted.
+    ASSERT( tbb_nthreads==omp_nthreads, "Initialization of TBB is possibly affected by OpenMP");
+#endif
+}
+#endif // __INTEL_COMPILER
 
 const int M = 17*17;
 const int N = 13*13;
-T a[M], b[N];
+T A[M], B[N];
 T expected[M+N], actual[M+N];
 
 template <class Func>
 void RunTest( Func F, int m, int n, int p, bool wait_workers = false ) {
     task_scheduler_init init( p, 0, wait_workers );
     memset( actual, -1, (m+n)*sizeof(T) );
-    F( actual, a, m, b, n );
+    F( actual, A, m, B, n );
     ASSERT( memcmp(actual, expected, (m+n-1)*sizeof(T))==0, NULL );
 }
 
 int TestMain () {
+#if __INTEL_COMPILER
+    TestNumThreads(); // Testing initialization-related behavior; must be the first
+#endif // __INTEL_COMPILER
     MinThread = 1;
     for( int p=MinThread; p<=MaxThread; ++p ) {
         for( int m=1; m<=M; m*=17 ) {
             for( int n=1; n<=N; n*=13 ) {
-                for( int i=0; i<m; ++i ) a[i] = T(1+i/5);
-                for( int i=0; i<n; ++i ) b[i] = T(1+i/7);
-                SerialConvolve( expected, a, m, b, n );
+                for( int i=0; i<m; ++i ) A[i] = T(1+i/5);
+                for( int i=0; i<n; ++i ) B[i] = T(1+i/7);
+                SerialConvolve( expected, A, m, B, n );
                 RunTest( OpenMP_TBB_Convolve, m, n, p );
                 RunTest( TBB_OpenMP_Convolve, m, n, p
 #if OPENMP_ASYNC_SHUTDOWN_BROKEN

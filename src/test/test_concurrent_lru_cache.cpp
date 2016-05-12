@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -95,7 +95,7 @@ namespace helpers{
     template <typename counter_type = size_t>
     struct object_instances_counting_type{
         counter_type * m_p_count;
-        object_instances_counting_type(): m_p_count (new counter_type){*m_p_count =1; } //to overcome absense of constructor in tbb::atomic
+        object_instances_counting_type(): m_p_count (new counter_type){*m_p_count =1; } //to overcome absence of constructor in tbb::atomic
         ~object_instances_counting_type(){ if (! --(*m_p_count)){delete(m_p_count);}}
         object_instances_counting_type(object_instances_counting_type const& other): m_p_count(other.m_p_count){
             ++(*m_p_count);
@@ -142,16 +142,16 @@ namespace helpers{
 
             };
             TEST_CASE_WITH_FIXTURE(test_object_instances_counting_type_copy,native_for_single_op_repeated_fixture){
-                struct _{ static void copy(object_instances_counting_concurrent_type& source){
-                    object_instances_counting_concurrent_type copy(source);
+                struct _{ static void copy(object_instances_counting_concurrent_type& a_source){
+                    object_instances_counting_concurrent_type copy(a_source);
                     helpers::prevent_optimizing_out(copy);
                 }};
                 run_native_for_and_assert_source_is_unique(&_::copy,"reference counting during copy construction/destruction is not thread safe ?");
             }
             TEST_CASE_WITH_FIXTURE(test_object_instances_counting_type_assignment,native_for_single_op_repeated_fixture){
-                struct _{ static void assign(object_instances_counting_concurrent_type& source){
+                struct _{ static void assign(object_instances_counting_concurrent_type& a_source){
                     object_instances_counting_concurrent_type assigned;
-                    assigned = source;
+                    assigned = a_source;
                     helpers::prevent_optimizing_out(assigned);
                 }};
                 run_native_for_and_assert_source_is_unique(&_::assign,"reference counting during assigning/destruction is not thread safe ?");

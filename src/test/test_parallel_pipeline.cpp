@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -35,10 +35,9 @@ const unsigned n_tokens = 8;
 // we can conceivably have two buffers used in the middle filter for every token in flight, so
 // we must allocate two buffers for every token.  Unlikely, but possible.
 const unsigned n_buffers = 2*n_tokens;
-const unsigned max_counter = 16;
+const int max_counter = 16;
 static tbb::atomic<int> output_counter;
 static tbb::atomic<int> input_counter;
-static tbb::atomic<int> check_type_counter;
 static tbb::atomic<int> non_pointer_specialized_calls;
 static tbb::atomic<int> pointer_specialized_calls;
 static tbb::atomic<int> first_pointer_specialized_calls;
@@ -48,7 +47,7 @@ static tbb::spin_mutex buffer_mutex;
 static int intbuffer[max_counter];  // store results for <int,int> parallel pipeline test
 static bool check_intbuffer;
 
-static void* buffers[n_buffers]; 
+static void* buffers[n_buffers];
 static bool buf_available[n_buffers];
 
 void *fetchNextBuffer() {
@@ -81,39 +80,7 @@ private:
     T *my_p;
 };
 
-template<class Counter>
-class check_type : Harness::NoAfterlife {
-    Counter id;
-    bool am_ready;
-public:
-    check_type( ) : id(0), am_ready(false) {
-        ++check_type_counter;
-    }
-
-    check_type(const check_type& other) : Harness::NoAfterlife(other) {
-        other.AssertLive();
-        AssertLive();
-        id = other.id;
-        am_ready = other.am_ready;
-        ++check_type_counter;
-    }
-
-    ~check_type() { 
-        AssertLive(); 
-        --check_type_counter;
-        ASSERT(check_type_counter >= 0, "too many destructions");
-    }
-
-    unsigned int my_id() { AssertLive(); return id; }
-    bool is_ready() { AssertLive(); return am_ready; }
-    void function() {
-        AssertLive();
-        if( id == 0 ) {
-            id = 1;
-            am_ready = true;
-        }
-    }
-};
+#include "harness_checktype.h"
 
 // methods for testing check_type< >, that return okay values for other types.
 template<typename T>
@@ -154,7 +121,7 @@ public:
         AssertLive();
         if( --input_counter < 0 ) {
             control.stop();
-        } 
+        }
         else  // only count successful reads
             ++non_pointer_specialized_calls;
         return U();  // default constructed
@@ -190,7 +157,7 @@ public:
         if( --input_counter < 0 ) {
             control.stop();
         }
-        else 
+        else
             ++non_pointer_specialized_calls;
     }
 
@@ -360,10 +327,10 @@ void checkCounters(final_assert_type my_t) {
             ASSERT(pointer_specialized_calls+first_pointer_specialized_calls+second_pointer_specialized_calls == 0, "non-pointer filters specialized to pointer");
             ASSERT(non_pointer_specialized_calls == 3*max_counter, "bad count for non-pointer filters");
             if(check_intbuffer) {
-                for(int i = 1; i <= (int)max_counter; ++i) {
+                for(int i = 1; i <= max_counter; ++i) {
                     int j = i*i;
                     bool found_val = false;
-                    for(int k = 0; k < (int)max_counter; ++k) {
+                    for(int k = 0; k < max_counter; ++k) {
                         if(intbuffer[k] == j) {
                             found_val = true;
                             break;
@@ -380,7 +347,7 @@ void checkCounters(final_assert_type my_t) {
                     second_pointer_specialized_calls == 0, "incorrect specialization for firstpointer");
             break;
         case assert_secondpointer:
-            ASSERT(pointer_specialized_calls == max_counter && 
+            ASSERT(pointer_specialized_calls == max_counter &&
                     first_pointer_specialized_calls == 0 &&
                     non_pointer_specialized_calls == max_counter &&  // input filter
                     second_pointer_specialized_calls == max_counter, "incorrect specialization for firstpointer");
@@ -392,13 +359,9 @@ void checkCounters(final_assert_type my_t) {
         case no_pointer_counts:
             break;
     }
-    if(check_type_counter > 0) {
-        REMARK("check_type_counter == %lu\n", (unsigned long)check_type_counter);
-    }
-    ASSERT(!check_type_counter, "Error in check_type creation/destruction");
 }
 
-static const tbb::filter::mode filter_table[] = { tbb::filter::parallel, tbb::filter::serial_in_order, tbb::filter::serial_out_of_order}; 
+static const tbb::filter::mode filter_table[] = { tbb::filter::parallel, tbb::filter::serial_in_order, tbb::filter::serial_out_of_order};
 const unsigned number_of_filter_types = sizeof(filter_table)/sizeof(filter_table[0]);
 
 typedef tbb::filter_t<void, void> filter_chain;
@@ -434,7 +397,7 @@ void run_function_spec() {
         tbb::atomic<int> counter;
         counter = max_counter;
         // Construct filter using lambda-syntax when parallel_pipeline() is being run;
-        tbb::parallel_pipeline( n_tokens, 
+        tbb::parallel_pipeline( n_tokens,
             tbb::make_filter<void, void>(filter_table[i], [&counter]( tbb::flow_control& control ) {
                     if( counter-- == 0 )
                         control.stop();
@@ -447,11 +410,11 @@ void run_function_spec() {
 }
 
 template<typename t1, typename t2>
-void run_filter_set( 
-        input_filter<t1>& i_filter, 
-        middle_filter<t1,t2>& m_filter, 
-        output_filter<t2>& o_filter, 
-        mode_array *filter_type, 
+void run_filter_set(
+        input_filter<t1>& i_filter,
+        middle_filter<t1,t2>& m_filter,
+        output_filter<t2>& o_filter,
+        mode_array *filter_type,
         final_assert_type my_t) {
     tbb::filter_t<void, t1> filter1( filter_type[0], i_filter );
     tbb::filter_t<t1, t2> filter2( filter_type[1], m_filter );
@@ -487,7 +450,7 @@ void run_filter_set(
 
     // Construct filters and create the sequence when parallel_pipeline() is being run
     resetCounters();
-    tbb::parallel_pipeline( n_tokens, 
+    tbb::parallel_pipeline( n_tokens,
                tbb::make_filter<void, t1>(filter_type[0], i_filter) &
                tbb::make_filter<t1, t2>(filter_type[1], m_filter) &
                tbb::make_filter<t2, void>(filter_type[2], o_filter) );
@@ -527,7 +490,7 @@ void run_lambdas_test( mode_array *filter_type ) {
     counter = max_counter;
     // Construct filters using lambda-syntax and create the sequence when parallel_pipeline() is being run;
     resetCounters();  // only need the output_counter reset.
-    tbb::parallel_pipeline( n_tokens, 
+    tbb::parallel_pipeline( n_tokens,
         tbb::make_filter<void, t1>(filter_type[0], [&counter]( tbb::flow_control& control ) -> t1 {
                 if( --counter < 0 )
                     control.stop();
@@ -536,15 +499,15 @@ void run_lambdas_test( mode_array *filter_type ) {
         tbb::make_filter<t1, t2>(filter_type[1], []( t1 /*my_storage*/ ) -> t2 {
                 return t2(); }
         ) &
-        tbb::make_filter<t2, void>(filter_type[2], [] ( t2 ) -> void { 
+        tbb::make_filter<t2, void>(filter_type[2], [] ( t2 ) -> void {
                 output_counter++; }
-        ) 
+        )
     );
     checkCounters(no_pointer_counts);  // don't have to worry about specializations
     counter = max_counter;
     // pointer filters
     resetCounters();
-    tbb::parallel_pipeline( n_tokens, 
+    tbb::parallel_pipeline( n_tokens,
         tbb::make_filter<void, t1*>(filter_type[0], [&counter]( tbb::flow_control& control ) -> t1* {
                 if( --counter < 0 ) {
                     control.stop();
@@ -556,17 +519,17 @@ void run_lambdas_test( mode_array *filter_type ) {
                 tbb::tbb_allocator<t1>().destroy(my_storage); // my_storage->~t1();
                 return new(my_storage) t2(); }
         ) &
-        tbb::make_filter<t2*, void>(filter_type[2], [] ( t2* my_storage ) -> void { 
+        tbb::make_filter<t2*, void>(filter_type[2], [] ( t2* my_storage ) -> void {
                 tbb::tbb_allocator<t2>().destroy(my_storage);  // my_storage->~t2();
                 freeBuffer(my_storage);
                 output_counter++; }
-        ) 
+        )
     );
     checkCounters(no_pointer_counts);
     // first filter outputs pointer
     counter = max_counter;
     resetCounters();
-    tbb::parallel_pipeline( n_tokens, 
+    tbb::parallel_pipeline( n_tokens,
         tbb::make_filter<void, t1*>(filter_type[0], [&counter]( tbb::flow_control& control ) -> t1* {
                 if( --counter < 0 ) {
                     control.stop();
@@ -579,15 +542,15 @@ void run_lambdas_test( mode_array *filter_type ) {
                 freeBuffer(my_storage);
                 return t2(); }
         ) &
-        tbb::make_filter<t2, void>(filter_type[2], [] ( t2 /*my_storage*/) -> void { 
+        tbb::make_filter<t2, void>(filter_type[2], [] ( t2 /*my_storage*/) -> void {
                 output_counter++; }
-        ) 
+        )
     );
     checkCounters(no_pointer_counts);
     // second filter outputs pointer
     counter = max_counter;
     resetCounters();
-    tbb::parallel_pipeline( n_tokens, 
+    tbb::parallel_pipeline( n_tokens,
         tbb::make_filter<void, t1>(filter_type[0], [&counter]( tbb::flow_control& control ) -> t1 {
                 if( --counter < 0 ) {
                     control.stop();
@@ -597,11 +560,11 @@ void run_lambdas_test( mode_array *filter_type ) {
         tbb::make_filter<t1, t2*>(filter_type[1], []( t1 /*my_storage*/ ) -> t2* {
                 return new(fetchNextBuffer()) t2(); }
         ) &
-        tbb::make_filter<t2*, void>(filter_type[2], [] ( t2* my_storage) -> void { 
+        tbb::make_filter<t2*, void>(filter_type[2], [] ( t2* my_storage) -> void {
                 tbb::tbb_allocator<t2>().destroy(my_storage);  // my_storage->~t2();
                 freeBuffer(my_storage);
                 output_counter++; }
-        ) 
+        )
     );
     checkCounters(no_pointer_counts);
 }
@@ -617,6 +580,9 @@ void run_function(const char *l1, const char *l2) {
     check_intbuffer = (!strcmp(l1,"int") && !strcmp(l2,"int"));
     if(check_intbuffer) REMARK(", check output of filters");
     REMARK("\n");
+
+    Check<type1> check1;  // check constructions/destructions
+    Check<type2> check2;  // for type1 or type2 === check_type<T>
 
     const size_t number_of_filters = 3;
 
@@ -690,18 +656,12 @@ int TestMain() {
         run_function<size_t,double>("size_t", "double");
         run_function<size_t,bool>("size_t", "bool");
         run_function<int,int>("int","int");
-        check_type_counter = 0;
         run_function<check_type<unsigned int>,size_t>("check_type<unsigned int>", "size_t");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned int> creation/destruction");
         run_function<check_type<unsigned short>,size_t>("check_type<unsigned short>", "size_t");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned short> creation/destruction");
         run_function<check_type<unsigned int>, check_type<unsigned int> >("check_type<unsigned int>", "check_type<unsigned int>");
         run_function<check_type<unsigned int>, check_type<unsigned short> >("check_type<unsigned int>", "check_type<unsigned short>");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned int> creation/destruction");
         run_function<check_type<unsigned short>, check_type<unsigned short> >("check_type<unsigned short>", "check_type<unsigned short>");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned short> creation/destruction");
         run_function<double, check_type<unsigned short> >("double", "check_type<unsigned short>");
-        ASSERT(!check_type_counter, "Error in check_type<unsigned short> creation/destruction");
     }
     return Harness::Done;
 }

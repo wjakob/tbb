@@ -23,50 +23,47 @@ This directory contains the source code and unit tests for Intel&reg; Threading 
 <h2>Files</h2>
 <dl>
 <dt><a href="Makefile">Makefile</a>
-</dt><dd>Advanced Makefile for developing and debugging of TBB. See the <a href="../build/index.html#build">basic build directions</a>. Additional targets and options:
-    <dl>
+<dd>Advanced Makefile for developing and debugging of TBB. See the <a href="../build/index.html#build">basic build directions</a>. Additional targets and options:
     <dt><tt>make test_{name} time_{name}</tt>
-    </dt><dd>Make and run individual test or benchmark.</dd>
+    <dd>Make and run individual test or benchmark.
     <dt><tt>make stress_{name}</tt>
-    </dt><dd>Equivalent to 'make test_{name}' but runs until a failure detected or terminated by user.</dd>
+    <dd>Equivalent to 'make test_{name}' but runs until a failure detected or terminated by user.
     <dt><tt>make run_cmd="{command}" [(above options or targets)]</tt>
-    </dt><dd>Command prefix for tests execution. Also, "run_cmd=-" will ignore test execution failures. See also -k and -i options of the GNU make for more options to keep building and testing despite of failures.</dd>
+    <dd>Command prefix for tests execution. Also, "run_cmd=-" will ignore test execution failures. See also -k and -i options of the GNU make for more options to keep building and testing despite of failures.
     <dt><tt>make debug_{name}</tt>
-    </dt><dd>Equivalent to 'make test_{name}' but compiles in debug mode and runs under debugger ("run_cmd=$(debugger)").</dd>
+    <dd>Equivalent to 'make test_{name}' but compiles in debug mode and runs under debugger ("run_cmd=$(debugger)").
     <dt><tt>make args="{command-line arguments}" [(above options or targets)]</tt>
-    </dt><dd>Additional arguments for the run.</dd>
+    <dd>Additional arguments for the run.
     <dt><tt>make repeat="{N}" [(above options or targets)]</tt>
-    </dt><dd>Repeats execution N times.</dd>
+    <dd>Repeats execution N times.
     <dt><tt>make clean_{filename}</tt>
-    </dt><dd>Removes executable, object, and other intermediate files with specified filename ('*' also works).</dd>
+    <dd>Removes executable, object, and other intermediate files with specified filename ('*' also works).
     <dt><tt>make cfg={debug|release} [(above options or targets)]</tt>
-    </dt><dd>Specifies a build mode or corresponding directory to work in.</dd>
+    <dd>Specifies a build mode or corresponding directory to work in.
     <dt><tt>make tbb_strict=1 [(above options or targets)]</tt>
-    </dt><dd>Enables warnings as errors.</dd>
+    <dd>Enables warnings as errors.
     <dt><tt>make examples/{target}</tt>
-    </dt><dd>Invokes examples/Makefile with specified target.</dd>
+    <dd>Invokes examples/Makefile with specified target.
     <dt><tt>make clean_release clean_debug clean_examples</tt>
-    </dt><dd>Removes release or debug build directories, or cleans all examples.</dd>
+    <dd>Removes release or debug build directories, or cleans all examples.
     <dt><tt>make test_no_depends</tt>
-    </dt><dd>Equivalent to 'make test' but does not check for libraries updates.</dd>
+    <dd>Equivalent to 'make test' but does not check for libraries updates.
     <dt><tt>make info</tt>
-    </dt><dd>Output information about build configuration and directories.</dd>
+    <dd>Output information about build configuration and directories.
     <dt><tt>make cpp0x=1 [(above options or targets)]</tt>
-    </dt><dd>Enables C++0x extensions like lambdas for compilers that implement them as experimental features.</dd>
+    <dd>Enables C++0x extensions like lambdas for compilers that implement them as experimental features.
     <dt><tt>make CXXFLAGS={Flags} [(above options or targets)]</tt>
-    </dt><dd>Specifies additional options for compiler.</dd>
+    <dd>Specifies additional options for compiler.
     <dt><tt>make target={name} [(above options or targets)]</tt>
-    </dt><dd>Includes additional build/{name}.inc file after OS-specific one.</dd>
+    <dd>Includes additional build/{name}.inc file after OS-specific one.
     <dt><tt>make extra_inc={filename} [(above options or targets)]</tt>
-    </dt><dd>Includes additional makefile.</dd>
+    <dd>Includes additional makefile.
+    </dl>
 
-    </dd></dl>
-</dd></dl>
-
-<HR>
+<HR/>
 <A HREF="../index.html">Up to parent directory</A>
 <p></p>
-Copyright &copy; 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2016 Intel Corporation.  All Rights Reserved.
 <P></P>
 Intel is a registered trademark or trademark of Intel Corporation
 or its subsidiaries in the United States and other countries.

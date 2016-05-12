@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -31,13 +31,13 @@ namespace tbb {
 //! Thread-local storage with optional reduction
 /** @ingroup containers */
     template <typename T>
-        class combinable {
+    class combinable {
+
     private:
         typedef typename tbb::cache_aligned_allocator<T> my_alloc;
-
         typedef typename tbb::enumerable_thread_specific<T, my_alloc, ets_no_key> my_ets_type;
-        my_ets_type my_ets; 
- 
+        my_ets_type my_ets;
+
     public:
 
         combinable() { }
@@ -46,12 +46,25 @@ namespace tbb {
         combinable( finit _finit) : my_ets(_finit) { }
 
         //! destructor
-        ~combinable() { 
+        ~combinable() { }
+
+        combinable( const combinable& other) : my_ets(other.my_ets) { }
+
+#if __TBB_ETS_USE_CPP11
+        combinable( combinable&& other) : my_ets( std::move(other.my_ets)) { }
+#endif
+
+        combinable & operator=( const combinable & other) {
+            my_ets = other.my_ets;
+            return *this;
         }
 
-        combinable(const combinable& other) : my_ets(other.my_ets) { }
-
-        combinable & operator=( const combinable & other) { my_ets = other.my_ets; return *this; }
+#if __TBB_ETS_USE_CPP11
+        combinable & operator=( combinable && other) {
+            my_ets=std::move(other.my_ets);
+            return *this;
+        }
+#endif
 
         void clear() { my_ets.clear(); }
 

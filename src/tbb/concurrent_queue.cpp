@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -158,6 +158,8 @@ public:
         return array[index(k)];
     }
 
+    atomic<unsigned> abort_counter;
+
     //! Value for effective_capacity that denotes unbounded queue.
     static const ptrdiff_t infinite_capacity = ptrdiff_t(~size_t(0)/2);
 };
@@ -168,7 +170,7 @@ public:
     #pragma warning( disable: 4146 )
 #endif
 
-static void* invalid_page;
+static void* static_invalid_page;
 
 //------------------------------------------------------------------------
 // micro_queue
@@ -185,6 +187,7 @@ void micro_queue::push( const void* item, ticket k, concurrent_queue_base& base,
         } __TBB_CATCH(...) {
             ++base.my_rep->n_invalid_entries;
             make_invalid( k );
+            __TBB_RETHROW();
         }
         p->mask = 0;
         p->next = NULL;
@@ -298,6 +301,7 @@ micro_queue& micro_queue::assign( const micro_queue& src, concurrent_queue_base&
             tail_page = cur_page;
         } __TBB_CATCH(...) {
             make_invalid( g_index );
+            __TBB_RETHROW();
         }
     } else {
         head_page = tail_page = NULL;
@@ -328,17 +332,16 @@ void micro_queue::make_invalid( ticket k )
 {
     static concurrent_queue_base::page dummy = {static_cast<page*>((void*)1), 0};
     // mark it so that no more pushes are allowed.
-    invalid_page = &dummy;
+    static_invalid_page = &dummy;
     {
         spin_mutex::scoped_lock lock( page_mutex );
         tail_counter = k+concurrent_queue_rep::n_queue+1;
         if( page* q = tail_page )
-            q->next = static_cast<page*>(invalid_page);
+            q->next = static_cast<page*>(static_invalid_page);
         else
-            head_page = static_cast<page*>(invalid_page);
-        tail_page = static_cast<page*>(invalid_page);
+            head_page = static_cast<page*>(static_invalid_page);
+        tail_page = static_cast<page*>(static_invalid_page);
     }
-    __TBB_RETHROW();
 }
 
 #if _MSC_VER && !defined(__INTEL_COMPILER)
@@ -357,10 +360,10 @@ concurrent_queue_base_v3::concurrent_queue_base_v3( size_t item_sz ) {
                      1;
     my_capacity = size_t(-1)/(item_sz>1 ? item_sz : 2);
     my_rep = cache_aligned_allocator<concurrent_queue_rep>().allocate(1);
-    __TBB_ASSERT( (size_t)my_rep % NFS_GetLineSize()==0, "alignment error" );
-    __TBB_ASSERT( (size_t)&my_rep->head_counter % NFS_GetLineSize()==0, "alignment error" );
-    __TBB_ASSERT( (size_t)&my_rep->tail_counter % NFS_GetLineSize()==0, "alignment error" );
-    __TBB_ASSERT( (size_t)&my_rep->array % NFS_GetLineSize()==0, "alignment error" );
+    __TBB_ASSERT( is_aligned(my_rep, NFS_GetLineSize()), "alignment error" );
+    __TBB_ASSERT( is_aligned(&my_rep->head_counter, NFS_GetLineSize()), "alignment error" );
+    __TBB_ASSERT( is_aligned(&my_rep->tail_counter, NFS_GetLineSize()), "alignment error" );
+    __TBB_ASSERT( is_aligned(&my_rep->array, NFS_GetLineSize()), "alignment error" );
     memset(my_rep,0,sizeof(concurrent_queue_rep));
     new ( &my_rep->items_avail ) concurrent_monitor();
     new ( &my_rep->slots_avail ) concurrent_monitor();
@@ -384,6 +387,7 @@ void concurrent_queue_base_v8::internal_push_move( const void* src ) {
 
 void concurrent_queue_base_v3::internal_insert_item( const void* src, copy_specifics op_type ) {
     concurrent_queue_rep& r = *my_rep;
+    unsigned old_abort_counter = r.abort_counter;
     ticket k = r.tail_counter++;
     ptrdiff_t e = my_capacity;
 #if DO_ITT_NOTIFY
@@ -401,6 +405,10 @@ void concurrent_queue_base_v3::internal_insert_item( const void* src, copy_speci
         r.slots_avail.prepare_wait( thr_ctx, ((ptrdiff_t)(k-e)) );
         while( (ptrdiff_t)(k-r.head_counter)>=const_cast<volatile ptrdiff_t&>(e = my_capacity) ) {
             __TBB_TRY {
+                if( r.abort_counter!=old_abort_counter ) {
+                    r.slots_avail.cancel_wait( thr_ctx );
+                    throw_exception( eid_user_abort );
+                }
                 slept = r.slots_avail.commit_wait( thr_ctx );
             } __TBB_CATCH( tbb::user_abort& ) {
                 r.choose(k).abort_push(k, *this);
@@ -426,6 +434,8 @@ void concurrent_queue_base_v3::internal_pop( void* dst ) {
 #if DO_ITT_NOTIFY
     bool sync_prepare_done = false;
 #endif
+    unsigned old_abort_counter = r.abort_counter;
+    // This loop is a single pop operation; abort_counter should not be re-read inside
     do {
         k=r.head_counter++;
         if ( (ptrdiff_t)(r.tail_counter-k)<=0 ) { // queue is empty
@@ -440,6 +450,10 @@ void concurrent_queue_base_v3::internal_pop( void* dst ) {
             r.items_avail.prepare_wait( thr_ctx, k );
             while( (ptrdiff_t)(r.tail_counter-k)<=0 ) {
                 __TBB_TRY {
+                    if( r.abort_counter!=old_abort_counter ) {
+                        r.items_avail.cancel_wait( thr_ctx );
+                        throw_exception( eid_user_abort );
+                    }
                     slept = r.items_avail.commit_wait( thr_ctx );
                 } __TBB_CATCH( tbb::user_abort& ) {
                     r.head_counter--;
@@ -462,6 +476,7 @@ void concurrent_queue_base_v3::internal_pop( void* dst ) {
 
 void concurrent_queue_base_v3::internal_abort() {
     concurrent_queue_rep& r = *my_rep;
+    ++r.abort_counter;
     r.items_avail.abort_all();
     r.slots_avail.abort_all();
 }
@@ -540,7 +555,7 @@ void concurrent_queue_base_v3::internal_finish_clear() {
         page* tp = my_rep->array[i].tail_page;
         __TBB_ASSERT( my_rep->array[i].head_page==tp, "at most one page should remain" );
         if( tp!=NULL) {
-            if( tp!=invalid_page ) deallocate_page( tp );
+            if( tp!=static_invalid_page ) deallocate_page( tp );
             my_rep->array[i].tail_page = NULL;
         }
     }
@@ -558,6 +573,7 @@ void concurrent_queue_base_v3::internal_assign( const concurrent_queue_base& src
     my_rep->head_counter = src.my_rep->head_counter;
     my_rep->tail_counter = src.my_rep->tail_counter;
     my_rep->n_invalid_entries = src.my_rep->n_invalid_entries;
+    my_rep->abort_counter = src.my_rep->abort_counter;
 
     // copy micro_queues
     for( size_t i = 0; i<my_rep->n_queue; ++i )

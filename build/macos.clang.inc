@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -35,7 +35,7 @@ LIBDL = -ldl
 
 LIBS = -lpthread
 LINK_FLAGS =
-LIB_LINK_FLAGS = -dynamiclib
+LIB_LINK_FLAGS = -dynamiclib -install_name @rpath/$(BUILDING_LIBRARY)
 C_FLAGS = $(CPLUS_FLAGS)
 
 ifeq ($(cfg), release)
@@ -51,15 +51,9 @@ ifneq (,$(shell grep xtest `echo "\#include<immintrin.h>" | clang -E -M - 2>&1 |
     RTM_KEY = -mrtm
 endif
 
-ifeq (libc++,$(stdlib))
-    CPLUS_FLAGS    += -stdlib=libc++
-    LIB_LINK_FLAGS += -stdlib=libc++
-endif
-
-CPP11_FLAGS = -std=c++11 -D_TBB_CPP0X
-    
-ifneq (00,$(lambdas)$(cpp0x))
-    CXX_ONLY_FLAGS += $(CPP11_FLAGS)
+ifneq (,$(stdlib))
+    CPLUS_FLAGS    += -stdlib=$(stdlib)
+    LIB_LINK_FLAGS += -stdlib=$(stdlib)
 endif
 
 ifeq (intel64,$(arch))
@@ -84,6 +78,18 @@ ifeq (ppc32,$(arch))
     CPLUS_FLAGS += -arch ppc
     LINK_FLAGS += -arch ppc
     LIB_LINK_FLAGS += -arch ppc
+endif
+
+ifeq ($(arch),$(filter $(arch),armv7 armv7s arm64))
+    CPLUS_FLAGS += -arch $(arch)
+    LINK_FLAGS += -arch $(arch)
+    LIB_LINK_FLAGS += -arch $(arch)
+endif
+
+ifdef SDKROOT
+    CPLUS_FLAGS += -isysroot $(SDKROOT)
+    LINK_FLAGS += -L$(SDKROOT)/usr/lib/system -L$(SDKROOT)/usr/lib/
+    LIB_LINK_FLAGS += -L$(SDKROOT)/usr/lib/system -L$(SDKROOT)/usr/lib/
 endif
 
 #------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -117,6 +117,13 @@ inline void SpinWaitWhileEq(const volatile intptr_t &location, const intptr_t va
     tbb::internal::spin_wait_while_eq(location, value);
 }
 
+class AtomicBackoff {
+    tbb::internal::atomic_backoff backoff;
+public:
+    AtomicBackoff() {}
+    void pause() { backoff.pause(); }
+};
+
 inline void SpinWaitUntilEq(const volatile intptr_t &location, const intptr_t value) {
     tbb::internal::spin_wait_until_eq(location, value);
 }
@@ -133,8 +140,8 @@ static inline bool isAligned(T* arg, uintptr_t alignment) {
 static inline bool isPowerOfTwo(uintptr_t arg) {
     return tbb::internal::is_power_of_two(arg);
 }
-static inline bool isPowerOfTwoMultiple(uintptr_t arg, uintptr_t divisor) {
-    return arg && tbb::internal::is_power_of_two_factor(arg,divisor);
+static inline bool isPowerOfTwoAtLeast(uintptr_t arg, uintptr_t power2) {
+    return arg && tbb::internal::is_power_of_two_at_least(arg,power2);
 }
 
 #define MALLOC_STATIC_ASSERT(condition,msg) __TBB_STATIC_ASSERT(condition,msg)
@@ -193,7 +200,7 @@ namespace tbb {
 #if TBB_USE_THREADING_TOOLS
             call_itt_notify(releasing, &dst);
 #endif // TBB_USE_THREADING_TOOLS
-            FencedStore(*(intptr_t*)&dst, src); 
+            FencedStore(*(intptr_t*)&dst, src);
         }
 
         template <typename T>

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -18,12 +18,217 @@
     reasons why the executable file might be covered by the GNU General Public License.
 */
 
+#if _MSC_VER
+// Suppress "decorated name length exceeded, name was truncated" warning
+#if __INTEL_COMPILER
+    #pragma warning( disable: 2586 )
+#else
+    #pragma warning( disable: 4503 )
+#endif
+#endif
+
+#define TBB_PREVIEW_FLOW_GRAPH_FEATURES 1
 #include "harness.h"
+#include "harness_defs.h"
 #include "tbb/atomic.h"
 #include "harness_checktype.h"
 
 #include "tbb/flow_graph.h"
 #include "tbb/task_scheduler_init.h"
+
+#define __TBB_MIC_OFFLOAD_TEST_COMPILATION_BROKEN __TBB_MIC_OFFLOAD
+
+const char *names[] = {
+    "Adam", "Bruce", "Charles", "Daniel", "Evan", "Frederich", "George", "Hiram", "Ichabod",
+    "John", "Kevin", "Leonard", "Michael", "Ned", "Olin", "Paul", "Quentin", "Ralph", "Steven",
+    "Thomas", "Ulysses", "Victor", "Walter", "Xerxes", "Yitzhak", "Zebediah", "Anne", "Bethany",
+    "Clarisse", "Dorothy", "Erin", "Fatima", "Gabrielle", "Helen", "Irene", "Jacqueline",
+    "Katherine", "Lana", "Marilyn", "Noelle", "Okiilani", "Pauline", "Querida", "Rose", "Sybil",
+    "Tatiana", "Umiko", "Victoria", "Wilma", "Xena", "Yolanda", "Zoe", "Algernon", "Benjamin",
+    "Caleb", "Dylan", "Ezra", "Felix", "Gabriel", "Henry", "Issac", "Jasper", "Keifer",
+    "Lincoln", "Milo", "Nathaniel", "Owen", "Peter", "Quincy", "Ronan", "Silas", "Theodore",
+    "Uriah", "Vincent", "Wilbur", "Xavier", "Yoda", "Zachary", "Amelia", "Brielle", "Charlotte",
+    "Daphne", "Emma", "Fiona", "Grace", "Hazel", "Isla", "Juliet", "Keira", "Lily", "Mia",
+    "Nora", "Olivia", "Penelope", "Quintana", "Ruby", "Sophia", "Tessa", "Ursula", "Violet",
+    "Willow", "Xanthe", "Yvonne", "ZsaZsa", "Asher", "Bennett", "Connor", "Dominic", "Ethan",
+    "Finn", "Grayson", "Hudson", "Ian", "Jackson", "Kent", "Liam", "Matthew", "Noah", "Oliver",
+    "Parker", "Quinn", "Rhys", "Sebastian", "Taylor", "Umberto", "Vito", "William", "Xanto",
+    "Yogi", "Zane", "Ava", "Brenda", "Chloe", "Delilah", "Ella", "Felicity", "Genevieve",
+    "Hannah", "Isabella", "Josephine", "Kacie", "Lucy", "Madeline", "Natalie", "Octavia",
+    "Piper", "Qismah", "Rosalie", "Scarlett", "Tanya", "Uta", "Vivian", "Wendy", "Xola",
+    "Yaritza", "Zanthe" };
+
+static const int NameCnt = sizeof(names) / sizeof(char *);
+
+template<typename K>
+struct index_to_key {
+    K operator()(const int indx){
+        return (K)(3*indx+1);
+    }
+};
+
+template<>
+struct index_to_key<std::string>{
+    std::string operator()(const int indx){
+        return std::string(names[indx % NameCnt]);
+    }
+};
+
+template<typename K>
+struct K_deref {
+    typedef K type;
+};
+
+template<typename K>
+struct K_deref<K&> {
+    typedef K type;
+};
+
+template<typename K, typename V>
+struct MyKeyFirst {
+    K my_key;
+    V my_value;
+    MyKeyFirst(int i=0, int v=0 ) : my_key(index_to_key<K>()(i)), my_value((V)v){
+    }
+    void print_val() const {
+        REMARK("MyKeyFirst{");print_my_value(my_key); REMARK(","); print_my_value(my_value);REMARK("}");
+    }
+    operator int() const { return (int)my_value; }
+};
+
+template<typename K, typename V>
+struct MyKeySecond {
+    V my_value;
+    K my_key;
+    MyKeySecond(int i=0, int v = 0) : my_value((V)v), my_key(index_to_key<K>()(i)) {
+    }
+    void print_val() const {
+        REMARK("MyKeySecond{");print_my_value(my_key); REMARK(","); print_my_value(my_value);REMARK("}");
+    }
+    operator int() const { return (int)my_value; }
+};
+
+template<typename K, typename V>
+struct MyMessageKeyWithoutKey {
+    V my_value;
+    K my_message_key;
+    MyMessageKeyWithoutKey(int i=0, int v = 0) : my_value((V)v), my_message_key(index_to_key<K>()(i)) {
+    }
+    void print_val() const {
+        REMARK("MyMessageKeyWithoutKey{");print_my_value(my_message_key); REMARK(","); print_my_value(my_value);REMARK("}");
+    }
+    operator int() const { return (int)my_value; }
+    const K& key() const {
+        return my_message_key;
+    }
+};
+
+template<typename K, typename V>
+struct MyMessageKeyWithBrokenKey {
+    V my_value;
+    K my_key;
+    K my_message_key;
+    MyMessageKeyWithBrokenKey(int i=0, int v = 0) : my_value((V)v), my_key(), my_message_key(index_to_key<K>()(i)) {
+    }
+    void print_val() const {
+        REMARK("MyMessageKeyWithBrokenKey{");print_my_value(my_message_key); REMARK(","); print_my_value(my_value);REMARK("}");
+    }
+    operator int() const { return (int)my_value; }
+    const K& key() const {
+        return my_message_key;
+    }
+
+};
+
+template<typename K, typename V>
+struct MyKeyWithBrokenMessageKey {
+    V my_value;
+    K my_key;
+    MyKeyWithBrokenMessageKey(int i=0, int v = 0) : my_value((V)v), my_key(index_to_key<K>()(i)) {
+    }
+    void print_val() const {
+        REMARK("MyKeyWithBrokenMessageKey{");print_my_value(my_key); REMARK(","); print_my_value(my_value);REMARK("}");
+    }
+    operator int() const { return (int)my_value; }
+    K key() const {
+        ASSERT(false, "The method should never be called");
+        return K();
+    }
+};
+
+template<typename K, typename V>
+struct MyMessageKeyWithoutKeyMethod {
+    V my_value;
+    K my_message_key;
+    MyMessageKeyWithoutKeyMethod(int i=0, int v = 0) : my_value((V)v), my_message_key(index_to_key<K>()(i)) {
+    }
+    void print_val() const {
+        REMARK("MyMessageKeyWithoutKeyMethod{");print_my_value(my_message_key); REMARK(","); print_my_value(my_value);REMARK("}");
+    }
+    operator int() const { return (int)my_value; }
+#if __TBB_COMPLICATED_ADL_BROKEN
+    const K& key() const { return my_message_key; }
+#endif
+    //K key() const; // Do not define
+};
+
+// Overload for MyMessageKeyWithoutKeyMethod
+template <typename K, typename V>
+K key_from_message(const MyMessageKeyWithoutKeyMethod<typename tbb::internal::strip<K>::type, V> &m) {
+    return m.my_message_key;
+}
+
+
+// pattern for creating values in the tag_matching and key_matching, given an integer and the index in the tuple
+template<typename TT, size_t INDEX>
+struct make_thingie {
+    TT operator()(int const &i) {
+        return TT(i * (INDEX+1));
+    }
+};
+
+template<template <typename, typename> class T, typename K, typename V, size_t INDEX>
+struct make_thingie<T<K,V>, INDEX> {
+    T<K,V> operator()(int const &i) {
+        return T<K,V>(i, i*(INDEX+1));
+    }
+};
+
+// cast_from<T>::my_int_val(i);
+template<typename T>
+struct cast_from {
+    static int my_int_val(T const &i) { return (int)i; }
+};
+
+template<typename K, typename V>
+struct cast_from<MyKeyFirst<K,V> > {
+    static int my_int_val(MyKeyFirst<K,V> const &i) { return (int)(i.my_value); }
+};
+
+template<typename K, typename V>
+struct cast_from<MyKeySecond<K,V> > {
+    static int my_int_val(MyKeySecond<K,V> const &i) { return (int)(i.my_value); }
+};
+
+template<typename T>
+void print_my_value(T const &i) {
+    REMARK(" %d ", cast_from<T>::my_int_val(i));
+}
+
+template<typename K, typename V>
+void print_my_value(MyKeyFirst<K,V> const &i) {
+    i.print_val();
+}
+
+template<typename K, typename V>
+void print_my_value(MyKeySecond<K,V> const &i) {
+    i.print_val();
+}
+
+template<>
+void print_my_value(std::string const &i) {
+    REMARK("\"%s\"", i.c_str());
+}
 
 #if defined(_MSC_VER) && _MSC_VER < 1600
     #pragma warning (disable : 4503) //disabling the "decorated name length exceeded" warning for VS2008 and earlier
@@ -32,6 +237,125 @@
 //
 // Tests
 //
+
+//!
+// my_struct_key == given a type V with a field named my_key of type K, will return a copy of my_key
+template<class K, typename V>
+struct my_struct_key{
+    K operator()(const V& mv) {
+        return mv.my_key;
+    }
+};
+
+// specialization returning reference to my_key.
+template<class K, typename V>
+struct my_struct_key<K&, V>{
+    const K& operator()(const V& mv) {
+        return const_cast<const K&>(mv.my_key);
+    }
+};
+
+using tbb::internal::is_ref;
+
+template<class K, class V> struct VtoKFB {
+    typedef tbb::flow::interface8::internal::type_to_key_function_body<V, K> type;
+};
+
+template<typename K> struct make_hash_compare{ typedef typename tbb::tbb_hash_compare<K> type;};
+
+template<typename K, class V>
+void hash_buffer_test(const char *sname) {
+    typedef typename K_deref<K>::type KnoR;
+    tbb::flow::interface8::internal::hash_buffer<
+        K,
+        V,
+        typename VtoKFB<K,V>::type,
+        tbb::tbb_hash_compare<KnoR>
+        > my_hash_buffer;
+    const bool k_is_ref = is_ref<K>::value;
+    typedef tbb::flow::interface8::internal::type_to_key_function_body_leaf<
+        V, K, my_struct_key<K,V> > my_func_body_type;
+    typename VtoKFB<K,V>::type *kp = new my_func_body_type(my_struct_key<K,V>());
+    my_hash_buffer.set_key_func(kp);
+    REMARK("Running hash_buffer test on %s; is ref == %s\n", sname, k_is_ref ? "true":"false");
+    V mv1, mv0;
+    bool res;
+    for(int cnt = 0; cnt < 2; ++cnt) {
+        // insert 50 items after checking they are not already in the table
+        for( int i = 0; i < 50; ++i) {
+            KnoR kk = index_to_key<KnoR>()(i);
+            mv1.my_key = kk;
+            mv1.my_value = 0.5*i;
+            res = my_hash_buffer.find_with_key(kk, mv0);
+            ASSERT(!res, "Found non-inserted item");
+            res = my_hash_buffer.insert_with_key(mv1);
+            ASSERT(res, "insert failed");
+            res = my_hash_buffer.find_with_key(kk, mv0);
+            ASSERT(res, "not found after insert");
+            ASSERT(mv0.my_value == mv1.my_value, "result not correct");
+        }
+        // go backwards checking they are still there.
+        for( int i = 49; i >= 0; --i) {
+            KnoR kk = index_to_key<KnoR>()(i);
+            double value = 0.5*i;
+            res = my_hash_buffer.find_with_key(kk, mv0);
+            ASSERT(res, "find failed");
+            ASSERT(mv0.my_value == value, "result not correct");
+        }
+        // delete every third item, check they are gone
+        for(int i = 0; i < 50; i += 3) {
+            KnoR kk = index_to_key<KnoR>()(i);
+            my_hash_buffer.delete_with_key(kk);
+            res = my_hash_buffer.find_with_key(kk, mv0);
+            ASSERT(!res, "Found deleted item");
+        }
+        // check the deleted items are gone, the non-deleted items are there.
+        for(int i = 0; i < 50; ++i) {
+            KnoR kk = index_to_key<KnoR>()(i);
+            double value = 0.5*i;
+            if(i%3 == 0) {
+                res = my_hash_buffer.find_with_key(kk, mv0);
+                ASSERT(!res, "found an item that was previously deleted");
+            }
+            else {
+                res = my_hash_buffer.find_with_key(kk, mv0);
+                ASSERT(res, "find failed");
+                ASSERT(mv0.my_value == value, "result not correct");
+            }
+        }
+        // insert new items, check the deleted items return true, the non-deleted items return false.
+        for(int i = 0; i < 50; ++i) {
+            KnoR kk = index_to_key<KnoR>()(i);
+            double value = 1.5*i;
+            mv1.my_key = kk;
+            mv1.my_value = value;
+            res = my_hash_buffer.insert_with_key(mv1);
+            if(i%3 == 0) {
+                ASSERT(res, "didn't insert in empty slot");
+            }
+            else {
+                ASSERT(!res, "slot was empty on insert");
+            }
+        }
+        // delete all items
+        for(int i = 0; i < 50; ++i) {
+            KnoR kk = index_to_key<KnoR>()(i);
+            my_hash_buffer.delete_with_key(kk);
+            res = my_hash_buffer.find_with_key(kk, mv0);
+            ASSERT(!res, "Found deleted item");
+        }
+    }  // perform tasks twice
+}
+
+void
+TestTaggedBuffers() {
+    hash_buffer_test<int, MyKeyFirst<int,double> >("MyKeyFirst<int,double>");
+    hash_buffer_test<int&, MyKeyFirst<int,double> >("MyKeyFirst<int,double> with int&");
+    hash_buffer_test<int, MyKeySecond<int,double> >("MyKeySecond<int,double>");
+
+    hash_buffer_test<std::string, MyKeyFirst<std::string,double> >("MyKeyFirst<std::string,double>");
+    hash_buffer_test<std::string&, MyKeySecond<std::string,double> >("MyKeySecond<std::string,double> with std::string&");
+}
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
 template< typename T, typename NODE_TYPE >
@@ -53,52 +377,52 @@ protected:
     typename in_queue_t::successor_type *ms_p0_ptr;
     typename in_queue_t::successor_type *ms_p1_ptr;
     typename out_queue_t::predecessor_type *mp_ptr;
-    typename in_queue_t::predecessor_vector_type in0_p_vec;
-    typename in_queue_t::successor_vector_type in0_s_vec;
-    typename in_queue_t::predecessor_vector_type in1_p_vec;
-    typename in_queue_t::successor_vector_type in1_s_vec;
-    typename in_queue_t::predecessor_vector_type in2_p_vec;
-    typename in_queue_t::successor_vector_type in2_s_vec;
-    typename out_queue_t::predecessor_vector_type out0_p_vec;
-    typename out_queue_t::successor_vector_type out0_s_vec;
-    typename out_queue_t::predecessor_vector_type out1_p_vec;
-    typename out_queue_t::successor_vector_type out1_s_vec;
-    typename in_queue_t::predecessor_vector_type mp0_vec;
-    typename in_queue_t::predecessor_vector_type mp1_vec;
-    typename out_queue_t::successor_vector_type ms_vec;
+    typename in_queue_t::predecessor_list_type in0_p_list;
+    typename in_queue_t::successor_list_type in0_s_list;
+    typename in_queue_t::predecessor_list_type in1_p_list;
+    typename in_queue_t::successor_list_type in1_s_list;
+    typename in_queue_t::predecessor_list_type in2_p_list;
+    typename in_queue_t::successor_list_type in2_s_list;
+    typename out_queue_t::predecessor_list_type out0_p_list;
+    typename out_queue_t::successor_list_type out0_s_list;
+    typename out_queue_t::predecessor_list_type out1_p_list;
+    typename out_queue_t::successor_list_type out1_s_list;
+    typename in_queue_t::predecessor_list_type mp0_list;
+    typename in_queue_t::predecessor_list_type mp1_list;
+    typename out_queue_t::successor_list_type ms_list;
 
-    virtual void set_up_vectors() {
-        in0_p_vec.clear();
-        in0_s_vec.clear();
-        in1_p_vec.clear();
-        in1_s_vec.clear();
-        in2_p_vec.clear();
-        in2_s_vec.clear();
-        out0_p_vec.clear();
-        out0_s_vec.clear();
-        out1_p_vec.clear();
-        out1_s_vec.clear();
-        mp0_vec.clear();
-        mp1_vec.clear();
-        ms_vec.clear();
+    virtual void set_up_lists() {
+        in0_p_list.clear();
+        in0_s_list.clear();
+        in1_p_list.clear();
+        in1_s_list.clear();
+        in2_p_list.clear();
+        in2_s_list.clear();
+        out0_p_list.clear();
+        out0_s_list.clear();
+        out1_p_list.clear();
+        out1_s_list.clear();
+        mp0_list.clear();
+        mp1_list.clear();
+        ms_list.clear();
 
-        in0.copy_predecessors(in0_p_vec);
-        in0.copy_successors(in0_s_vec);
-        in1.copy_predecessors(in1_p_vec);
-        in1.copy_successors(in1_s_vec);
-        in2.copy_predecessors(in2_p_vec);
-        in2.copy_successors(in2_s_vec);
-        tbb::flow::input_port<0>(middle).copy_predecessors(mp0_vec);
-        tbb::flow::input_port<1>(middle).copy_predecessors(mp1_vec);
-        middle.copy_successors(ms_vec);
-        out0.copy_predecessors(out0_p_vec);
-        out0.copy_successors(out0_s_vec);
-        out1.copy_predecessors(out1_p_vec);
-        out1.copy_successors(out1_s_vec);
+        in0.copy_predecessors(in0_p_list);
+        in0.copy_successors(in0_s_list);
+        in1.copy_predecessors(in1_p_list);
+        in1.copy_successors(in1_s_list);
+        in2.copy_predecessors(in2_p_list);
+        in2.copy_successors(in2_s_list);
+        tbb::flow::input_port<0>(middle).copy_predecessors(mp0_list);
+        tbb::flow::input_port<1>(middle).copy_predecessors(mp1_list);
+        middle.copy_successors(ms_list);
+        out0.copy_predecessors(out0_p_list);
+        out0.copy_successors(out0_s_list);
+        out1.copy_predecessors(out1_p_list);
+        out1.copy_successors(out1_s_list);
     }
 
     void check_tuple( T &r, tuple_t &v ) {
-        T t0 = tbb::flow::get<0>(v); 
+        T t0 = tbb::flow::get<0>(v);
         T t1 = tbb::flow::get<1>(v);
         ASSERT( (t0 == 1 || t0 == 2) && (t0&r) == 0, "duplicate value" );
         r |= t0;
@@ -107,8 +431,8 @@ protected:
     }
 
     void make_and_validate_full_graph() {
-        /*     in0                         */ 
-        /*         \                       */ 
+        /*     in0                         */
+        /*         \                       */
         /*           port0          out0   */
         /*         /       |      /        */
         /*     in1         middle          */
@@ -120,32 +444,34 @@ protected:
         tbb::flow::make_edge( middle, out0 );
         tbb::flow::make_edge( middle, out1 );
 
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 1 && in0_s_vec.size() == 1 && in0_s_vec[0] == ms_p0_ptr, "expected 1 successor" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 1 && in1_s_vec.size() == 1 && in1_s_vec[0] == ms_p0_ptr, "expected 1 successor" );
-        ASSERT( in2.predecessor_count() == 0 && in2_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in2.successor_count() == 1 && in2_s_vec.size() == 1 && in2_s_vec[0] == ms_p1_ptr, "expected 1 successor" );
-        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 2 && mp0_vec.size() == 2, "expected 2 predecessors" );
-        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 1 && mp1_vec.size() == 1, "expected 1 predecessors" );
-        ASSERT( middle.successor_count() == 2 && ms_vec.size() == 2, "expected 2 successors" );
-        ASSERT( out0.predecessor_count() == 1 && out0_p_vec.size() == 1 && out0_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 1 && out1_p_vec.size() == 1 && out1_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 1 && in0_s_list.size() == 1 && *(in0_s_list.begin()) == ms_p0_ptr, "expected 1 successor" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 1 && in1_s_list.size() == 1 && *(in1_s_list.begin()) == ms_p0_ptr, "expected 1 successor" );
+        ASSERT( in2.predecessor_count() == 0 && in2_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in2.successor_count() == 1 && in2_s_list.size() == 1 && *(in2_s_list.begin()) == ms_p1_ptr, "expected 1 successor" );
+        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 2 && mp0_list.size() == 2, "expected 2 predecessors" );
+        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 1 && mp1_list.size() == 1, "expected 1 predecessors" );
+        ASSERT( middle.successor_count() == 2 && ms_list.size() == 2, "expected 2 successors" );
+        ASSERT( out0.predecessor_count() == 1 && out0_p_list.size() == 1 && *(out0_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 1 && out1_p_list.size() == 1 && *(out1_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
 
-        int first_pred = mp0_vec[0] == ins[0] ? 0 : ( mp0_vec[0] == ins[1] ? 1 : -1 );
-        int second_pred = mp0_vec[1] == ins[0] ? 0 : ( mp0_vec[1] == ins[1] ? 1 : -1 );
-        ASSERT( first_pred != -1 && second_pred != -1 && first_pred != second_pred, "bad predecessor(s) for middle port 0" ); 
+        typename in_queue_t::predecessor_list_type::iterator mp0_list_iter = mp0_list.begin(); ++mp0_list_iter;
+        int first_pred = *(mp0_list.begin()) == ins[0] ? 0 : ( *(mp0_list.begin()) == ins[1] ? 1 : -1 );
+        int second_pred = *mp0_list_iter == ins[0] ? 0 : ( *mp0_list_iter == ins[1] ? 1 : -1 );
+        ASSERT( first_pred != -1 && second_pred != -1 && first_pred != second_pred, "bad predecessor(s) for middle port 0" );
 
-        ASSERT( mp1_vec[0] == ins[2], "bad predecessor for middle port 1" );
+        ASSERT( *(mp1_list.begin()) == ins[2], "bad predecessor for middle port 1" );
 
-        int first_succ = ms_vec[0] == outs[0] ? 0 : ( ms_vec[0] == outs[1] ? 1 : -1 );
-        int second_succ = ms_vec[1] == outs[0] ? 0 : ( ms_vec[1] == outs[1] ? 1 : -1 );
-        ASSERT( first_succ != -1 && second_succ != -1 && first_succ != second_succ, "bad successor(s) for middle" ); 
- 
+        typename out_queue_t::successor_list_type::iterator ms_list_iter = ms_list.begin(); ++ms_list_iter;
+        int first_succ = *(ms_list.begin()) == outs[0] ? 0 : ( *(ms_list.begin()) == outs[1] ? 1 : -1 );
+        int second_succ = *ms_list_iter == outs[0] ? 0 : ( *ms_list_iter == outs[1] ? 1 : -1 );
+        ASSERT( first_succ != -1 && second_succ != -1 && first_succ != second_succ, "bad successor(s) for middle" );
+
         in0.try_put(1);
         in1.try_put(2);
         in2.try_put(8);
@@ -154,7 +480,7 @@ protected:
 
         T v_in;
         tuple_t v;
-    
+
         ASSERT( in0.try_get(v_in) == false, "buffer should not have a value" );
         ASSERT( in1.try_get(v_in) == false, "buffer should not have a value" );
         ASSERT( in1.try_get(v_in) == false, "buffer should not have a value" );
@@ -178,35 +504,35 @@ protected:
     }
 
     void validate_partial_graph() {
-        /*     in0                         */ 
-        /*                                 */ 
+        /*     in0                         */
+        /*                                 */
         /*           port0          out0   */
         /*         /       |               */
         /*     in1         middle          */
         /*                 |      \        */
         /*     in2 - port1          out1   */
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 0 && in0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 1 && in1_s_vec.size() == 1 && in1_s_vec[0] == ms_p0_ptr, "expected 1 successor" );
-        ASSERT( in2.predecessor_count() == 0 && in2_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in2.successor_count() == 1 && in2_s_vec.size() == 1 && in2_s_vec[0] == ms_p1_ptr, "expected 1 successor" );
-        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 1 && mp0_vec.size() == 1 && mp0_vec[0] == ins[1], "expected 1 predecessor" );
-        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 1 && mp1_vec.size() == 1 && mp1_vec[0] == ins[2], "expected 1 predecessor" );
-        ASSERT( middle.successor_count() == 1 && ms_vec.size() == 1 && ms_vec[0] == outs[1], "expected 1 successor" );
-        ASSERT( out0.predecessor_count() == 0 && out0_p_vec.size() == 0, "expected 1 predecessor" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 1 && out1_p_vec.size() == 1 && out1_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 0 && in0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 1 && in1_s_list.size() == 1 && *(in1_s_list.begin()) == ms_p0_ptr, "expected 1 successor" );
+        ASSERT( in2.predecessor_count() == 0 && in2_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in2.successor_count() == 1 && in2_s_list.size() == 1 && *(in2_s_list.begin()) == ms_p1_ptr, "expected 1 successor" );
+        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 1 && mp0_list.size() == 1 && *(mp0_list.begin()) == ins[1], "expected 1 predecessor" );
+        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 1 && mp1_list.size() == 1 && *(mp1_list.begin()) == ins[2], "expected 1 predecessor" );
+        ASSERT( middle.successor_count() == 1 && ms_list.size() == 1 && *(ms_list.begin()) == outs[1], "expected 1 successor" );
+        ASSERT( out0.predecessor_count() == 0 && out0_p_list.size() == 0, "expected 1 predecessor" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 1 && out1_p_list.size() == 1 && *(out1_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
 
         in0.try_put(1);
         in1.try_put(2);
         in2.try_put(8);
         in2.try_put(4);
         g.wait_for_all();
-    
+
         T v_in;
         tuple_t v;
 
@@ -220,35 +546,35 @@ protected:
     }
 
     void validate_empty_graph() {
-        /*     in0                         */ 
-        /*                                 */ 
+        /*     in0                         */
+        /*                                 */
         /*            port0         out0   */
         /*                |                */
         /*     in1         middle          */
         /*                 |               */
         /*     in2   port1          out1   */
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 0 && in0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 0 && in1_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in2.predecessor_count() == 0 && in2_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in2.successor_count() == 0 && in2_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 0 && mp0_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 0 && mp1_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( middle.successor_count() == 0 && ms_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out0.predecessor_count() == 0 && out0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 0 && out1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 0 && in0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 0 && in1_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in2.predecessor_count() == 0 && in2_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in2.successor_count() == 0 && in2_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( tbb::flow::input_port<0>(middle).predecessor_count() == 0 && mp0_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( tbb::flow::input_port<1>(middle).predecessor_count() == 0 && mp1_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( middle.successor_count() == 0 && ms_list.size() == 0, "expected 0 successors" );
+        ASSERT( out0.predecessor_count() == 0 && out0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 0 && out1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
 
         in0.try_put(1);
         in1.try_put(2);
         in2.try_put(8);
         in2.try_put(4);
         g.wait_for_all();
-    
+
         T v_in;
         tuple_t v;
 
@@ -264,7 +590,7 @@ protected:
 
 public:
 
-    test_join_base_extract(tbb::flow::graph &_g, in_queue_t &_in0, in_queue_t &_in1, in_queue_t &_in2, NODE_TYPE &m, out_queue_t &_out0, out_queue_t &_out1) : 
+    test_join_base_extract(tbb::flow::graph &_g, in_queue_t &_in0, in_queue_t &_in1, in_queue_t &_in2, NODE_TYPE &m, out_queue_t &_out0, out_queue_t &_out1) :
         g(_g), in0(_in0), in1(_in1), in2(_in2), middle(m), out0(_out0), out1(_out1) {
         ins[0] = &in0;
         ins[1] = &in1;
@@ -275,7 +601,7 @@ public:
         ms_p1_ptr = static_cast< typename in_queue_t::successor_type * >(&tbb::flow::input_port<1>(middle));
         mp_ptr = static_cast< typename out_queue_t::predecessor_type *>(&middle);
     }
- 
+
     virtual ~test_join_base_extract() {}
 
     void run_tests() {
@@ -340,12 +666,12 @@ protected:
     out_queue_t my_out1;
 
 public:
-    test_join_extract() : test_join_base_extract<T, NODE_TYPE>( my_g, my_in0, my_in1, my_in2, my_middle, my_out0, my_out1 ), 
+    test_join_extract() : test_join_base_extract<T, NODE_TYPE>( my_g, my_in0, my_in1, my_in2, my_middle, my_out0, my_out1 ),
                           my_in0(my_g), my_in1(my_g), my_in2(my_g), my_middle(my_g), my_out0(my_g), my_out1(my_g) { }
 };
 
 template< typename T >
-class test_join_extract<T, tbb::flow::join_node< tbb::flow::tuple<T,T>, tbb::flow::tag_matching> > : 
+class test_join_extract<T, tbb::flow::join_node< tbb::flow::tuple<T,T>, tbb::flow::tag_matching> > :
     public test_join_base_extract< T, tbb::flow::join_node< tbb::flow::tuple<T,T>, tbb::flow::tag_matching> > {
 protected:
     typedef tbb::flow::join_node< tbb::flow::tuple<T,T>, tbb::flow::tag_matching> my_node_t;
@@ -364,7 +690,7 @@ protected:
     struct tag_match_0 { size_t operator()(T v) { return v; } };
     struct tag_match_1 { size_t operator()(T v) { return v/4; } };
 public:
-    test_join_extract() : test_join_base_extract<T, my_node_t>( my_g, my_in0, my_in1, my_in2, my_middle, my_out0, my_out1 ), 
+    test_join_extract() : test_join_base_extract<T, my_node_t>( my_g, my_in0, my_in1, my_in2, my_middle, my_out0, my_out1 ),
                           my_in0(my_g), my_in1(my_g), my_in2(my_g), my_middle(my_g, tag_match_0(), tag_match_1()), my_out0(my_g), my_out1(my_g) { }
 };
 #endif
@@ -373,18 +699,21 @@ struct threebyte {
     unsigned char b1;
     unsigned char b2;
     unsigned char b3;
-    threebyte(int i=0) { b1 = (unsigned char)i; }
+    threebyte(int i=0) {
+        b1 = (unsigned char)(i & 0xFF);
+        b2 = (unsigned char)((i >> 8) & 0xFF);
+        b3 = (unsigned char)((i >> 16) & 0xFF);
+    }
     threebyte(const threebyte &other) : b1(other.b1), b2(other.b2), b3(other.b3) { }
-    operator int() { return (int)b1; }
+    operator int() const { return (int)(b1 + (b2 << 8) + (b3 << 16)); }
 };
 
 const int Count = 150;
+
 const int Recirc_count = 1000;  // number of tuples to be generated
 const int MaxPorts = 10;
 const int MaxNSources = 5; // max # of source_nodes to register for each join_node input in parallel test
 bool outputCheck[MaxPorts][Count];  // for checking output
-
-using tbb::flow::NO_TAG;
 
 void
 check_outputCheck( int nUsed, int maxCnt) {
@@ -444,6 +773,43 @@ class name_of<threebyte> {
 public:
     static const char* name() {return "threebyte"; }
 };
+template<>
+class name_of<std::string> {
+public:
+    static const char* name() {return "std::string"; }
+};
+template<typename K,typename V>
+class name_of<MyKeyFirst<K,V> > {
+public:
+    static const char* name() {return "MyKeyFirst<K,V>"; }
+};
+template<typename K,typename V>
+class name_of<MyKeySecond<K,V> > {
+public:
+    static const char* name() {return "MyKeySecond<K,V>"; }
+};
+
+// The additional policy to differ message based key matching from usual key matching.
+// It only has sence for the test because join_node is created with the key_matching policy for the both cases.
+template <typename K, typename KHash = tbb::tbb_hash_compare<typename tbb::internal::strip<K>::type > >
+struct message_based_key_matching {};
+
+// test for key_matching
+template<class JP>
+struct is_key_matching_join {
+    static const bool value = false;
+    typedef int key_type;  // have to define it to something
+};
+template<class K, class KHash>
+struct is_key_matching_join<tbb::flow::key_matching<K,KHash> > {
+    static const bool value = true;
+    typedef K key_type;
+};
+template<class K, class KHash>
+struct is_key_matching_join<message_based_key_matching<K,KHash> > {
+    static const bool value = true;
+    typedef K key_type;
+};
 
 // for recirculating tags, input is tuple<index,continue_msg>
 // output is index*my_mult cast to the right type
@@ -469,7 +835,7 @@ public:
     bool operator()(tbb::flow::continue_msg &v ) {
         --input_count;
         v = tbb::flow::continue_msg();
-        return 0 <= input_count; 
+        return 0 <= input_count;
     }
 };
 
@@ -479,17 +845,16 @@ public:
 // source nodes to a join_port, and each will generate part of the numerical series the port is expecting
 // to receive.  If there is only one source node, the series order will be maintained; if more than one,
 // this is not guaranteed.
-template<typename TT>
+template<typename TT, size_t INDEX>
 class source_body {
-    TT my_mult;
     int my_count;
     int addend;
 public:
-    source_body(TT multiplier, int init_val, int addto) : my_mult(multiplier), my_count(init_val), addend(addto) { }
-    void operator=( const source_body& other) {my_mult=other.my_mult; my_count=other.my_count; addend=other.addend;}
+    source_body(int init_val, int addto) : my_count(init_val), addend(addto) { }
+    void operator=( const source_body& other) {my_count=other.my_count; addend=other.addend;}
     bool operator()( TT &v) {
         int lc = my_count;
-        v = my_mult * (TT)my_count;
+        v = make_thingie<TT, INDEX>()(my_count);
         my_count += addend;
         return lc < Count;
     }
@@ -501,17 +866,28 @@ class tag_func {
 public:
     tag_func(TT multiplier) : my_mult(multiplier) { }
     void operator=( const tag_func& other){my_mult = other.my_mult;}
-    // operator() will return [0 .. Count) 
+    // operator() will return [0 .. Count)
     tbb::flow::tag_value operator()( TT v) {
         tbb::flow::tag_value t = tbb::flow::tag_value(v / my_mult);
         return t;
     }
 };
 
-// allocator for join_node.  This is specialized for tag_matching joins because they  require a variable number
+template <class JP>
+struct filter_out_message_based_key_matching {
+    typedef JP policy;
+};
+
+template <typename K, typename KHash>
+struct filter_out_message_based_key_matching<message_based_key_matching<K, KHash> > {
+    // To have message based key matching in join_node, the key_matchig policy should be specified.
+    typedef tbb::flow::key_matching<K, KHash> policy;
+};
+
+// allocator for join_node.  This is specialized for tag_matching and key_matching joins because they require a variable number
 // of tag_value methods passed to the constructor
 
-template<int N, typename JType, tbb::flow::graph_buffer_policy JP>
+template<int N, typename JType, class JP>
 class makeJoin {
 public:
     static JType *create(tbb::flow::graph& g) {
@@ -521,6 +897,23 @@ public:
     static void destroy(JType *p) { delete p; }
 };
 
+// for general key_matching case, each type in the tuple is a class that has the my_key field and the my_value field.
+//
+template<typename JType, typename K, typename KHash>
+class makeJoin<2,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
 
 template<typename JType>
 class makeJoin<2,JType,tbb::flow::tag_matching> {
@@ -529,7 +922,7 @@ class makeJoin<2,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<1, TType>::type T1;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3))
             );
@@ -539,6 +932,24 @@ public:
 };
 
 #if MAX_TUPLE_TEST_SIZE >= 3
+template<typename JType, typename K, typename KHash>
+class makeJoin<3,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+    typedef typename tbb::flow::tuple_element<2, TType>::type T2;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>(),
+            my_struct_key<K,T2>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
+
 template<typename JType>
 class makeJoin<3,JType,tbb::flow::tag_matching> {
     typedef typename JType::output_type TType;
@@ -547,7 +958,7 @@ class makeJoin<3,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<2, TType>::type T2;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3)),
             tag_func<T2>(T2(4))
@@ -556,8 +967,30 @@ public:
     }
     static void destroy(JType *p) { delete p; }
 };
+
 #endif
 #if MAX_TUPLE_TEST_SIZE >= 4
+
+template<typename JType, typename K, typename KHash>
+class makeJoin<4,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+    typedef typename tbb::flow::tuple_element<2, TType>::type T2;
+    typedef typename tbb::flow::tuple_element<3, TType>::type T3;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>(),
+            my_struct_key<K,T2>(),
+            my_struct_key<K,T3>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
+
 template<typename JType>
 class makeJoin<4,JType,tbb::flow::tag_matching> {
     typedef typename JType::output_type TType;
@@ -567,7 +1000,7 @@ class makeJoin<4,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<3, TType>::type T3;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3)),
             tag_func<T2>(T2(4)),
@@ -577,8 +1010,31 @@ public:
     }
     static void destroy(JType *p) { delete p; }
 };
+
 #endif
 #if MAX_TUPLE_TEST_SIZE >= 5
+template<typename JType, typename K, typename KHash>
+class makeJoin<5,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+    typedef typename tbb::flow::tuple_element<2, TType>::type T2;
+    typedef typename tbb::flow::tuple_element<3, TType>::type T3;
+    typedef typename tbb::flow::tuple_element<4, TType>::type T4;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>(),
+            my_struct_key<K,T2>(),
+            my_struct_key<K,T3>(),
+            my_struct_key<K,T4>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
+
 template<typename JType>
 class makeJoin<5,JType,tbb::flow::tag_matching> {
     typedef typename JType::output_type TType;
@@ -589,7 +1045,7 @@ class makeJoin<5,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<4, TType>::type T4;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3)),
             tag_func<T2>(T2(4)),
@@ -602,6 +1058,30 @@ public:
 };
 #endif
 #if MAX_TUPLE_TEST_SIZE >= 6
+template<typename JType, typename K, typename KHash>
+class makeJoin<6,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+    typedef typename tbb::flow::tuple_element<2, TType>::type T2;
+    typedef typename tbb::flow::tuple_element<3, TType>::type T3;
+    typedef typename tbb::flow::tuple_element<4, TType>::type T4;
+    typedef typename tbb::flow::tuple_element<5, TType>::type T5;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>(),
+            my_struct_key<K,T2>(),
+            my_struct_key<K,T3>(),
+            my_struct_key<K,T4>(),
+            my_struct_key<K,T5>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
+
 template<typename JType>
 class makeJoin<6,JType,tbb::flow::tag_matching> {
     typedef typename JType::output_type TType;
@@ -613,7 +1093,7 @@ class makeJoin<6,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<5, TType>::type T5;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3)),
             tag_func<T2>(T2(4)),
@@ -628,6 +1108,32 @@ public:
 #endif
 
 #if MAX_TUPLE_TEST_SIZE >= 7
+template<typename JType, typename K, typename KHash>
+class makeJoin<7,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+    typedef typename tbb::flow::tuple_element<2, TType>::type T2;
+    typedef typename tbb::flow::tuple_element<3, TType>::type T3;
+    typedef typename tbb::flow::tuple_element<4, TType>::type T4;
+    typedef typename tbb::flow::tuple_element<5, TType>::type T5;
+    typedef typename tbb::flow::tuple_element<6, TType>::type T6;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>(),
+            my_struct_key<K,T2>(),
+            my_struct_key<K,T3>(),
+            my_struct_key<K,T4>(),
+            my_struct_key<K,T5>(),
+            my_struct_key<K,T6>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
+
 template<typename JType>
 class makeJoin<7,JType,tbb::flow::tag_matching> {
     typedef typename JType::output_type TType;
@@ -640,7 +1146,7 @@ class makeJoin<7,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<6, TType>::type T6;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3)),
             tag_func<T2>(T2(4)),
@@ -656,6 +1162,34 @@ public:
 #endif
 
 #if MAX_TUPLE_TEST_SIZE >= 8
+template<typename JType, typename K, typename KHash>
+class makeJoin<8,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+    typedef typename tbb::flow::tuple_element<2, TType>::type T2;
+    typedef typename tbb::flow::tuple_element<3, TType>::type T3;
+    typedef typename tbb::flow::tuple_element<4, TType>::type T4;
+    typedef typename tbb::flow::tuple_element<5, TType>::type T5;
+    typedef typename tbb::flow::tuple_element<6, TType>::type T6;
+    typedef typename tbb::flow::tuple_element<7, TType>::type T7;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>(),
+            my_struct_key<K,T2>(),
+            my_struct_key<K,T3>(),
+            my_struct_key<K,T4>(),
+            my_struct_key<K,T5>(),
+            my_struct_key<K,T6>(),
+            my_struct_key<K,T7>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
+
 template<typename JType>
 class makeJoin<8,JType,tbb::flow::tag_matching> {
     typedef typename JType::output_type TType;
@@ -669,7 +1203,7 @@ class makeJoin<8,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<7, TType>::type T7;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3)),
             tag_func<T2>(T2(4)),
@@ -686,6 +1220,36 @@ public:
 #endif
 
 #if MAX_TUPLE_TEST_SIZE >= 9
+template<typename JType, typename K, typename KHash>
+class makeJoin<9,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+    typedef typename tbb::flow::tuple_element<2, TType>::type T2;
+    typedef typename tbb::flow::tuple_element<3, TType>::type T3;
+    typedef typename tbb::flow::tuple_element<4, TType>::type T4;
+    typedef typename tbb::flow::tuple_element<5, TType>::type T5;
+    typedef typename tbb::flow::tuple_element<6, TType>::type T6;
+    typedef typename tbb::flow::tuple_element<7, TType>::type T7;
+    typedef typename tbb::flow::tuple_element<8, TType>::type T8;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>(),
+            my_struct_key<K,T2>(),
+            my_struct_key<K,T3>(),
+            my_struct_key<K,T4>(),
+            my_struct_key<K,T5>(),
+            my_struct_key<K,T6>(),
+            my_struct_key<K,T7>(),
+            my_struct_key<K,T8>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
+
 template<typename JType>
 class makeJoin<9,JType,tbb::flow::tag_matching> {
     typedef typename JType::output_type TType;
@@ -700,7 +1264,7 @@ class makeJoin<9,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<8, TType>::type T8;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3)),
             tag_func<T2>(T2(4)),
@@ -718,6 +1282,38 @@ public:
 #endif
 
 #if MAX_TUPLE_TEST_SIZE >= 10
+template<typename JType, typename K, typename KHash>
+class makeJoin<10,JType,tbb::flow::key_matching<K,KHash> > {
+    typedef typename JType::output_type TType;
+    typedef typename tbb::flow::tuple_element<0, TType>::type T0;
+    typedef typename tbb::flow::tuple_element<1, TType>::type T1;
+    typedef typename tbb::flow::tuple_element<2, TType>::type T2;
+    typedef typename tbb::flow::tuple_element<3, TType>::type T3;
+    typedef typename tbb::flow::tuple_element<4, TType>::type T4;
+    typedef typename tbb::flow::tuple_element<5, TType>::type T5;
+    typedef typename tbb::flow::tuple_element<6, TType>::type T6;
+    typedef typename tbb::flow::tuple_element<7, TType>::type T7;
+    typedef typename tbb::flow::tuple_element<8, TType>::type T8;
+    typedef typename tbb::flow::tuple_element<9, TType>::type T9;
+public:
+    static JType *create(tbb::flow::graph& g) {
+        JType *temp = new JType(g,
+            my_struct_key<K,T0>(),
+            my_struct_key<K,T1>(),
+            my_struct_key<K,T2>(),
+            my_struct_key<K,T3>(),
+            my_struct_key<K,T4>(),
+            my_struct_key<K,T5>(),
+            my_struct_key<K,T6>(),
+            my_struct_key<K,T7>(),
+            my_struct_key<K,T8>(),
+            my_struct_key<K,T9>()
+            );
+        return temp;
+    }
+    static void destroy(JType *p) { delete p; }
+};
+
 template<typename JType>
 class makeJoin<10,JType,tbb::flow::tag_matching> {
     typedef typename JType::output_type TType;
@@ -733,7 +1329,7 @@ class makeJoin<10,JType,tbb::flow::tag_matching> {
     typedef typename tbb::flow::tuple_element<9, TType>::type T9;
 public:
     static JType *create(tbb::flow::graph& g) {
-        JType *temp = new JType(g, 
+        JType *temp = new JType(g,
             tag_func<T0>(T0(2)),
             tag_func<T1>(T1(3)),
             tag_func<T2>(T2(4)),
@@ -770,7 +1366,7 @@ public:
     }
     static void add_source_nodes(join_node_type &my_join, tbb::flow::graph &g, int nInputs) {
         for(int i=0; i < nInputs; ++i) {
-            my_source_node_type *new_node = new my_source_node_type(g, source_body<IT>((IT)(ELEM+1), i, nInputs));
+            my_source_node_type *new_node = new my_source_node_type(g, source_body<IT,ELEM>(i, nInputs));
             tbb::flow::make_edge( *new_node, tbb::flow::input_port<ELEM-1>(my_join) );
             all_source_nodes[ELEM-1][i] = (void *)new_node;
         }
@@ -834,7 +1430,7 @@ public:
     }
     static void add_source_nodes(join_node_type &my_join, tbb::flow::graph &g, int nInputs) {
         for(int i=0; i < nInputs; ++i) {
-            my_source_node_type *new_node = new my_source_node_type(g, source_body<IT>((IT)2, i, nInputs));
+            my_source_node_type *new_node = new my_source_node_type(g, source_body<IT,1>(i, nInputs));
             tbb::flow::make_edge( *new_node, tbb::flow::input_port<0>(my_join) );
             all_source_nodes[0][i] = (void *)new_node;
         }
@@ -959,16 +1555,30 @@ public:
     }
 };
 
-template<typename JType, tbb::flow::graph_buffer_policy JP>
+#if _MSC_VER && !defined(__INTEL_COMPILER)
+    // Suppress "conditional expression is constant" warning.
+    #pragma warning( push )
+    #pragma warning( disable: 4127 )
+#endif
+
+template<typename JType, class JP>
 class parallel_test {
 public:
     typedef typename JType::output_type TType;
     static const int TUPLE_SIZE = tbb::flow::tuple_size<TType>::value;
-    static const tbb::flow::graph_buffer_policy jp = JP;
+    typedef typename is_key_matching_join<JP>::key_type            key_type;
+    static const bool is_key_matching = is_key_matching_join<JP>::value;
     static void test() {
         TType v;
         source_node_helper<TUPLE_SIZE,JType>::print_remark("Parallel test of join_node");
-        REMARK(" >\n");
+        REMARK(" > ");
+        if(is_key_matching) {
+            REMARK("with K == %s", name_of<typename K_deref<typename is_key_matching_join<JP>::key_type>::type >::name());
+            if(is_ref<typename is_key_matching_join<JP>::key_type>::value) {
+                REMARK("&");
+            }
+        }
+        REMARK("\n");
         for(int i=0; i < MaxPorts; ++i) {
             for(int j=0; j < MaxNSources; ++j) {
                 all_source_nodes[i][j] = NULL;
@@ -976,8 +1586,7 @@ public:
         }
         for(int nInputs = 1; nInputs <= MaxNSources; ++nInputs) {
             tbb::flow::graph g;
-            // JType my_join(g);
-            bool not_out_of_order = (nInputs == 1) && (jp != tbb::flow::tag_matching);
+            bool not_out_of_order = (nInputs == 1) && (!is_key_matching);
             JType* my_join = makeJoin<TUPLE_SIZE,JType,JP>::create(g);
             tbb::flow::queue_node<TType> outq1(g);
             tbb::flow::queue_node<TType> outq2(g);
@@ -1032,24 +1641,28 @@ public:
         tbb::flow::make_edge( *new_node, tbb::flow::get<ELEM-1>(my_join.input_ports()) );
         all_source_nodes[ELEM-1][0] = (void *)new_node;
     }
+
     static void fill_one_queue(int maxVal) {
         // fill queue to "left" of me
         my_queue_node_type *qptr = reinterpret_cast<my_queue_node_type *>(all_source_nodes[ELEM-1][0]);
         serial_queue_helper<ELEM-1,JType>::fill_one_queue(maxVal);
         for(int i = 0; i < maxVal; ++i) {
-            ASSERT(qptr->try_put((IT)(i*(ELEM+1))), NULL);
+            ASSERT(qptr->try_put(make_thingie<IT,ELEM>()(i)), NULL);
         }
     }
+
     static void put_one_queue_val(int myVal) {
         // put this val to my "left".
         serial_queue_helper<ELEM-1,JType>::put_one_queue_val(myVal);
         my_queue_node_type *qptr = reinterpret_cast<my_queue_node_type *>(all_source_nodes[ELEM-1][0]);
-        ASSERT(qptr->try_put((IT)(myVal*(ELEM+1))), NULL);
+        ASSERT(qptr->try_put(make_thingie<IT,ELEM>()(myVal)), NULL);
     }
+
     static void check_queue_value(int i, TT &v) {
         serial_queue_helper<ELEM-1,JType>::check_queue_value(i, v);
-        ASSERT( tbb::flow::get<ELEM-1>(v) == (IT)(i * (ELEM+1)), NULL);
+        ASSERT( cast_from<IT>::my_int_val(tbb::flow::get<ELEM-1>(v)) == i * (ELEM+1), NULL);
     }
+
     static void remove_queue_nodes(JType &my_join) {
         my_queue_node_type *vptr = reinterpret_cast<my_queue_node_type *>(all_source_nodes[ELEM-1][0]);
         tbb::flow::remove_edge( *vptr, tbb::flow::get<ELEM-1>(my_join.input_ports()) );
@@ -1067,24 +1680,30 @@ public:
     static void print_remark() {
         REMARK("Serial test of join_node< %s", name_of<IT>::name());
     }
+
     static void add_queue_nodes(tbb::flow::graph &g, JType &my_join) {
         my_queue_node_type *new_node = new my_queue_node_type(g);
         tbb::flow::make_edge( *new_node, tbb::flow::input_port<0>(my_join) );
         all_source_nodes[0][0] = (void *)new_node;
     }
+
     static void fill_one_queue(int maxVal) {
         my_queue_node_type *qptr = reinterpret_cast<my_queue_node_type *>(all_source_nodes[0][0]);
         for(int i = 0; i < maxVal; ++i) {
-            ASSERT(qptr->try_put((IT)(i*2)), NULL);
+            ASSERT(qptr->try_put(make_thingie<IT,1>()(i)), NULL);
         }
     }
+
     static void put_one_queue_val(int myVal) {
         my_queue_node_type *qptr = reinterpret_cast<my_queue_node_type *>(all_source_nodes[0][0]);
-        ASSERT(qptr->try_put((IT)(myVal*2)), NULL);
+        IT my_val = make_thingie<IT,1>()(myVal);
+        ASSERT(qptr->try_put(my_val), NULL);
     }
+
     static void check_queue_value(int i, TT &v) {
-        ASSERT( tbb::flow::get<0>(v) == (IT)(i*2), NULL);
+        ASSERT( cast_from<IT>::my_int_val(tbb::flow::get<0>(v)) == i * 2, NULL);
     }
+
     static void remove_queue_nodes(JType &my_join) {
         my_queue_node_type *vptr = reinterpret_cast<my_queue_node_type *>(all_source_nodes[0][0]);
         tbb::flow::remove_edge( *vptr, tbb::flow::get<0>(my_join.input_ports()) );
@@ -1097,10 +1716,11 @@ public:
 //   * put to buffer before port0, then put to buffer before port1, ...
 //   * fill buffer before port0 then fill buffer before port1, ...
 
-template<typename JType, tbb::flow::graph_buffer_policy JP>
+template<typename JType, class JP>
 void test_one_serial( JType &my_join, tbb::flow::graph &g) {
     typedef typename JType::output_type TType;
     static const int TUPLE_SIZE = tbb::flow::tuple_size<TType>::value;
+    bool is_key_matching = is_key_matching_join<JP>::value;
     std::vector<bool> flags;
     serial_queue_helper<TUPLE_SIZE, JType>::add_queue_nodes(g,my_join);
     typedef TType q3_input_type;
@@ -1116,12 +1736,11 @@ void test_one_serial( JType &my_join, tbb::flow::graph &g) {
     }
 
     g.wait_for_all();
-    tbb::flow::graph_buffer_policy jp = JP;
     for (int i = 0; i < Count; ++i ) {
         q3_input_type v;
         g.wait_for_all();
         ASSERT(q3.try_get( v ), "Error in try_get()");
-        if(jp == tbb::flow::tag_matching) {
+        if(is_key_matching) {
             // because we look up tags in the hash table, the output may be out of order.
             int j = int(tbb::flow::get<0>(v)) / 2;  // figure what the index should be
             serial_queue_helper<TUPLE_SIZE,JType>::check_queue_value(j, v);
@@ -1132,7 +1751,7 @@ void test_one_serial( JType &my_join, tbb::flow::graph &g) {
         }
     }
 
-    if(jp == tbb::flow::tag_matching) {
+    if(is_key_matching) {
         for(int i = 0; i < Count; ++i) {
             ASSERT(flags[i], NULL);
             flags[i] = false;
@@ -1147,7 +1766,7 @@ void test_one_serial( JType &my_join, tbb::flow::graph &g) {
         q3_input_type v;
         g.wait_for_all();
         ASSERT(q3.try_get( v ), "Error in try_get()");
-        if(jp == tbb::flow::tag_matching) {
+        if(is_key_matching) {
             int j = int(tbb::flow::get<0>(v)) / 2;
             serial_queue_helper<TUPLE_SIZE,JType>::check_queue_value(j, v);
             flags[i] = true;
@@ -1157,7 +1776,7 @@ void test_one_serial( JType &my_join, tbb::flow::graph &g) {
         }
     }
 
-    if(jp == tbb::flow::tag_matching) {
+    if(is_key_matching) {
         for(int i = 0; i < Count; ++i) {
             ASSERT(flags[i], NULL);
         }
@@ -1167,7 +1786,7 @@ void test_one_serial( JType &my_join, tbb::flow::graph &g) {
 
 }
 
-template<typename JType, tbb::flow::graph_buffer_policy JP>
+template<typename JType, class JP>
 class serial_test {
     typedef typename JType::output_type TType;
     static const int TUPLE_SIZE = tbb::flow::tuple_size<TType>::value;
@@ -1176,9 +1795,17 @@ public:
 static void test() {
     tbb::flow::graph g;
     std::vector<bool> flags;
+    bool is_key_matching = is_key_matching_join<JP>::value;
     flags.reserve(Count);
     JType* my_join = makeJoin<TUPLE_SIZE,JType,JP>::create(g);
-    serial_queue_helper<TUPLE_SIZE, JType>::print_remark(); REMARK(" >\n");
+    serial_queue_helper<TUPLE_SIZE, JType>::print_remark(); REMARK(" >");
+    if(is_key_matching) {
+        REMARK("with K == %s", name_of<typename K_deref<typename is_key_matching_join<JP>::key_type>::type >::name());
+        if(is_ref<typename is_key_matching_join<JP>::key_type>::value) {
+            REMARK("&");
+        }
+    }
+    REMARK("\n");
 
     test_one_serial<JType,JP>( *my_join, g);
     // build the vector with copy construction from the used join node.
@@ -1194,13 +1821,17 @@ static void test() {
 
 }; // serial_test
 
+#if _MSC_VER && !defined(__INTEL_COMPILER)
+    #pragma warning( pop )
+#endif
+
 template<
-      template<typename, tbb::flow::graph_buffer_policy> class TestType,  // serial_test or parallel_test
+      template<typename, class > class TestType,  // serial_test or parallel_test
       typename OutputTupleType,           // type of the output of the join
-      tbb::flow::graph_buffer_policy J>                 // graph_buffer_policy (reserving, queueing or tag_matching)
+      class J>                 // graph_buffer_policy (reserving, queueing, tag_matching or key_matching)
 class generate_test {
 public:
-    typedef tbb::flow::join_node<OutputTupleType,J> join_node_type;
+    typedef tbb::flow::join_node<OutputTupleType,typename filter_out_message_based_key_matching<J>::policy> join_node_type;
     static void do_test() {
         TestType<join_node_type,J>::test();
     }
@@ -1215,7 +1846,7 @@ public:
     }
 };
 
-template<tbb::flow::graph_buffer_policy JP>
+template<class JP>
 void test_input_port_policies();
 
 // join_node (reserving) does not consume inputs until an item is available at
@@ -1256,7 +1887,7 @@ void test_input_port_policies<tbb::flow::reserving>() {
     tbb::flow::make_edge( jn, oq1 );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(jn.successor_count() == 2, NULL);
-    JType::successor_vector_type my_succs;
+    JType::successor_list_type my_succs;
     jn.copy_successors(my_succs);
     ASSERT(my_succs.size() == 2, NULL);
 #endif
@@ -1265,7 +1896,7 @@ void test_input_port_policies<tbb::flow::reserving>() {
     tbb::flow::make_edge( iq1, tbb::flow::get<1>(jn.input_ports()) );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(tbb::flow::get<0>(jn.input_ports()).predecessor_count() == 1, NULL);
-    std::vector<tbb::flow::sender<int> *> my_0preds;
+    tbb::flow::tuple_element<0,JType::input_type>::type::predecessor_list_type my_0preds;
     tbb::flow::input_port<0>(jn).copy_predecessors(my_0preds);
     ASSERT(my_0preds.size() == 1, NULL);
 #endif
@@ -1351,7 +1982,7 @@ void test_input_port_policies<tbb::flow::queueing>() {
     tbb::flow::make_edge( jn, oq1 );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(jn.successor_count() == 2, NULL);
-    JType::successor_vector_type my_succs;
+    JType::successor_list_type my_succs;
     jn.copy_successors(my_succs);
     ASSERT(my_succs.size() == 2, NULL);
 #endif
@@ -1360,7 +1991,7 @@ void test_input_port_policies<tbb::flow::queueing>() {
     tbb::flow::make_edge( iq1, tbb::flow::get<1>(jn.input_ports()) );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     ASSERT(tbb::flow::get<0>(jn.input_ports()).predecessor_count() == 1, NULL);
-    std::vector<tbb::flow::sender<int> *> my_0preds;
+    tbb::flow::tuple_element<0,JType::input_type>::type::predecessor_list_type my_0preds;
     tbb::flow::input_port<0>(jn).copy_predecessors(my_0preds);
     ASSERT(my_0preds.size() == 1, NULL);
 #endif
@@ -1438,7 +2069,7 @@ void test_input_port_policies<tbb::flow::tag_matching>() {
     JoinNodeType testJoinNode(g, myTagValue<int>(), myTagValue<check_type<int> >());
     tbb::flow::queue_node<CheckTupleType> checkTupleQueue0(g);
     tbb::flow::queue_node<CheckTupleType> checkTupleQueue1(g);
-    { 
+    {
         Check<check_type<int> > my_check;
 
 
@@ -1454,7 +2085,7 @@ void test_input_port_policies<tbb::flow::tag_matching>() {
         tbb::flow::make_edge( testJoinNode, checkTupleQueue1 );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         ASSERT(testJoinNode.successor_count() == 2, NULL);
-        JoinNodeType::successor_vector_type my_succs;
+        JoinNodeType::successor_list_type my_succs;
         testJoinNode.copy_successors(my_succs);
         ASSERT(my_succs.size() == 2, NULL);
 #endif
@@ -1463,17 +2094,16 @@ void test_input_port_policies<tbb::flow::tag_matching>() {
         tbb::flow::make_edge( checkInputQueue, tbb::flow::input_port<1>(testJoinNode) );
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         ASSERT(tbb::flow::input_port<0>(testJoinNode).predecessor_count() == 1, NULL);
-        std::vector<tbb::flow::sender<int> *> my_0preds;
+        tbb::flow::tuple_element<0,JoinNodeType::input_type>::type::predecessor_list_type my_0preds;
         tbb::flow::input_port<0>(testJoinNode).copy_predecessors(my_0preds);
         ASSERT(my_0preds.size() == 1, NULL);
 #endif
 
         // we'll put four discrete values in the inputs to the join_node.  Each
-        // set of inputs should result in one output.  (NO_TAG is currently defined
-        // to be tag_value(-1), so zero is an allowed tag_value.)
+        // set of inputs should result in one output.
         for(int loop = 0; loop < 4; ++loop) {
             // place one item in intInputQueue
-            ASSERT(intInputQueue.try_put(loop), "Error putting to intInputQueue"); 
+            ASSERT(intInputQueue.try_put(loop), "Error putting to intInputQueue");
             // attach intInputQueue to intEmptyTestQueue
             tbb::flow::make_edge( intInputQueue, intEmptyTestQueue );
             // intEmptyTestQueue should not have an item in it.  (the join consumed it.)
@@ -1502,7 +2132,6 @@ void test_input_port_policies<tbb::flow::tag_matching>() {
             {
                 int intVal1;
                 check_type<int> checkVal1;
-                //REMARK("loop == %d point 4.7 count is %d %d\n", loop, my_check(), my_check(1) );  // +1
                 ASSERT(!intEmptyTestQueue.try_get(intVal1), "intInputQueue still had value in it");
                 ASSERT(!checkEmptyTestQueue.try_get(checkVal1), "checkInputQueue still had value in it");
             }
@@ -1518,7 +2147,7 @@ void test_input_port_policies<tbb::flow::tag_matching>() {
 
         for(int loop = 4; loop < 4+nValues; ++loop) {
             // place one item in intInputQueue
-            ASSERT(intInputQueue.try_put(loop), "Error putting to intInputQueue"); 
+            ASSERT(intInputQueue.try_put(loop), "Error putting to intInputQueue");
             g.wait_for_all();
             {
                 CheckTupleType t3;
@@ -1551,8 +2180,7 @@ int TestMain() {
 #else
     REMARK("  Using platform tuple\n");
 #endif
-
-
+    TestTaggedBuffers();
     test_input_port_policies<tbb::flow::reserving>();
     test_input_port_policies<tbb::flow::queueing>();
     test_input_port_policies<tbb::flow::tag_matching>();
@@ -1649,13 +2277,88 @@ int TestMain() {
        generate_recirc_test<tbb::flow::tuple<double, double, int, int, short> >::do_test();
 #endif
    }
+        REMARK("key_matching\n");
+       generate_test<serial_test,tbb::flow::tuple<MyKeyFirst<int,double>,MyKeySecond<int,float> >,tbb::flow::key_matching<int> >::do_test();
+       generate_test<serial_test,tbb::flow::tuple<MyKeyFirst<std::string,double>,MyKeySecond<std::string,float> >,tbb::flow::key_matching<std::string> >::do_test();
+#if MAX_TUPLE_TEST_SIZE >= 3
+       generate_test<serial_test,tbb::flow::tuple<MyKeyFirst<std::string,double>,MyKeySecond<std::string,float>, MyKeyWithBrokenMessageKey<std::string, int> >,tbb::flow::key_matching<std::string&> >::do_test();
+#endif
+#if MAX_TUPLE_TEST_SIZE >= 7
+       generate_test<serial_test,tbb::flow::tuple<
+           MyKeyFirst<std::string,double>,
+           MyKeyWithBrokenMessageKey<std::string,int>,
+           MyKeyFirst<std::string, int>,
+           MyKeySecond<std::string,size_t>,
+           MyKeyWithBrokenMessageKey<std::string, int>,
+           MyKeySecond<std::string,short>,
+           MyKeySecond<std::string,threebyte>
+        > ,tbb::flow::key_matching<std::string&> >::do_test();
+#endif
+
+       generate_test<parallel_test,tbb::flow::tuple<MyKeyFirst<int,double>,MyKeySecond<int,float> >,tbb::flow::key_matching<int> >::do_test();
+       generate_test<parallel_test,tbb::flow::tuple<MyKeyFirst<int,double>,MyKeySecond<int,float> >,tbb::flow::key_matching<int&> >::do_test();
+       generate_test<parallel_test,tbb::flow::tuple<MyKeyFirst<std::string,double>,MyKeySecond<std::string,float> >,tbb::flow::key_matching<std::string&> >::do_test();
+#if MAX_TUPLE_TEST_SIZE >= 10
+       generate_test<parallel_test,tbb::flow::tuple<
+           MyKeyFirst<std::string,double>,
+           MyKeySecond<std::string,int>,
+           MyKeyFirst<std::string, int>,
+           MyKeyWithBrokenMessageKey<std::string,size_t>,
+           MyKeyWithBrokenMessageKey<std::string, int>,
+           MyKeySecond<std::string,short>,
+           MyKeySecond<std::string,threebyte>,
+           MyKeyFirst<std::string, int>,
+           MyKeySecond<std::string,threebyte>,
+           MyKeyWithBrokenMessageKey<std::string,size_t>
+        > ,tbb::flow::key_matching<std::string&> >::do_test();
+#endif
+
+        REMARK("message based key_matching\n");
+       generate_test<serial_test,tbb::flow::tuple<MyMessageKeyWithBrokenKey<int,double>,MyMessageKeyWithoutKey<int,float> >,message_based_key_matching<int> >::do_test();
+       generate_test<serial_test,tbb::flow::tuple<MyMessageKeyWithoutKeyMethod<std::string,double>,MyMessageKeyWithBrokenKey<std::string,float> >,message_based_key_matching<std::string> >::do_test();
+#if !__TBB_MIC_OFFLOAD_TEST_COMPILATION_BROKEN
+#if MAX_TUPLE_TEST_SIZE >= 3
+       generate_test<serial_test,tbb::flow::tuple<MyMessageKeyWithoutKey<std::string,double>,MyMessageKeyWithoutKeyMethod<std::string,float>,MyMessageKeyWithBrokenKey<std::string, int> >,message_based_key_matching<std::string&> >::do_test();
+#endif
+#if MAX_TUPLE_TEST_SIZE >= 7
+       generate_test<serial_test,tbb::flow::tuple<
+           MyMessageKeyWithoutKey<std::string,double>,
+           MyMessageKeyWithoutKeyMethod<std::string,int>,
+           MyMessageKeyWithBrokenKey<std::string, int>,
+           MyMessageKeyWithoutKey<std::string,size_t>,
+           MyMessageKeyWithoutKeyMethod<std::string, int>,
+           MyMessageKeyWithBrokenKey<std::string,short>,
+           MyMessageKeyWithoutKey<std::string,threebyte>
+        > ,message_based_key_matching<std::string&> >::do_test();
+#endif
+
+       generate_test<parallel_test,tbb::flow::tuple<MyMessageKeyWithBrokenKey<int,double>,MyMessageKeyWithoutKey<int,float> >,message_based_key_matching<int> >::do_test();
+       generate_test<parallel_test,tbb::flow::tuple<MyMessageKeyWithoutKeyMethod<int,double>,MyMessageKeyWithBrokenKey<int,float> >,message_based_key_matching<int&> >::do_test();
+       generate_test<parallel_test,tbb::flow::tuple<MyMessageKeyWithoutKey<std::string,double>,MyMessageKeyWithoutKeyMethod<std::string,float> >,message_based_key_matching<std::string&> >::do_test();
+
+#if MAX_TUPLE_TEST_SIZE >= 10
+       generate_test<parallel_test,tbb::flow::tuple<
+           MyMessageKeyWithoutKeyMethod<std::string,double>,
+           MyMessageKeyWithBrokenKey<std::string,int>,
+           MyMessageKeyWithoutKey<std::string, int>,
+           MyMessageKeyWithoutKeyMethod<std::string,size_t>,
+           MyMessageKeyWithBrokenKey<std::string, int>,
+           MyMessageKeyWithoutKeyMethod<std::string,short>,
+           MyMessageKeyWithoutKeyMethod<std::string,threebyte>,
+           MyMessageKeyWithBrokenKey<std::string, int>,
+           MyMessageKeyWithoutKeyMethod<std::string,threebyte>,
+           MyMessageKeyWithBrokenKey<std::string,size_t>
+        > ,message_based_key_matching<std::string&> >::do_test();
+#endif
+#endif /* __TBB_MIC_OFFLOAD_TEST_COMPILATION_BROKEN */
+
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
    REMARK("test queueing extract\n");
-   test_join_extract<int, tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::queueing> >().run_tests(); 
+   test_join_extract<int, tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::queueing> >().run_tests();
    REMARK("test tag_matching extract\n");
-   test_join_extract<int, tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::tag_matching> >().run_tests(); 
+   test_join_extract<int, tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::tag_matching> >().run_tests();
    REMARK("test reserving extract\n");
-   test_join_extract<int, tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::reserving> >().run_tests(); 
+   test_join_extract<int, tbb::flow::join_node< tbb::flow::tuple<int,int>, tbb::flow::reserving> >().run_tests();
 #endif
    return Harness::Done;
 }

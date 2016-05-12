@@ -1,4 +1,4 @@
-; Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+; Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 ;
 ; This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 ; you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -51,15 +51,14 @@ __TBB_SYMBOL( ?terminate@task_scheduler_init@tbb@@QAAXXZ )
 __TBB_SYMBOL( ?observe@task_scheduler_observer_v3@internal@tbb@@QAAX_N@Z )
 #endif /* __TBB_SCHEDULER_OBSERVER */
 
-#if __TBB_TASK_ARENA
 /* arena.cpp */
 __TBB_SYMBOL( ?internal_current_slot@task_arena_base@internal@interface7@tbb@@KAHXZ )
 __TBB_SYMBOL( ?internal_initialize@task_arena_base@internal@interface7@tbb@@IAAXXZ )
 __TBB_SYMBOL( ?internal_terminate@task_arena_base@internal@interface7@tbb@@IAAXXZ )
+__TBB_SYMBOL( ?internal_attach@task_arena_base@internal@interface7@tbb@@IAAXXZ )
 __TBB_SYMBOL( ?internal_enqueue@task_arena_base@internal@interface7@tbb@@IBAXAAVtask@4@H@Z )
 __TBB_SYMBOL( ?internal_execute@task_arena_base@internal@interface7@tbb@@IBAXAAVdelegate_base@234@@Z )
 __TBB_SYMBOL( ?internal_wait@task_arena_base@internal@interface7@tbb@@IBAXXZ )
-#endif /* __TBB_TASK_ARENA */
 
 #if !TBB_NO_LEGACY
 // task_v2.cpp

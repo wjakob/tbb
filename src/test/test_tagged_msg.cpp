@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -52,30 +52,30 @@ typedef tbb::flow::tagged_msg<size_t, int, char, double, odd_array_type, odder_a
 
 // test base of tagged_msg
 void TestWrapper() {
-    tbb::flow::interface7::internal::Wrapper<int> wi(42);
-    const tbb::flow::interface7::internal::Wrapper<int> wic(23);
+    tbb::flow::interface8::internal::Wrapper<int> wi(42);
+    const tbb::flow::interface8::internal::Wrapper<int> wic(23);
 
     REMARK("Value of wic is %d\n", wic.value());
 
     // pointer-type creation
     int point_to_me = 23;
-    tbb::flow::interface7::internal::Wrapper<int_ptr> wip(&point_to_me);
+    tbb::flow::interface8::internal::Wrapper<int_ptr> wip(&point_to_me);
     ASSERT(*(wip.value()) == 23, "Error in wip value");
 
     odd_array_type ww;
     for(int ii = 0; ii < 15; ++ii) { ww[ii] = char('0' + ii); } ww[14] = 0;
 
-    tbb::flow::interface7::internal::Wrapper<odd_array_type> ci(ww);
+    tbb::flow::interface8::internal::Wrapper<odd_array_type> ci(ww);
     ASSERT(!strncmp(ci.value(), ww, 14), "odd_array_type ci not properly-constructed" );
 
-    tbb::flow::interface7::internal::Wrapper<odd_array_type> ci2(ci);
+    tbb::flow::interface8::internal::Wrapper<odd_array_type> ci2(ci);
 
     ASSERT(!strncmp(ci2.value(), ww, 14), "odd_array_type ci2 not properly-constructed" );
 
     d_vector di;
     di.clear();
     di.push_back(2.0);
-    tbb::flow::interface7::internal::Wrapper<d_vector> dvec(di);
+    tbb::flow::interface8::internal::Wrapper<d_vector> dvec(di);
     ASSERT(dvec.value()[0] == 2.0, "incorrect value in vector");
 
     // test array of non-PODs.
@@ -84,17 +84,17 @@ void TestWrapper() {
     oia[1].clear();
     oia[0].push_back(3);
     oia[1].push_back(2);
-    tbb::flow::interface7::internal::Wrapper<i_vector_array> ia(oia);
+    tbb::flow::interface8::internal::Wrapper<i_vector_array> ia(oia);
     ASSERT((ia.value()[1])[0] == 2, "integer vector array element[1] misbehaved");
     ASSERT((ia.value()[0])[0] == 3, "integer vector array element[0] misbehaved");
-    tbb::flow::interface7::internal::Wrapper<i_vector_array> iac(ia);
+    tbb::flow::interface8::internal::Wrapper<i_vector_array> iac(ia);
     ASSERT((iac.value()[1])[0] == 2, "integer vector array element[1] misbehaved");
     ASSERT((iac.value()[0])[0] == 3, "integer vector array element[0] misbehaved");
 
     // counted_array
     counted_array_type cat_orig;
     for(int i = 0; i < 12; ++i) cat_orig[i] = i + 1;
-    tbb::flow::interface7::internal::Wrapper<counted_array_type> cat(cat_orig);
+    tbb::flow::interface8::internal::Wrapper<counted_array_type> cat(cat_orig);
     for(int j = 0; j < 12; ++j)
         ASSERT(1 + j == cat.value()[j], "Error in cat array");
 
@@ -134,7 +134,7 @@ void RunTests() {
     ASSERT(ref_i == 4, "assign to i did not affect ref_i");
 
     ASSERT( z == 3, "Error retrieving value from i");
-    
+
     //updating and retrieving tags
     ASSERT(j.tag() == 2, "Error retrieving tag for j");
     j.set_tag(10);
@@ -144,7 +144,7 @@ void RunTests() {
     k.set_tag('b');
     ASSERT(k.tag() == 'b', "Error updating char tag");
 
-    tagged_msg_type double_tagged_msg(3, 8.0);  
+    tagged_msg_type double_tagged_msg(3, 8.0);
     ASSERT(is_a<double>(double_tagged_msg), "Wrong type for double_tagged_msg (== double)");
     ASSERT(!is_a<char>(double_tagged_msg), "Wrong type for double_tagged_msg (!= char)");
     ASSERT(!is_a<int>(double_tagged_msg), "Wrong type for double_tagged_msg (!= int)");
@@ -152,7 +152,7 @@ void RunTests() {
     ASSERT(is_a<double>(copytype), "Wrong type for double_tagged_msg (== double)");
     ASSERT(!is_a<char>(copytype), "Wrong type for double_tagged_msg (!= char)");
     ASSERT(!is_a<int>(copytype), "Wrong type for double_tagged_msg (!= int)");
-    tagged_msg_type default_tagged_msg;   
+    tagged_msg_type default_tagged_msg;
     ASSERT(!(is_a<double>(default_tagged_msg)), "wrong type for default ( != double)");
     ASSERT(!(is_a<int>(default_tagged_msg)), "wrong type for default ( != int)");
     ASSERT(!(is_a<bool>(default_tagged_msg)), "wrong type for default ( != bool)");

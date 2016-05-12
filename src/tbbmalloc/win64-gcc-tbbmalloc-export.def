@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -46,6 +46,7 @@ _ZN3rml9pool_freeEPNS_10MemoryPoolEPv;
 _ZN3rml12pool_reallocEPNS_10MemoryPoolEPvy;
 _ZN3rml20pool_aligned_reallocEPNS_10MemoryPoolEPvyy;
 _ZN3rml19pool_aligned_mallocEPNS_10MemoryPoolEyy;
+_ZN3rml13pool_identifyEPv;
 
 local:*;
 };

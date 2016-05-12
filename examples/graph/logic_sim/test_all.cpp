@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -18,13 +18,26 @@
     reasons why the executable file might be covered by the GNU General Public License.
 */
 
+#include "tbb/tbb_config.h"
+#include <cstdio>
+
+#include "../../common/utility/utility.h"
+
+#if __TBB_FLOW_GRAPH_CPP11_FEATURES
+
 #if _MSC_VER
 #pragma warning (disable: 4503) // Suppress "decorated name length exceeded, name was truncated" warning
 #endif
 
+#define USE_TWO_BIT_FULL_ADDER 1
+
 #include "basics.h"
 #include "one_bit_adder.h"
+#if USE_TWO_BIT_FULL_ADDER
+#include "two_bit_adder.h"
+#else
 #include "four_bit_adder.h"
+#endif
 #include "D_latch.h"
 #include <cassert>
 
@@ -39,7 +52,10 @@ int get_default_num_threads() {
     return threads;
 }
 
+#endif // __TBB_FLOW_GRAPH_CPP11_FEATURES
+
 int main(int argc, char *argv[]) {
+#if __TBB_FLOW_GRAPH_CPP11_FEATURES
     try {
         utility::thread_number_range threads(get_default_num_threads);
         utility::parse_cli_arguments(argc, argv,
@@ -64,8 +80,8 @@ int main(int argc, char *argv[]) {
                 toggle input(g);
                 led output(g, "OUTPUT", false); // false means we will explicitly call display to see LED
                 
-                make_edge(input.get_out(), b.get_in(0));
-                make_edge(b.get_out(), output.get_in());
+                make_edge(input.get_out(), input_port<0>(b));
+                make_edge(output_port<0>(b), output.get_in());
                 
                 if (!silent) printf("Testing buffer...\n");
                 input.activate(); // 0
@@ -83,8 +99,8 @@ int main(int argc, char *argv[]) {
                 toggle input(g);
                 led output(g, "OUTPUT", false);
                 
-                make_edge(input.get_out(), n.get_in(0));
-                make_edge(n.get_out(), output.get_in());
+                make_edge(input.get_out(), input_port<0>(n));
+                make_edge(output_port<0>(n), output.get_in());
                 
                 if (!silent) printf("Testing not_gate...\n");
                 input.activate(); // 0
@@ -103,9 +119,9 @@ int main(int argc, char *argv[]) {
                 toggle input1(g);
                 led output(g, "OUTPUT", false);
                 
-                make_edge(input0.get_out(), a.get_in(0));
-                make_edge(input1.get_out(), a.get_in(1));
-                make_edge(a.get_out(), output.get_in());
+                make_edge(input0.get_out(), input_port<0>(a));
+                make_edge(input1.get_out(), input_port<1>(a));
+                make_edge(output_port<0>(a), output.get_in());
                 
                 if (!silent) printf("Testing and_gate...\n");
                 input1.activate();  input0.activate();  // 0 0
@@ -133,10 +149,10 @@ int main(int argc, char *argv[]) {
                 toggle input2(g);
                 led output(g, "OUTPUT", false);
                 
-                make_edge(input0.get_out(), o.get_in(0));
-                make_edge(input1.get_out(), o.get_in(1));
-                make_edge(input2.get_out(), o.get_in(2));
-                make_edge(o.get_out(), output.get_in());
+                make_edge(input0.get_out(), input_port<0>(o));
+                make_edge(input1.get_out(), input_port<1>(o));
+                make_edge(input2.get_out(), input_port<2>(o));
+                make_edge(output_port<0>(o), output.get_in());
                 
                 if (!silent) printf("Testing or_gate...\n");
                 input2.activate();  input1.activate();  input0.activate();  // 0 0 0
@@ -179,9 +195,9 @@ int main(int argc, char *argv[]) {
                 toggle input1(g);
                 led output(g, "OUTPUT", false);
                 
-                make_edge(input0.get_out(), x.get_in(0));
-                make_edge(input1.get_out(), x.get_in(1));
-                make_edge(x.get_out(), output.get_in());
+                make_edge(input0.get_out(), input_port<0>(x));
+                make_edge(input1.get_out(), input_port<1>(x));
+                make_edge(output_port<0>(x), output.get_in());
                 
                 if (!silent) printf("Testing xor_gate...\n");
                 input1.activate();  input0.activate();  // 0 0
@@ -209,9 +225,9 @@ int main(int argc, char *argv[]) {
                 toggle input1(g);
                 led output(g, "OUTPUT", false);
                 
-                make_edge(input0.get_out(), n.get_in(0));
-                make_edge(input1.get_out(), n.get_in(1));
-                make_edge(n.get_out(), output.get_in());
+                make_edge(input0.get_out(), input_port<0>(n));
+                make_edge(input1.get_out(), input_port<1>(n));
+                make_edge(output_port<0>(n), output.get_in());
                 
                 if (!silent) printf("Testing nor_gate...\n");
                 input1.activate();  input0.activate();  // 0 0
@@ -241,21 +257,21 @@ int main(int argc, char *argv[]) {
                 nor_gate<2> n(g);
                 digit output(g, "OUTPUT", false);
                 
-                make_edge(input0.get_out(), a.get_in(0));
-                make_edge(input1.get_out(), a.get_in(1));
-                make_edge(a.get_out(), output.get_in(0));
+                make_edge(input0.get_out(), input_port<0>(a));
+                make_edge(input1.get_out(), input_port<1>(a));
+                make_edge(output_port<0>(a), input_port<0>(output));
 
-                make_edge(input0.get_out(), o.get_in(0));
-                make_edge(input1.get_out(), o.get_in(1));
-                make_edge(o.get_out(), output.get_in(1));
+                make_edge(input0.get_out(), input_port<0>(o));
+                make_edge(input1.get_out(), input_port<1>(o));
+                make_edge(output_port<0>(o), input_port<1>(output));
 
-                make_edge(input0.get_out(), x.get_in(0));
-                make_edge(input1.get_out(), x.get_in(1));
-                make_edge(x.get_out(), output.get_in(2));
+                make_edge(input0.get_out(), input_port<0>(x));
+                make_edge(input1.get_out(), input_port<1>(x));
+                make_edge(output_port<0>(x), input_port<2>(output));
 
-                make_edge(input0.get_out(), n.get_in(0));
-                make_edge(input1.get_out(), n.get_in(1));
-                make_edge(n.get_out(), output.get_in(3));
+                make_edge(input0.get_out(), input_port<0>(n));
+                make_edge(input1.get_out(), input_port<1>(n));
+                make_edge(output_port<0>(n), input_port<3>(output));
                 
                 if (!silent) printf("Testing steady_signal...\n");
                 input0.activate();  // 1
@@ -270,8 +286,8 @@ int main(int argc, char *argv[]) {
                 buffer b(g);
                 led output(g, "OUTPUT", !silent); // true means print all LED state changes
 
-                make_edge(p.get_out(), b.get_in(0));
-                make_edge(b.get_out(), output.get_in());
+                make_edge(p.get_out(), input_port<0>(b));
+                make_edge(output_port<0>(b), output.get_in());
 
                 if (!silent) printf("Testing push_button...\n");
                 p.press();
@@ -289,11 +305,11 @@ int main(int argc, char *argv[]) {
                 led Sum(g, "SUM");
                 led CarryOUT(g, "CarryOUT");
                 
-                make_edge(A.get_out(), my_adder.get_A());
-                make_edge(B.get_out(), my_adder.get_B());
-                make_edge(CarryIN.get_out(), my_adder.get_CI());
-                make_edge(my_adder.get_out(), Sum.get_in());
-                make_edge(my_adder.get_CO(), CarryOUT.get_in());
+                make_edge(A.get_out(), input_port<P::A0>(my_adder));
+                make_edge(B.get_out(), input_port<P::B0>(my_adder));
+                make_edge(CarryIN.get_out(), input_port<P::CI>(my_adder));
+                make_edge(output_port<P::S0>(my_adder), Sum.get_in());
+                make_edge(output_port<1>(my_adder), CarryOUT.get_in());
                 
                 A.activate();
                 B.activate();
@@ -402,6 +418,50 @@ int main(int argc, char *argv[]) {
                 assert((Sum.get_value() == low) && (CarryOUT.get_value() == low));
             }
 
+#if USE_TWO_BIT_FULL_ADDER
+            { // test two_bit_adder
+                if (!silent) printf("testing two_bit adder\n");
+                two_bit_adder two_adder(g);
+                std::vector<toggle> A(2, toggle(g));
+                std::vector<toggle> B(2, toggle(g));
+                toggle CarryIN(g);
+                digit Sum(g, "SUM");
+                led CarryOUT(g, "CarryOUT");
+
+                make_edge(A[0].get_out(), input_port<P::A0>(two_adder));
+                make_edge(B[0].get_out(), input_port<P::B0>(two_adder));
+                make_edge(output_port<P::S0>(two_adder), input_port<0>(Sum));
+
+                make_edge(A[1].get_out(), input_port<P::A1>(two_adder));
+                make_edge(B[1].get_out(), input_port<P::B1>(two_adder)); 
+                make_edge(output_port<P::S1>(two_adder), input_port<1>(Sum));
+
+                make_edge(CarryIN.get_out(), input_port<P::CI>(two_adder));
+                make_edge(output_port<P::CO>(two_adder), CarryOUT.get_in());
+
+                // Activate all switches at low state
+                for (int i=0; i<2; ++i) {
+                    A[i].activate();
+                    B[i].activate();
+                }
+                CarryIN.activate();
+
+                if (!silent) printf("1+0\n");
+                A[0].flip();
+                g.wait_for_all();
+                if (!silent) Sum.display();
+                if (!silent) CarryOUT.display();
+                assert((Sum.get_value() == 1) && (CarryOUT.get_value() == low));
+
+                if (!silent) printf("0+1\n");
+                A[0].flip();
+                B[0].flip();
+                g.wait_for_all();
+                if (!silent) Sum.display();
+                if (!silent) CarryOUT.display();
+                assert((Sum.get_value() == 1) && (CarryOUT.get_value() == low));
+            }
+#else
             { // test four_bit_adder
                 four_bit_adder four_adder(g);
                 std::vector<toggle> A(4, toggle(g));
@@ -409,14 +469,25 @@ int main(int argc, char *argv[]) {
                 toggle CarryIN(g);
                 digit Sum(g, "SUM");
                 led CarryOUT(g, "CarryOUT");
-                
-                for (int i=0; i<4; ++i) {
-                    make_edge(A[i].get_out(), four_adder.get_A(i));
-                    make_edge(B[i].get_out(), four_adder.get_B(i));
-                    make_edge(four_adder.get_out(i), Sum.get_in(i));
-                }
-                make_edge(CarryIN.get_out(), four_adder.get_CI());
-                make_edge(four_adder.get_CO(), CarryOUT.get_in());
+
+                    make_edge(A[0].get_out(), input_port<P::A0>(four_adder));
+                    make_edge(B[0].get_out(), input_port<P::B0>(four_adder));
+                    make_edge(output_port<P::S0>(four_adder), input_port<0>(Sum));
+
+                    make_edge(A[1].get_out(), input_port<P::A1>(four_adder));
+                    make_edge(B[1].get_out(), input_port<P::B1>(four_adder));
+                    make_edge(output_port<P::S1>(four_adder), input_port<1>(Sum));
+
+                    make_edge(A[2].get_out(), input_port<P::A2>(four_adder));
+                    make_edge(B[2].get_out(), input_port<P::B2>(four_adder));
+                    make_edge(output_port<P::S2>(four_adder), input_port<2>(Sum));
+
+                    make_edge(A[3].get_out(), input_port<P::A3>(four_adder));
+                    make_edge(B[3].get_out(), input_port<P::B3>(four_adder));
+                    make_edge(output_port<P::S3>(four_adder), input_port<3>(Sum));
+
+                    make_edge(CarryIN.get_out(), input_port<P::CI>(four_adder));
+                    make_edge(output_port<P::CO>(four_adder), CarryOUT.get_in());
                 
                 // Activate all switches at low state
                 for (int i=0; i<4; ++i) {
@@ -505,6 +576,7 @@ int main(int argc, char *argv[]) {
                 if (!silent) CarryOUT.display();
                 assert((Sum.get_value() == 0) && (CarryOUT.get_value() == low));
             }
+#endif
 
             { // test D_latch
                 D_latch my_d_latch(g);
@@ -512,14 +584,14 @@ int main(int argc, char *argv[]) {
                 pulse E(g, 500, 4); // clock changes every 500ms; stops after 4 changes
                 led Q(g, " Q", verbose); // if true, LEDs print at every state change
                 led notQ(g, "~Q", verbose);
-                
-                make_edge(D.get_out(), my_d_latch.get_D());
-                make_edge(E.get_out(), my_d_latch.get_E());
-                make_edge(my_d_latch.get_Q(), Q.get_in());
-                make_edge(my_d_latch.get_notQ(), notQ.get_in());
-                
+
+                make_edge(D.get_out(), input_port<0>(my_d_latch)); 
+                make_edge(E.get_out(), input_port<1>(my_d_latch));
+                make_edge(output_port<0>(my_d_latch), Q.get_in());
+                make_edge(output_port<1>(my_d_latch), notQ.get_in());
+
                 D.activate();
-                
+
                 if (!silent) printf("Toggling D\n");
                 E.activate();
                 D.flip();
@@ -566,4 +638,9 @@ int main(int argc, char *argv[]) {
         cerr<<"error occurred. error text is :\"" <<e.what()<<"\"\n";
         return 1;
     }
+#else
+    utility::report_skipped();
+    return 0;
+#endif // __TBB_FLOW_GRAPH_CPP11_FEATURES
 }
+

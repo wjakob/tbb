@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -24,10 +24,17 @@
 #ifndef harness_inject_scheduler_H
 #define harness_inject_scheduler_H
 
+#if HARNESS_DEFINE_PRIVATE_PUBLIC
+#include <string> // merely prevents LNK2019 error to happen (on ICL+VC9 configurations)
+#include <algorithm> // include it first to avoid error on define below
+#define private public
+#define protected public
+#endif
+
 // Suppress usage of #pragma comment
 #define __TBB_NO_IMPLICIT_LINKAGE 1
 
-// Enable preview features if any 
+// Enable preview features if any
 #define __TBB_BUILD 1
 
 #undef DO_ITT_NOTIFY
@@ -69,6 +76,11 @@ int TestMain () {
 }
 // Renaming the TestMain function avoids conditional compilation around same function in the test file
 #define TestMain TestMainSkipped
+#endif
+
+#if HARNESS_DEFINE_PRIVATE_PUBLIC
+#undef protected
+#undef private
 #endif
 
 #endif /* harness_inject_scheduler_H */

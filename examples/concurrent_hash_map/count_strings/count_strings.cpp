@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -90,7 +90,7 @@ static void CountOccurrences(int nthreads) {
 
 struct Sound {
     const char *chars;
-    int rates[3];// begining, middle, ending
+    int rates[3];// beginning, middle, ending
 };
 Sound Vowels[] = {
     {"e", {445,6220,1762}}, {"a", {704,5262,514}}, {"i", {402,5224,162}}, {"o", {248,3726,191}},

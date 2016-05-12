@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::flow::interface7::indexer_node&lt; T0, T1 &gt; Class Template Reference</title>
+<title>tbb::flow::interface8::key_from_policy&lt; key_matching&lt; Key &amp; &gt; &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,61 +33,34 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00233.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface7</b></li><li class="navelem"><a class="el" href="a00070.html">indexer_node< T0, T1 ></a></li>  </ul>
+<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface8</b></li><li class="navelem"><a class="el" href="a00070.html">key_from_policy< key_matching< Key & > ></a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="a00349.html">List of all members</a>  </div>
+<a href="a00352.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::flow::interface7::indexer_node&lt; T0, T1 &gt; Class Template Reference</div>  </div>
+<div class="title">tbb::flow::interface8::key_from_policy&lt; key_matching&lt; Key &amp; &gt; &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="dynheader">
-Inheritance diagram for tbb::flow::interface7::indexer_node&lt; T0, T1 &gt;:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="a00070.png" usemap="#tbb::flow::interface7::indexer_node&lt; T0, T1 &gt;_map" alt=""/>
-  <map id="tbb::flow::interface7::indexer_node&lt; T0, T1 &gt;_map" name="tbb::flow::interface7::indexer_node&lt; T0, T1 &gt;_map">
-</map>
- </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a4a65bc98b3484d66d07de7689af675e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a65bc98b3484d66d07de7689af675e8"></a>
-typedef tuple&lt; T0, T1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>InputTuple</b></td></tr>
-<tr class="separator:a4a65bc98b3484d66d07de7689af675e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29b2f415ee274f7ce5289d0c9d03da96"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29b2f415ee274f7ce5289d0c9d03da96"></a>
-typedef internal::tagged_msg<br class="typebreak"/>
-&lt; size_t, T0, T1 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>output_type</b></td></tr>
-<tr class="separator:a29b2f415ee274f7ce5289d0c9d03da96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add3df69d677bd66a17dafec4e842725a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="add3df69d677bd66a17dafec4e842725a"></a>
-typedef <br class="typebreak"/>
-internal::unfolded_indexer_node<br class="typebreak"/>
-&lt; InputTuple &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>unfolded_type</b></td></tr>
-<tr class="separator:add3df69d677bd66a17dafec4e842725a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:a20fa956b588bbf778633bdc5b16ea2f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a20fa956b588bbf778633bdc5b16ea2f2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>indexer_node</b> (<a class="el" href="a00063.html">graph</a> &amp;g)</td></tr>
-<tr class="separator:a20fa956b588bbf778633bdc5b16ea2f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3ab0a8aec4a116ad31b8f809ee55080"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3ab0a8aec4a116ad31b8f809ee55080"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>indexer_node</b> (const <a class="el" href="a00068.html">indexer_node</a> &amp;other)</td></tr>
-<tr class="separator:ad3ab0a8aec4a116ad31b8f809ee55080"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a360bff898006bd5a72e3f70babc26c77"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a360bff898006bd5a72e3f70babc26c77"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set_name</b> (const char *name)</td></tr>
-<tr class="separator:a360bff898006bd5a72e3f70babc26c77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a265f81ad8a8090dc975c5fd898b17d3b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a265f81ad8a8090dc975c5fd898b17d3b"></a>
+typedef const Key &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
+<tr class="separator:a265f81ad8a8090dc975c5fd898b17d3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5025f524439668d0df4c6404472d1fbc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5025f524439668d0df4c6404472d1fbc"></a>
+typedef std::true_type&#160;</td><td class="memItemRight" valign="bottom"><b>is_key_matching</b></td></tr>
+<tr class="separator:a5025f524439668d0df4c6404472d1fbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
-<li><a class="el" href="a00190.html">flow_graph.h</a></li>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>flow_graph_opencl_node.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
 <p></p>
-Copyright &copy; 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2016 Intel Corporation.  All Rights Reserved.
 <p></p>
 Intel, Pentium, Intel Xeon, Itanium, Intel XScale and VTune are
 registered trademarks or trademarks of Intel Corporation or its

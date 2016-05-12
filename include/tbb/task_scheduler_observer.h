@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -22,9 +22,9 @@
 #define __TBB_task_scheduler_observer_H
 
 #include "atomic.h"
-#if __TBB_TASK_ARENA
+#if __TBB_ARENA_OBSERVER || __TBB_SLEEP_PERMISSION
 #include "task_arena.h"
-#endif //__TBB_TASK_ARENA
+#endif
 
 #if __TBB_SCHEDULER_OBSERVER
 
@@ -65,14 +65,14 @@ public:
     task_scheduler_observer_v3() : my_proxy(NULL) { my_busy_count.store<relaxed>(0); }
 
     //! Entry notification
-    /** Invoked from inside observe(true) call and whenever a worker enters the arena 
+    /** Invoked from inside observe(true) call and whenever a worker enters the arena
         this observer is associated with. If a thread is already in the arena when
         the observer is activated, the entry notification is called before it
         executes the first stolen task.
 
         Obsolete semantics. For global observers it is called by a thread before
         the first steal since observation became enabled. **/
-    virtual void on_scheduler_entry( bool /*is_worker*/ ) {} 
+    virtual void on_scheduler_entry( bool /*is_worker*/ ) {}
 
     //! Exit notification
     /** Invoked from inside observe(false) call and whenever a worker leaves the
@@ -88,7 +88,7 @@ public:
 
 } // namespace internal
 
-#if __TBB_ARENA_OBSERVER
+#if __TBB_ARENA_OBSERVER || __TBB_SLEEP_PERMISSION
 namespace interface6 {
 class task_scheduler_observer : public internal::task_scheduler_observer_v3 {
     friend class internal::task_scheduler_observer_v3;
@@ -116,10 +116,15 @@ public:
         constructor is obsolete too and will be changed in one of the future versions
         of the library. **/
     task_scheduler_observer( bool local = false ) {
+#if  __TBB_ARENA_OBSERVER
         my_context_tag = local? implicit_tag : global_tag;
+#else
+        __TBB_ASSERT_EX( !local, NULL );
+        my_context_tag = global_tag;
+#endif
     }
 
-#if __TBB_TASK_ARENA
+#if  __TBB_ARENA_OBSERVER
     //! Construct local observer for a given arena in inactive state (observation disabled).
     /** entry/exit notifications are invoked whenever a thread joins/leaves arena.
         If a thread is already in the arena when the observer is activated, the entry notification
@@ -127,7 +132,7 @@ public:
     task_scheduler_observer( task_arena & a) {
         my_context_tag = (intptr_t)&a;
     }
-#endif //__TBB_TASK_ARENA
+#endif /* __TBB_ARENA_OBSERVER */
 
     /** Destructor protects instance of the observer from concurrent notification.
        It is recommended to disable observation before destructor of a derived class starts,
@@ -145,6 +150,7 @@ public:
         internal::task_scheduler_observer_v3::observe(state);
     }
 
+#if  __TBB_SLEEP_PERMISSION
     //! Return commands for may_sleep()
     enum { keep_awake = false, allow_sleep = true };
 
@@ -152,13 +158,14 @@ public:
     /** If it returns false ('keep_awake'), the thread will keep spinning and looking for work.
         It will not be called for master threads. **/
     virtual bool may_sleep() { return allow_sleep; }
+#endif /*__TBB_SLEEP_PERMISSION*/
 };
 
 } //namespace interface6
 using interface6::task_scheduler_observer;
-#else /*__TBB_ARENA_OBSERVER*/
+#else /*__TBB_ARENA_OBSERVER || __TBB_SLEEP_PERMISSION*/
 typedef tbb::internal::task_scheduler_observer_v3 task_scheduler_observer;
-#endif /*__TBB_ARENA_OBSERVER*/
+#endif /*__TBB_ARENA_OBSERVER || __TBB_SLEEP_PERMISSION*/
 
 } // namespace tbb
 

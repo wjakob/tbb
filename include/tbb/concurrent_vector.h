@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -72,11 +72,11 @@ namespace tbb {
 template<typename T, class A = cache_aligned_allocator<T> >
 class concurrent_vector;
 
-template<typename Container, typename Value>
-class vector_iterator;
-
 //! @cond INTERNAL
 namespace internal {
+
+    template<typename Container, typename Value>
+    class vector_iterator;
 
     //! Bad allocation marker
     static void *const vector_allocation_error_flag = reinterpret_cast<void*>(size_t(63));
@@ -84,7 +84,7 @@ namespace internal {
     //! Exception helper function
     template<typename T>
     void handle_unconstructed_elements(T* array, size_t n_of_elements){
-        std::memset(array, 0, n_of_elements * sizeof(T));
+        std::memset( array, 0, n_of_elements * sizeof( T ) );
     }
 
     //! Base class of concurrent vector implementation.
@@ -126,6 +126,12 @@ namespace internal {
             template<typename T>
             T* pointer() const {  return static_cast<T*>(const_cast<void*>(array)); }
         };
+
+        friend void enforce_segment_allocated(segment_value_t const& s, internal::exception_id exception = eid_bad_last_alloc){
+            if(s != segment_allocated()){
+                internal::throw_exception(exception);
+            }
+        }
 
         // Segment pointer.
         class segment_t {
@@ -239,7 +245,7 @@ namespace internal {
             //and 2 is the minimal index for which it's true
             __TBB_ASSERT(element_index, "there should be no need to call "
                                         "is_first_element_in_segment for 0th element" );
-            return is_power_of_two_factor( element_index, 2 );
+            return is_power_of_two_at_least( element_index, 2 );
         }
 
         //! An operation on an n-element array starting at begin.
@@ -963,12 +969,14 @@ public:
     //! the first item
     reference front() {
         __TBB_ASSERT( size()>0, NULL);
-        return (my_segment[0].template load<relaxed>().template pointer<T>())[0];
+        const segment_value_t& segment_value = my_segment[0].template load<relaxed>();
+        return (segment_value.template pointer<T>())[0];
     }
     //! the first item const
     const_reference front() const {
         __TBB_ASSERT( size()>0, NULL);
-        return static_cast<const T*>(my_segment[0].array)[0];
+        const segment_value_t& segment_value = my_segment[0].template load<relaxed>();
+        return (segment_value.template pointer<const T>())[0];
     }
     //! the last item
     reference back() {
@@ -1151,8 +1159,9 @@ private:
 
         pointer internal_push_back_result(){ return g.element;}
         iterator return_iterator_and_dismiss(){
+            pointer ptr = g.element;
             g.dismiss();
-            return iterator(v, k, g.element);
+            return iterator(v, k, ptr);
         }
     };
 };
@@ -1233,8 +1242,7 @@ T& concurrent_vector<T, A>::internal_subscript_with_exceptions( size_type index 
     //TODO: why not make a load of my_segment relaxed as well ?
     //TODO: add an assertion that my_segment[k] is properly aligned to please ITT
     segment_value_t segment_value =  my_segment[k].template load<relaxed>();
-    if( segment_value != segment_allocated() ) // check for correct segment pointer
-        internal::throw_exception(internal::eid_index_range_error); // throw std::range_error
+    enforce_segment_allocated(segment_value, internal::eid_index_range_error);
     return (segment_value.pointer<T>())[j];
 }
 

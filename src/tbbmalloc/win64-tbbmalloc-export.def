@@ -1,4 +1,4 @@
-; Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+; Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 ;
 ; This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 ; you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -45,3 +45,4 @@ __TBB_malloc_safer_aligned_realloc
 ?pool_realloc@rml@@YAPEAXPEAVMemoryPool@1@PEAX_K@Z
 ?pool_aligned_realloc@rml@@YAPEAXPEAVMemoryPool@1@PEAX_K2@Z
 ?pool_aligned_malloc@rml@@YAPEAXPEAVMemoryPool@1@_K1@Z
+?pool_identify@rml@@YAPEAVMemoryPool@1@PEAX@Z

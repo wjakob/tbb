@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -62,15 +62,14 @@ __TBB_SYMBOL( _ZTIN3tbb10empty_taskE )
 __TBB_SYMBOL( _ZTSN3tbb10empty_taskE )
 __TBB_SYMBOL( _ZTVN3tbb10empty_taskE )
 
-#if __TBB_TASK_ARENA
 /* arena.cpp */
 __TBB_SYMBOL( _ZN3tbb10interface78internal15task_arena_base19internal_initializeEv )
 __TBB_SYMBOL( _ZN3tbb10interface78internal15task_arena_base18internal_terminateEv )
+__TBB_SYMBOL( _ZN3tbb10interface78internal15task_arena_base15internal_attachEv )
 __TBB_SYMBOL( _ZNK3tbb10interface78internal15task_arena_base16internal_enqueueERNS_4taskEl )
 __TBB_SYMBOL( _ZNK3tbb10interface78internal15task_arena_base16internal_executeERNS1_13delegate_baseE )
 __TBB_SYMBOL( _ZNK3tbb10interface78internal15task_arena_base13internal_waitEv )
 __TBB_SYMBOL( _ZN3tbb10interface78internal15task_arena_base21internal_current_slotEv )
-#endif /* __TBB_TASK_ARENA */
 
 #if !TBB_NO_LEGACY
 /* task_v2.cpp */
@@ -167,6 +166,8 @@ __TBB_SYMBOL( _ZN3tbb8internal22itt_make_task_group_v7ENS0_15itt_domain_enumEPvy
 __TBB_SYMBOL( _ZN3tbb8internal17itt_task_begin_v7ENS0_15itt_domain_enumEPvyS2_yNS0_12string_indexE )
 __TBB_SYMBOL( _ZN3tbb8internal19itt_relation_add_v7ENS0_15itt_domain_enumEPvyNS0_12itt_relationES2_y )
 __TBB_SYMBOL( _ZN3tbb8internal15itt_task_end_v7ENS0_15itt_domain_enumE )
+__TBB_SYMBOL( _ZN3tbb8internal19itt_region_begin_v9ENS0_15itt_domain_enumEPvyS2_yNS0_12string_indexE )
+__TBB_SYMBOL( _ZN3tbb8internal17itt_region_end_v9ENS0_15itt_domain_enumEPvy )
 #endif
 
 /* pipeline.cpp */
@@ -229,6 +230,7 @@ __TBB_SYMBOL( _ZN3tbb13spin_rw_mutex27internal_try_acquire_writerEPS0_ )
 #endif
 
 // x86_rtm_rw_mutex.cpp
+#if __TBB_TSX_AVAILABLE
 __TBB_SYMBOL( _ZN3tbb10interface88internal16x86_rtm_rw_mutex18internal_constructEv )
 __TBB_SYMBOL( _ZN3tbb10interface88internal16x86_rtm_rw_mutex23internal_acquire_writerERNS2_11scoped_lockEb )
 __TBB_SYMBOL( _ZN3tbb10interface88internal16x86_rtm_rw_mutex27internal_try_acquire_writerERNS2_11scoped_lockE )
@@ -236,6 +238,7 @@ __TBB_SYMBOL( _ZN3tbb10interface88internal16x86_rtm_rw_mutex23internal_acquire_r
 __TBB_SYMBOL( _ZN3tbb10interface88internal16x86_rtm_rw_mutex16internal_releaseERNS2_11scoped_lockE )
 __TBB_SYMBOL( _ZN3tbb10interface88internal16x86_rtm_rw_mutex16internal_upgradeERNS2_11scoped_lockE )
 __TBB_SYMBOL( _ZN3tbb10interface88internal16x86_rtm_rw_mutex18internal_downgradeERNS2_11scoped_lockE )
+#endif
 
 /* spin_rw_mutex v3 */
 __TBB_SYMBOL( _ZN3tbb16spin_rw_mutex_v318internal_constructEv )
@@ -370,4 +373,8 @@ __TBB_SYMBOL( _ZN3tbb8internal7move_v3ERNS0_13tbb_thread_v3ES2_ )
 __TBB_SYMBOL( _ZN3tbb8internal15thread_yield_v3Ev )
 __TBB_SYMBOL( _ZN3tbb8internal15thread_sleep_v3ERKNS_10tick_count10interval_tE )
 
+/* global_parameter */
+__TBB_SYMBOL( _ZN3tbb10interface914global_control12active_valueEi )
+__TBB_SYMBOL( _ZN3tbb10interface914global_control15internal_createEv )
+__TBB_SYMBOL( _ZN3tbb10interface914global_control16internal_destroyEv )
 #undef __TBB_SYMBOL

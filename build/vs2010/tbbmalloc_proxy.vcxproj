@@ -107,29 +107,29 @@
 	<PropertyGroup Label="UserMacros"/>
 	<PropertyGroup>
 		<_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-		<OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)ia32\$(Configuration)\</OutDir>
-		<IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)ia32\$(Configuration)\</IntDir>
+		<OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+		<IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
 		<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
-		<OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)intel64\$(Configuration)\</OutDir>
-		<IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)intel64\$(Configuration)\</IntDir>
+		<OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+		<IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
 		<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
-		<OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)ia32\$(Configuration)\</OutDir>
-		<IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)ia32\$(Configuration)\</IntDir>
+		<OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+		<IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
 		<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
-		<OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)intel64\$(Configuration)\</OutDir>
-		<IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)intel64\$(Configuration)\</IntDir>
+		<OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+		<IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
 		<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-		<OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-MT|Win32'">$(SolutionDir)ia32\$(Configuration)\</OutDir>
-		<IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-MT|Win32'">$(SolutionDir)ia32\$(Configuration)\</IntDir>
+		<OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-MT|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+		<IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-MT|Win32'">$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
 		<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug-MT|Win32'">false</LinkIncremental>
-		<OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-MT|x64'">$(SolutionDir)intel64\$(Configuration)\</OutDir>
-		<IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-MT|x64'">$(SolutionDir)intel64\$(Configuration)\</IntDir>
+		<OutDir Condition="'$(Configuration)|$(Platform)'=='Debug-MT|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+		<IntDir Condition="'$(Configuration)|$(Platform)'=='Debug-MT|x64'">$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
 		<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug-MT|x64'">false</LinkIncremental>
-		<OutDir Condition="'$(Configuration)|$(Platform)'=='Release-MT|Win32'">$(SolutionDir)ia32\$(Configuration)\</OutDir>
-		<IntDir Condition="'$(Configuration)|$(Platform)'=='Release-MT|Win32'">$(SolutionDir)ia32\$(Configuration)\</IntDir>
+		<OutDir Condition="'$(Configuration)|$(Platform)'=='Release-MT|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+		<IntDir Condition="'$(Configuration)|$(Platform)'=='Release-MT|Win32'">$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
 		<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-MT|Win32'">false</LinkIncremental>
-		<OutDir Condition="'$(Configuration)|$(Platform)'=='Release-MT|x64'">$(SolutionDir)intel64\$(Configuration)\</OutDir>
-		<IntDir Condition="'$(Configuration)|$(Platform)'=='Release-MT|x64'">$(SolutionDir)intel64\$(Configuration)\</IntDir>
+		<OutDir Condition="'$(Configuration)|$(Platform)'=='Release-MT|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+		<IntDir Condition="'$(Configuration)|$(Platform)'=='Release-MT|x64'">$(SolutionDir)$(Platform)\$(ProjectName)\$(Configuration)\</IntDir>
 		<LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release-MT|x64'">false</LinkIncremental>
 		<CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug-MT|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
 		<CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug-MT|Win32'"/>
@@ -162,7 +162,7 @@
 	</PropertyGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
 		<ClCompile>
-			<AdditionalOptions> /c /MDd /Od /Ob0 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /DTBB_USE_DEBUG /D__TBB_LIB_NAME=tbb_debug.lib /DDO_ITT_NOTIFY /GS /volatile:iso /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
+			<AdditionalOptions> /c /MDd /Od /Ob0 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /DTBB_USE_DEBUG /D__TBB_LIB_NAME=tbb_debug.lib /DDO_ITT_NOTIFY /GS /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
 			<Optimization>Disabled</Optimization>
 			<AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -191,7 +191,7 @@
 			<TargetEnvironment>X64</TargetEnvironment>
 		</Midl>
 		<ClCompile>
-			<AdditionalOptions> /c /MDd /Od /Ob0 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /DTBB_USE_DEBUG /D__TBB_LIB_NAME=tbb_debug.lib /DDO_ITT_NOTIFY /GS /volatile:iso /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
+			<AdditionalOptions> /c /MDd /Od /Ob0 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /DTBB_USE_DEBUG /D__TBB_LIB_NAME=tbb_debug.lib /DDO_ITT_NOTIFY /GS /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
 			<Optimization>Disabled</Optimization>
 			<AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<MinimalRebuild>false</MinimalRebuild>
@@ -199,7 +199,6 @@
 			</ExceptionHandling>
 			<BasicRuntimeChecks>Default</BasicRuntimeChecks>
 			<RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
 			<PrecompiledHeader>
 			</PrecompiledHeader>
@@ -220,7 +219,7 @@
 	</ItemDefinitionGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
 		<ClCompile>
-			<AdditionalOptions> /c /MD /O2 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /D__TBB_LIB_NAME=tbb.lib /DDO_ITT_NOTIFY /GS /volatile:iso /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
+			<AdditionalOptions> /c /MD /O2 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /D__TBB_LIB_NAME=tbb.lib /DDO_ITT_NOTIFY /GS /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
 			<AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<ExceptionHandling>
@@ -249,13 +248,12 @@
 			<TargetEnvironment>X64</TargetEnvironment>
 		</Midl>
 		<ClCompile>
-			<AdditionalOptions> /c /MD /O2 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /D__TBB_LIB_NAME=tbb.lib /DDO_ITT_NOTIFY /GS /volatile:iso /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
+			<AdditionalOptions> /c /MD /O2 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /D__TBB_LIB_NAME=tbb.lib /DDO_ITT_NOTIFY /GS /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
 			<AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<ExceptionHandling>
 			</ExceptionHandling>
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<PrecompiledHeader>
 			</PrecompiledHeader>
 			<WarningLevel>Level4</WarningLevel>
@@ -276,7 +274,7 @@
 	</ItemDefinitionGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MT|Win32'">
 		<ClCompile>
-			<AdditionalOptions> /c /MTd /Od /Ob0 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /DTBB_USE_DEBUG /D__TBB_LIB_NAME=tbb_debug.lib /DDO_ITT_NOTIFY /GS /volatile:iso /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
+			<AdditionalOptions> /c /MTd /Od /Ob0 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /DTBB_USE_DEBUG /D__TBB_LIB_NAME=tbb_debug.lib /DDO_ITT_NOTIFY /GS /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
 			<Optimization>Disabled</Optimization>
 			<AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -305,7 +303,7 @@
 			<TargetEnvironment>X64</TargetEnvironment>
 		</Midl>
 		<ClCompile>
-			<AdditionalOptions> /c /MTd /Od /Ob0 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /DTBB_USE_DEBUG /D__TBB_LIB_NAME=tbb_debug.lib /DDO_ITT_NOTIFY /GS /volatile:iso /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
+			<AdditionalOptions> /c /MTd /Od /Ob0 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /DTBB_USE_DEBUG /D__TBB_LIB_NAME=tbb_debug.lib /DDO_ITT_NOTIFY /GS /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
 			<Optimization>Disabled</Optimization>
 			<AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<MinimalRebuild>false</MinimalRebuild>
@@ -313,7 +311,6 @@
 			</ExceptionHandling>
 			<BasicRuntimeChecks>Default</BasicRuntimeChecks>
 			<RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
 			<PrecompiledHeader>
 			</PrecompiledHeader>
@@ -334,7 +331,7 @@
 	</ItemDefinitionGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-MT|Win32'">
 		<ClCompile>
-			<AdditionalOptions> /c /MT /O2 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /D__TBB_LIB_NAME=tbb.lib /DDO_ITT_NOTIFY /GS /volatile:iso /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
+			<AdditionalOptions> /c /MT /O2 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /D__TBB_LIB_NAME=tbb.lib /DDO_ITT_NOTIFY /GS /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
 			<AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<ExceptionHandling>
@@ -363,13 +360,12 @@
 			<TargetEnvironment>X64</TargetEnvironment>
 		</Midl>
 		<ClCompile>
-			<AdditionalOptions> /c /MT /O2 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /D__TBB_LIB_NAME=tbb.lib /DDO_ITT_NOTIFY /GS /volatile:iso /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
+			<AdditionalOptions> /c /MT /O2 /Zi /EHsc /GR /Zc:forScope /Zc:wchar_t /D__TBB_LIB_NAME=tbb.lib /DDO_ITT_NOTIFY /GS /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0502 /W4 /D__TBBMALLOC_BUILD=1 /I../../src /I../../src/rml/include /I../../include /I../../src/tbbmalloc /I../../src/tbbmalloc</AdditionalOptions>
 			<AdditionalIncludeDirectories>.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
 			<PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<ExceptionHandling>
 			</ExceptionHandling>
 			<RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-			<BufferSecurityCheck>false</BufferSecurityCheck>
 			<PrecompiledHeader>
 			</PrecompiledHeader>
 			<WarningLevel>Level4</WarningLevel>
@@ -405,9 +401,7 @@
 			<AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">/I../../src /I../../include /DDO_ITT_NOTIFY /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0400 %(AdditionalOptions)</AdditionalOptions>
 			<AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">/I../../src /I../../include /DDO_ITT_NOTIFY /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0400 %(AdditionalOptions)</AdditionalOptions>
 		</ResourceCompile>
-		<ClCompile Include="..\..\src\tbbmalloc\proxy.cpp"/>
-		<ClCompile Include="..\..\src\tbbmalloc\tbb_function_replacement.cpp"/>
-	</ItemGroup>
+		<ClCompile Include="..\..\src\tbbmalloc\proxy.cpp"/><ClCompile Include="..\..\src\tbbmalloc\tbb_function_replacement.cpp"/></ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="tbbmalloc.vcxproj">
 			<Project>{b15f131e-328a-4d42-adc2-9ff4ca6306d8}</Project>

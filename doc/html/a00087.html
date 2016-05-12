@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::interface6::memory_pool_allocator&lt; T, P &gt; Class Template Reference</title>
+<title>tbb::flow::interface8::opencl_buffer&lt; T, Factory &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,144 +33,111 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00233.html">tbb</a></li><li class="navelem"><b>interface6</b></li><li class="navelem"><a class="el" href="a00087.html">memory_pool_allocator</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface8</b></li><li class="navelem"><a class="el" href="a00087.html">opencl_buffer</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pro-types">Protected Types</a> &#124;
-<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="#friends">Friends</a> &#124;
-<a href="a00382.html">List of all members</a>  </div>
+<a href="a00340.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::interface6::memory_pool_allocator&lt; T, P &gt; Class Template Reference<div class="ingroups"><a class="el" href="a00249.html">Memory Allocation</a></div></div>  </div>
+<div class="title">tbb::flow::interface8::opencl_buffer&lt; T, Factory &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Meets "allocator" requirements of ISO C++ Standard, Section 20.1.5.  
- <a href="a00087.html#details">More...</a></p>
-
-<p><code>#include &lt;memory_pool.h&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for tbb::flow::interface8::opencl_buffer&lt; T, Factory &gt;:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="a00087.png" usemap="#tbb::flow::interface8::opencl_buffer&lt; T, Factory &gt;_map" alt=""/>
+  <map id="tbb::flow::interface8::opencl_buffer&lt; T, Factory &gt;_map" name="tbb::flow::interface8::opencl_buffer&lt; T, Factory &gt;_map">
+<area href="a00101.html" alt="tbb::flow::interface8::opencl_subbuffer&lt; T, Factory &gt;" shape="rect" coords="0,56,310,80"/>
+</map>
+ </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00115.html">rebind</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a6202050e0edbded0b0534ea4be9547e0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6202050e0edbded0b0534ea4be9547e0"></a>
-typedef <br class="typebreak"/>
-tbb::internal::allocator_type<br class="typebreak"/>
-&lt; T &gt;::value_type&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b></td></tr>
-<tr class="separator:a6202050e0edbded0b0534ea4be9547e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07450f397df1af8096f31bfa8f2e1722"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a07450f397df1af8096f31bfa8f2e1722"></a>
-typedef value_type *&#160;</td><td class="memItemRight" valign="bottom"><b>pointer</b></td></tr>
-<tr class="separator:a07450f397df1af8096f31bfa8f2e1722"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a972521ed466cc8140d386331a25e895a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a972521ed466cc8140d386331a25e895a"></a>
-typedef const value_type *&#160;</td><td class="memItemRight" valign="bottom"><b>const_pointer</b></td></tr>
-<tr class="separator:a972521ed466cc8140d386331a25e895a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a83b91759effc3a452fc565ac3bb45613"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83b91759effc3a452fc565ac3bb45613"></a>
-typedef value_type &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>reference</b></td></tr>
-<tr class="separator:a83b91759effc3a452fc565ac3bb45613"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15abe537e2dad4132c956c08d9d0a27e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15abe537e2dad4132c956c08d9d0a27e"></a>
-typedef const value_type &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>const_reference</b></td></tr>
-<tr class="separator:a15abe537e2dad4132c956c08d9d0a27e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac20767f3b7a8fcdc1aff0b0874245d3a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac20767f3b7a8fcdc1aff0b0874245d3a"></a>
-typedef size_t&#160;</td><td class="memItemRight" valign="bottom"><b>size_type</b></td></tr>
-<tr class="separator:ac20767f3b7a8fcdc1aff0b0874245d3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23267e855e2427b401b99ce4b547f83e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23267e855e2427b401b99ce4b547f83e"></a>
-typedef ptrdiff_t&#160;</td><td class="memItemRight" valign="bottom"><b>difference_type</b></td></tr>
-<tr class="separator:a23267e855e2427b401b99ce4b547f83e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7fbadc577ee5fc031ffffef38535aba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa7fbadc577ee5fc031ffffef38535aba"></a>
+typedef cl_mem&#160;</td><td class="memItemRight" valign="bottom"><b>native_object_type</b></td></tr>
+<tr class="separator:aa7fbadc577ee5fc031ffffef38535aba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4a8113025ef9016ab20fef6b30f0d3c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4a8113025ef9016ab20fef6b30f0d3c"></a>
+typedef <a class="el" href="a00087.html">opencl_buffer</a>&#160;</td><td class="memItemRight" valign="bottom"><b>memory_object_type</b></td></tr>
+<tr class="separator:aa4a8113025ef9016ab20fef6b30f0d3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe4505e7cae02a1c38e0031cce4d2211"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe4505e7cae02a1c38e0031cce4d2211"></a>
+typedef Factory&#160;</td><td class="memItemRight" valign="bottom"><b>opencl_factory_type</b></td></tr>
+<tr class="separator:afe4505e7cae02a1c38e0031cce4d2211"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a527615fc3e01dde9f7c6bafaeab83cae"><td class="memTemplParams" colspan="2"><a class="anchor" id="a527615fc3e01dde9f7c6bafaeab83cae"></a>
+template&lt;access_type a&gt; </td></tr>
+<tr class="memitem:a527615fc3e01dde9f7c6bafaeab83cae"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>iterator</b> = T *</td></tr>
+<tr class="separator:a527615fc3e01dde9f7c6bafaeab83cae"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a384be31e682a3b86b5b11e635232c9c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a384be31e682a3b86b5b11e635232c9c5"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>memory_pool_allocator</b> (pool_type &amp;pool)  throw ()</td></tr>
-<tr class="separator:a384be31e682a3b86b5b11e635232c9c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2b4cf16b566e40ddb196c371e5ae96e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2b4cf16b566e40ddb196c371e5ae96e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>memory_pool_allocator</b> (const <a class="el" href="a00087.html">memory_pool_allocator</a> &amp;src)  throw ()</td></tr>
-<tr class="separator:aa2b4cf16b566e40ddb196c371e5ae96e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad32ad8245399fbdb38a0a41e912d86d9"><td class="memTemplParams" colspan="2"><a class="anchor" id="ad32ad8245399fbdb38a0a41e912d86d9"></a>
-template&lt;typename U &gt; </td></tr>
-<tr class="memitem:ad32ad8245399fbdb38a0a41e912d86d9"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>memory_pool_allocator</b> (const <a class="el" href="a00087.html">memory_pool_allocator</a>&lt; U, P &gt; &amp;src)  throw ()</td></tr>
-<tr class="separator:ad32ad8245399fbdb38a0a41e912d86d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55653a8c539901be6ca24a120a5d7b72"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55653a8c539901be6ca24a120a5d7b72"></a>
-pointer&#160;</td><td class="memItemRight" valign="bottom"><b>address</b> (reference x) const </td></tr>
-<tr class="separator:a55653a8c539901be6ca24a120a5d7b72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8a3e4236f6e1266f126dac557906ce2c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a3e4236f6e1266f126dac557906ce2c"></a>
-const_pointer&#160;</td><td class="memItemRight" valign="bottom"><b>address</b> (const_reference x) const </td></tr>
-<tr class="separator:a8a3e4236f6e1266f126dac557906ce2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10b9888883a3dbd66e87c4a7f874ef28"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a10b9888883a3dbd66e87c4a7f874ef28"></a>
-pointer&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00087.html#a10b9888883a3dbd66e87c4a7f874ef28">allocate</a> (size_type n, const void *=0)</td></tr>
-<tr class="memdesc:a10b9888883a3dbd66e87c4a7f874ef28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate space for n objects. <br/></td></tr>
-<tr class="separator:a10b9888883a3dbd66e87c4a7f874ef28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9fcf288f2d653972d1bdc0c65abebed4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9fcf288f2d653972d1bdc0c65abebed4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00087.html#a9fcf288f2d653972d1bdc0c65abebed4">deallocate</a> (pointer p, size_type)</td></tr>
-<tr class="memdesc:a9fcf288f2d653972d1bdc0c65abebed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free previously allocated block of memory. <br/></td></tr>
-<tr class="separator:a9fcf288f2d653972d1bdc0c65abebed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2bded8e3fb2cec32b48771e7a1bbb838"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2bded8e3fb2cec32b48771e7a1bbb838"></a>
-size_type&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00087.html#a2bded8e3fb2cec32b48771e7a1bbb838">max_size</a> () const   throw ()</td></tr>
-<tr class="memdesc:a2bded8e3fb2cec32b48771e7a1bbb838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Largest value for which method allocate might succeed. <br/></td></tr>
-<tr class="separator:a2bded8e3fb2cec32b48771e7a1bbb838"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac51b34ef90ecabdd2e0483e25603a15b"><td class="memTemplParams" colspan="2"><a class="anchor" id="ac51b34ef90ecabdd2e0483e25603a15b"></a>
-template&lt;typename U , typename... Args&gt; </td></tr>
-<tr class="memitem:ac51b34ef90ecabdd2e0483e25603a15b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="a00087.html#ac51b34ef90ecabdd2e0483e25603a15b">construct</a> (U *p, Args &amp;&amp;...args)</td></tr>
-<tr class="memdesc:ac51b34ef90ecabdd2e0483e25603a15b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy-construct value at location pointed to by p. <br/></td></tr>
-<tr class="separator:ac51b34ef90ecabdd2e0483e25603a15b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8be8f1b38d4b1b6bea2d83f611bf66e7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8be8f1b38d4b1b6bea2d83f611bf66e7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (pointer p, value_type &amp;&amp;value)</td></tr>
-<tr class="separator:a8be8f1b38d4b1b6bea2d83f611bf66e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:affac76f7742c4d8ea6345e0aad82792a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="affac76f7742c4d8ea6345e0aad82792a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (pointer p, const value_type &amp;value)</td></tr>
-<tr class="separator:affac76f7742c4d8ea6345e0aad82792a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2223b6469f88aadc432a4b3f88728d0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2223b6469f88aadc432a4b3f88728d0f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00087.html#a2223b6469f88aadc432a4b3f88728d0f">destroy</a> (pointer p)</td></tr>
-<tr class="memdesc:a2223b6469f88aadc432a4b3f88728d0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy value at location pointed to by p. <br/></td></tr>
-<tr class="separator:a2223b6469f88aadc432a4b3f88728d0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-types"></a>
-Protected Types</h2></td></tr>
-<tr class="memitem:aecd858782faee0fb5fa707671cfc49aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aecd858782faee0fb5fa707671cfc49aa"></a>
-typedef P&#160;</td><td class="memItemRight" valign="bottom"><b>pool_type</b></td></tr>
-<tr class="separator:aecd858782faee0fb5fa707671cfc49aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
-Protected Attributes</h2></td></tr>
-<tr class="memitem:a0fbd737811d556f1d2898d3722e85f32"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0fbd737811d556f1d2898d3722e85f32"></a>
-pool_type *&#160;</td><td class="memItemRight" valign="bottom"><b>my_pool</b></td></tr>
-<tr class="separator:a0fbd737811d556f1d2898d3722e85f32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a667f92789c0b790a647afbb8ff974953"><td class="memTemplParams" colspan="2"><a class="anchor" id="a667f92789c0b790a647afbb8ff974953"></a>
+template&lt;access_type a&gt; </td></tr>
+<tr class="memitem:a667f92789c0b790a647afbb8ff974953"><td class="memTemplItemLeft" align="right" valign="top">iterator&lt; a &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>access</b> () const </td></tr>
+<tr class="separator:a667f92789c0b790a647afbb8ff974953"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c2063c05e78014a2290be021667b89a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c2063c05e78014a2290be021667b89a"></a>
+T *&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const </td></tr>
+<tr class="separator:a0c2063c05e78014a2290be021667b89a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cf5ad938f23a83e323649f072590174"><td class="memTemplParams" colspan="2"><a class="anchor" id="a6cf5ad938f23a83e323649f072590174"></a>
+template&lt;access_type a = read_write&gt; </td></tr>
+<tr class="memitem:a6cf5ad938f23a83e323649f072590174"><td class="memTemplItemLeft" align="right" valign="top">iterator&lt; a &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>begin</b> () const </td></tr>
+<tr class="separator:a6cf5ad938f23a83e323649f072590174"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadbe73967e1187cdd2b4a969b1f51809"><td class="memTemplParams" colspan="2"><a class="anchor" id="aadbe73967e1187cdd2b4a969b1f51809"></a>
+template&lt;access_type a = read_write&gt; </td></tr>
+<tr class="memitem:aadbe73967e1187cdd2b4a969b1f51809"><td class="memTemplItemLeft" align="right" valign="top">iterator&lt; a &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>end</b> () const </td></tr>
+<tr class="separator:aadbe73967e1187cdd2b4a969b1f51809"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1fb95b1ade1cf743bb950b94c46453c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af1fb95b1ade1cf743bb950b94c46453c"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const </td></tr>
+<tr class="separator:af1fb95b1ade1cf743bb950b94c46453c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1781e710557102fd53b34ff90f06c47a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1781e710557102fd53b34ff90f06c47a"></a>
+T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (ptrdiff_t k)</td></tr>
+<tr class="separator:a1781e710557102fd53b34ff90f06c47a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec8afab085cd801346b37d185debd209"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec8afab085cd801346b37d185debd209"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>opencl_buffer</b> (<a class="el" href="a00094.html">opencl_graph</a> &amp;g, size_t size)</td></tr>
+<tr class="separator:aec8afab085cd801346b37d185debd209"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a092a633c4bd84a4fec1658b9a96e0baa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a092a633c4bd84a4fec1658b9a96e0baa"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>opencl_buffer</b> (Factory &amp;f, size_t size)</td></tr>
+<tr class="separator:a092a633c4bd84a4fec1658b9a96e0baa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7298aa41e8e050b921691a198b86e7c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab7298aa41e8e050b921691a198b86e7c"></a>
+cl_mem&#160;</td><td class="memItemRight" valign="bottom"><b>native_object</b> () const </td></tr>
+<tr class="separator:ab7298aa41e8e050b921691a198b86e7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5c696b32bf4b78d4206ef5a5c7b8cbe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af5c696b32bf4b78d4206ef5a5c7b8cbe"></a>
+const <a class="el" href="a00087.html">opencl_buffer</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>memory_object</b> () const </td></tr>
+<tr class="separator:af5c696b32bf4b78d4206ef5a5c7b8cbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d6f20e3cfd8823033e334ffd09425b0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d6f20e3cfd8823033e334ffd09425b0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>send</b> (<a class="el" href="a00089.html">opencl_device</a> device, <a class="el" href="a00054.html">dependency_msg</a>&lt; <a class="el" href="a00087.html">opencl_buffer</a>, Factory &gt; &amp;dependency) const </td></tr>
+<tr class="separator:a1d6f20e3cfd8823033e334ffd09425b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a337f2107ce9255307638ec3375f2f218"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a337f2107ce9255307638ec3375f2f218"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>receive</b> (const <a class="el" href="a00054.html">dependency_msg</a>&lt; <a class="el" href="a00087.html">opencl_buffer</a>, Factory &gt; &amp;dependency) const </td></tr>
+<tr class="separator:a337f2107ce9255307638ec3375f2f218"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af19e5d23a9f92b2d179e85f860e82d5f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af19e5d23a9f92b2d179e85f860e82d5f"></a>
+<a class="el" href="a00101.html">opencl_subbuffer</a>&lt; T, Factory &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>subbuffer</b> (size_t index, size_t size) const </td></tr>
+<tr class="separator:af19e5d23a9f92b2d179e85f860e82d5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a6c34ee2e5a57845f050b507cc516a005"><td class="memTemplParams" colspan="2"><a class="anchor" id="a6c34ee2e5a57845f050b507cc516a005"></a>
-template&lt;typename U , typename R &gt; </td></tr>
-<tr class="memitem:a6c34ee2e5a57845f050b507cc516a005"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>memory_pool_allocator</b></td></tr>
-<tr class="separator:a6c34ee2e5a57845f050b507cc516a005"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8c26a64f4e012f2a9cf6035cf029905"><td class="memTemplParams" colspan="2"><a class="anchor" id="ac8c26a64f4e012f2a9cf6035cf029905"></a>
-template&lt;typename V , typename U , typename R &gt; </td></tr>
-<tr class="memitem:ac8c26a64f4e012f2a9cf6035cf029905"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="a00087.html">memory_pool_allocator</a>&lt; V, R &gt; &amp;a, const <a class="el" href="a00087.html">memory_pool_allocator</a>&lt; U, R &gt; &amp;b)</td></tr>
-<tr class="separator:ac8c26a64f4e012f2a9cf6035cf029905"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2f7230e5bc817e7512e18b5311b3371b"><td class="memTemplParams" colspan="2"><a class="anchor" id="a2f7230e5bc817e7512e18b5311b3371b"></a>
-template&lt;typename V , typename U , typename R &gt; </td></tr>
-<tr class="memitem:a2f7230e5bc817e7512e18b5311b3371b"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="a00087.html">memory_pool_allocator</a>&lt; V, R &gt; &amp;a, const <a class="el" href="a00087.html">memory_pool_allocator</a>&lt; U, R &gt; &amp;b)</td></tr>
-<tr class="separator:a2f7230e5bc817e7512e18b5311b3371b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a357c187838aa075f23be7b8c86ddcbd3"><td class="memTemplParams" colspan="2"><a class="anchor" id="a357c187838aa075f23be7b8c86ddcbd3"></a>
+template&lt;typename &gt; </td></tr>
+<tr class="memitem:a357c187838aa075f23be7b8c86ddcbd3"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>opencl_factory</b></td></tr>
+<tr class="separator:a357c187838aa075f23be7b8c86ddcbd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a518ac9631dff44b959b95caa4d9d69d8"><td class="memTemplParams" colspan="2"><a class="anchor" id="a518ac9631dff44b959b95caa4d9d69d8"></a>
+template&lt;typename , typename &gt; </td></tr>
+<tr class="memitem:a518ac9631dff44b959b95caa4d9d69d8"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>opencl_subbuffer</b></td></tr>
+<tr class="separator:a518ac9631dff44b959b95caa4d9d69d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e5bdf00651720250e564d13b624863c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e5bdf00651720250e564d13b624863c"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="a00087.html">opencl_buffer</a>&lt; T, Factory &gt; &amp;lhs, const <a class="el" href="a00087.html">opencl_buffer</a>&lt; T, Factory &gt; &amp;rhs)</td></tr>
+<tr class="separator:a4e5bdf00651720250e564d13b624863c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename T, typename P = internal::pool_base&gt;<br/>
-class tbb::interface6::memory_pool_allocator&lt; T, P &gt;</h3>
-
-<p>Meets "allocator" requirements of ISO C++ Standard, Section 20.1.5. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
-<li><a class="el" href="a00191.html">memory_pool.h</a></li>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>flow_graph_opencl_node.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
 <p></p>
-Copyright &copy; 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2016 Intel Corporation.  All Rights Reserved.
 <p></p>
 Intel, Pentium, Intel Xeon, Itanium, Intel XScale and VTune are
 registered trademarks or trademarks of Intel Corporation or its

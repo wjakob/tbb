@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -140,7 +140,7 @@ public:
     TestCase SetTestCase(const char *name, const char *mode, int threads);
     //! Specify next test key
     void SetTestCase(const TestCase &t) { SetTestCase(t.getName(), t.getMode(), t.getThreads()); }
-    //! Reserve specified number of rounds. Use for effeciency. Used mostly internally
+    //! Reserve specified number of rounds. Use for efficiency. Used mostly internally
     void ReserveRounds(size_t index);
     //! Add result of the measure
     void AddRoundResult(const TestCase &, value_t v);

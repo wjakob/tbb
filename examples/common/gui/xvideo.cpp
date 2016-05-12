@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -244,12 +244,13 @@ generic:
             goto fail;
         }
     }
-    // Note: It may be more efficient to adopt the server's byte order
-    //       and swap once per get_color() call instead of once per pixel.
-    const uint32_t probe = 0x03020100;
-    const bool big_endian = (((const char*)(&probe))[0]==0x03);
-    ximage->byte_order = big_endian ? MSBFirst : LSBFirst;
-
+    if( ximage ) {
+        // Note: It may be more efficient to adopt the server's byte order
+        //       and swap once per get_color() call instead of once per pixel.
+        const uint32_t probe = 0x03020100;
+        const bool big_endian = (((const char*)(&probe))[0]==0x03);
+        ximage->byte_order = big_endian ? MSBFirst : LSBFirst;
+    }
     printf("Note: using %s with %s visual for %d-bit color depth\n", vidstr, vis==DefaultVisual(dpy, theScreen)?"default":"non-default", dispdepth);
     running = true;
     return true;

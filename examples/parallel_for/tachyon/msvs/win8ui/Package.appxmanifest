@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-  <Identity Name="36816596-d167-42e1-bcc0-cd3ec4577997" Publisher="CN=vpolin" Version="1.0.0.18" />
+  <Identity Name="36816596-d167-42e1-bcc0-cd3ec4577997" Publisher="CN=tbbtest" Version="1.0.0.18" />
   <Properties>
     <DisplayName>Tachyon Demo</DisplayName>
     <PublisherDisplayName>test</PublisherDisplayName>

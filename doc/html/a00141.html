@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::flow::interface7::split_node&lt; TupleType, Allocator &gt; Class Template Reference</title>
+<title>tbb::queuing_mutex::scoped_lock Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,117 +33,94 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00233.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface7</b></li><li class="navelem"><a class="el" href="a00141.html">split_node</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><a class="el" href="a00110.html">queuing_mutex</a></li><li class="navelem"><a class="el" href="a00141.html">scoped_lock</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="a00333.html">List of all members</a>  </div>
+<a href="a00289.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::flow::interface7::split_node&lt; TupleType, Allocator &gt; Class Template Reference</div>  </div>
+<div class="title">tbb::queuing_mutex::scoped_lock Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="a00141.html" title="split_node: accepts a tuple as input, forwards each element of the tuple to its ">split_node</a>: accepts a tuple as input, forwards each element of the tuple to its  
+<p>The scoped locking pattern.  
  <a href="a00141.html#details">More...</a></p>
 
-<p><code>#include &lt;flow_graph.h&gt;</code></p>
+<p><code>#include &lt;queuing_mutex.h&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for tbb::flow::interface7::split_node&lt; TupleType, Allocator &gt;:</div>
+Inheritance diagram for tbb::queuing_mutex::scoped_lock:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="a00141.png" usemap="#tbb::flow::interface7::split_node&lt; TupleType, Allocator &gt;_map" alt=""/>
-  <map id="tbb::flow::interface7::split_node&lt; TupleType, Allocator &gt;_map" name="tbb::flow::interface7::split_node&lt; TupleType, Allocator &gt;_map">
-<area href="a00092.html" alt="tbb::flow::interface7::multifunction_node&lt; TupleType, TupleType, rejecting, Allocator &gt;" shape="rect" coords="500,112,1490,136"/>
-<area href="a00065.html" title="The base of all graph nodes. " alt="tbb::flow::interface7::graph_node" shape="rect" coords="0,56,990,80"/>
+  <img src="a00141.png" usemap="#tbb::queuing_mutex::scoped_lock_map" alt=""/>
+  <map id="tbb::queuing_mutex::scoped_lock_map" name="tbb::queuing_mutex::scoped_lock_map">
 </map>
  </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a7b30b85d93e3a6cc74eb58a9eccc77e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b30b85d93e3a6cc74eb58a9eccc77e8"></a>
-typedef <br class="typebreak"/>
-base_type::output_ports_type&#160;</td><td class="memItemRight" valign="bottom"><b>output_ports_type</b></td></tr>
-<tr class="separator:a7b30b85d93e3a6cc74eb58a9eccc77e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab385733461335acd814fdc501dd1ab90"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab385733461335acd814fdc501dd1ab90"></a>
-typedef TupleType&#160;</td><td class="memItemRight" valign="bottom"><b>input_type</b></td></tr>
-<tr class="separator:ab385733461335acd814fdc501dd1ab90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd56f31b5208a5dff21e5ecba2c2902f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abd56f31b5208a5dff21e5ecba2c2902f"></a>
-typedef Allocator&#160;</td><td class="memItemRight" valign="bottom"><b>allocator_type</b></td></tr>
-<tr class="separator:abd56f31b5208a5dff21e5ecba2c2902f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_a00092"><td colspan="2" onclick="javascript:toggleInherit('pub_types_a00092')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="a00092.html">tbb::flow::interface7::multifunction_node&lt; TupleType, TupleType, rejecting, Allocator &gt;</a></td></tr>
-<tr class="memitem:a3b656d3448ae8bf5acc58b07c072b3ab inherit pub_types_a00092"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b656d3448ae8bf5acc58b07c072b3ab"></a>
-typedef TupleType&#160;</td><td class="memItemRight" valign="bottom"><b>input_type</b></td></tr>
-<tr class="separator:a3b656d3448ae8bf5acc58b07c072b3ab inherit pub_types_a00092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a644a4f1eb5056ebae1f0032318b3e99d inherit pub_types_a00092"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a644a4f1eb5056ebae1f0032318b3e99d"></a>
-typedef <br class="typebreak"/>
-internal::wrap_tuple_elements<br class="typebreak"/>
-&lt; N, <br class="typebreak"/>
-internal::multifunction_output, <br class="typebreak"/>
-TupleType &gt;::type&#160;</td><td class="memItemRight" valign="bottom"><b>output_ports_type</b></td></tr>
-<tr class="separator:a644a4f1eb5056ebae1f0032318b3e99d inherit pub_types_a00092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a61bb1309f07046df50f2c9ab878c81d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61bb1309f07046df50f2c9ab878c81d4"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>split_node</b> (<a class="el" href="a00063.html">graph</a> &amp;g)</td></tr>
-<tr class="separator:a61bb1309f07046df50f2c9ab878c81d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9fad205fec699a225969f0391ea133d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae9fad205fec699a225969f0391ea133d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>split_node</b> (const <a class="el" href="a00141.html">split_node</a> &amp;other)</td></tr>
-<tr class="separator:ae9fad205fec699a225969f0391ea133d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1550198e198fc858c5619ce1dbd8411a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1550198e198fc858c5619ce1dbd8411a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set_name</b> (const char *name)</td></tr>
-<tr class="separator:a1550198e198fc858c5619ce1dbd8411a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_a00092"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_a00092')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="a00092.html">tbb::flow::interface7::multifunction_node&lt; TupleType, TupleType, rejecting, Allocator &gt;</a></td></tr>
-<tr class="memitem:a7be5663f3c71c628215860fb97302a5a inherit pub_methods_a00092"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7be5663f3c71c628215860fb97302a5a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>multifunction_node</b> (<a class="el" href="a00063.html">graph</a> &amp;g, size_t concurrency, Body body)</td></tr>
-<tr class="separator:a7be5663f3c71c628215860fb97302a5a inherit pub_methods_a00092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09d3b9e53a7e2fa3c07a0b7a794556ea inherit pub_methods_a00092"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a09d3b9e53a7e2fa3c07a0b7a794556ea"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>multifunction_node</b> (const <a class="el" href="a00092.html">multifunction_node</a> &amp;other)</td></tr>
-<tr class="separator:a09d3b9e53a7e2fa3c07a0b7a794556ea inherit pub_methods_a00092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcc4529e5533d36b6341c83a09502ee9 inherit pub_methods_a00092"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afcc4529e5533d36b6341c83a09502ee9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set_name</b> (const char *name)</td></tr>
-<tr class="separator:afcc4529e5533d36b6341c83a09502ee9 inherit pub_methods_a00092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_a00065"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_a00065')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="a00065.html">tbb::flow::interface7::graph_node</a></td></tr>
-<tr class="memitem:a4badd313105e30f539882276353dcb8e inherit pub_methods_a00065"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4badd313105e30f539882276353dcb8e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>graph_node</b> (<a class="el" href="a00063.html">graph</a> &amp;g)</td></tr>
-<tr class="separator:a4badd313105e30f539882276353dcb8e inherit pub_methods_a00065"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05e4f487c0bf45c7326062befeb2c7c4 inherit pub_methods_a00065"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05e4f487c0bf45c7326062befeb2c7c4"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>extract</b> (reset_flags f=rf_extract)</td></tr>
-<tr class="separator:a05e4f487c0bf45c7326062befeb2c7c4 inherit pub_methods_a00065"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pro_methods_a00092"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_a00092')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="a00092.html">tbb::flow::interface7::multifunction_node&lt; TupleType, TupleType, rejecting, Allocator &gt;</a></td></tr>
-<tr class="memitem:a80f7ba2f8934feb646bbd9d968718998 inherit pro_methods_a00092"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a80f7ba2f8934feb646bbd9d968718998"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> (__TBB_PFG_RESET_ARG(reset_flags f))</td></tr>
-<tr class="separator:a80f7ba2f8934feb646bbd9d968718998 inherit pro_methods_a00092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_attribs_a00065"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_a00065')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="a00065.html">tbb::flow::interface7::graph_node</a></td></tr>
-<tr class="memitem:a1caee1c5677047b05d18b1662ca6fdf8 inherit pro_attribs_a00065"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1caee1c5677047b05d18b1662ca6fdf8"></a>
-<a class="el" href="a00063.html">graph</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>my_graph</b></td></tr>
-<tr class="separator:a1caee1c5677047b05d18b1662ca6fdf8 inherit pro_attribs_a00065"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af48cd0cd4f6e44efc3b353adb55f86a8 inherit pro_attribs_a00065"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af48cd0cd4f6e44efc3b353adb55f86a8"></a>
-<a class="el" href="a00065.html">graph_node</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>next</b></td></tr>
-<tr class="separator:af48cd0cd4f6e44efc3b353adb55f86a8 inherit pro_attribs_a00065"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6917bffc3cb150319679bf2395e68caa inherit pro_attribs_a00065"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6917bffc3cb150319679bf2395e68caa"></a>
-<a class="el" href="a00065.html">graph_node</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>prev</b></td></tr>
-<tr class="separator:a6917bffc3cb150319679bf2395e68caa inherit pro_attribs_a00065"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0afe0107eb0aae613e726f67624d2fca"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00141.html#a0afe0107eb0aae613e726f67624d2fca">scoped_lock</a> ()</td></tr>
+<tr class="memdesc:a0afe0107eb0aae613e726f67624d2fca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct lock that has not acquired a mutex.  <a href="#a0afe0107eb0aae613e726f67624d2fca">More...</a><br/></td></tr>
+<tr class="separator:a0afe0107eb0aae613e726f67624d2fca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa82d9da0dcfe5b21f1c08473f8223105"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa82d9da0dcfe5b21f1c08473f8223105"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00141.html#aa82d9da0dcfe5b21f1c08473f8223105">scoped_lock</a> (<a class="el" href="a00110.html">queuing_mutex</a> &amp;m)</td></tr>
+<tr class="memdesc:aa82d9da0dcfe5b21f1c08473f8223105"><td class="mdescLeft">&#160;</td><td class="mdescRight">Acquire lock on given mutex. <br/></td></tr>
+<tr class="separator:aa82d9da0dcfe5b21f1c08473f8223105"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a469ec43836a8dd250ce0a22b02945630"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a469ec43836a8dd250ce0a22b02945630"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00141.html#a469ec43836a8dd250ce0a22b02945630">~scoped_lock</a> ()</td></tr>
+<tr class="memdesc:a469ec43836a8dd250ce0a22b02945630"><td class="mdescLeft">&#160;</td><td class="mdescRight">Release lock (if lock is held). <br/></td></tr>
+<tr class="separator:a469ec43836a8dd250ce0a22b02945630"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf8aa7ccd48d54dcb53665700a17d02a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf8aa7ccd48d54dcb53665700a17d02a"></a>
+void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00141.html#abf8aa7ccd48d54dcb53665700a17d02a">acquire</a> (<a class="el" href="a00110.html">queuing_mutex</a> &amp;m)</td></tr>
+<tr class="memdesc:abf8aa7ccd48d54dcb53665700a17d02a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Acquire lock on given mutex. <br/></td></tr>
+<tr class="separator:abf8aa7ccd48d54dcb53665700a17d02a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4800ba9e743cd91f152036a6689b0e9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab4800ba9e743cd91f152036a6689b0e9"></a>
+bool __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00141.html#ab4800ba9e743cd91f152036a6689b0e9">try_acquire</a> (<a class="el" href="a00110.html">queuing_mutex</a> &amp;m)</td></tr>
+<tr class="memdesc:ab4800ba9e743cd91f152036a6689b0e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Acquire lock on given mutex if free (i.e. non-blocking) <br/></td></tr>
+<tr class="separator:ab4800ba9e743cd91f152036a6689b0e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa065e48b428b8d43e9bb931ba9e6f6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaa065e48b428b8d43e9bb931ba9e6f6c"></a>
+void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00141.html#aaa065e48b428b8d43e9bb931ba9e6f6c">release</a> ()</td></tr>
+<tr class="memdesc:aaa065e48b428b8d43e9bb931ba9e6f6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Release lock. <br/></td></tr>
+<tr class="separator:aaa065e48b428b8d43e9bb931ba9e6f6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename TupleType, typename Allocator = cache_aligned_allocator&lt;TupleType&gt;&gt;<br/>
-class tbb::flow::interface7::split_node&lt; TupleType, Allocator &gt;</h3>
+<div class="textblock"><p>The scoped locking pattern. </p>
+<p>It helps to avoid the common problem of forgetting to release lock. It also nicely provides the "node" for queuing locks. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a class="anchor" id="a0afe0107eb0aae613e726f67624d2fca"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">tbb::queuing_mutex::scoped_lock::scoped_lock </td>
+          <td>(</td>
+          <td class="paramname">)</td><td></td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 
-<p><a class="el" href="a00141.html" title="split_node: accepts a tuple as input, forwards each element of the tuple to its ">split_node</a>: accepts a tuple as input, forwards each element of the tuple to its </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
-<li><a class="el" href="a00190.html">flow_graph.h</a></li>
+<p>Construct lock that has not acquired a mutex. </p>
+<p>Equivalent to zero-initialization of *this. </p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>queuing_mutex.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
 <p></p>
-Copyright &copy; 2005-2014 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2016 Intel Corporation.  All Rights Reserved.
 <p></p>
 Intel, Pentium, Intel Xeon, Itanium, Intel XScale and VTune are
 registered trademarks or trademarks of Intel Corporation or its

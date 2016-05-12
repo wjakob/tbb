@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -535,7 +535,7 @@ static tbb::runtime_loader::error_code load( tbb::runtime_loader::error_mode mod
 
 
 
-// Supress "defined but not used" compiler warnings.
+// Suppress "defined but not used" compiler warnings.
 static void const * dummy[] = {
     (void *) & strip,
     (void *) & trim,

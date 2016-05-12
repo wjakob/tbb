@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -58,18 +58,22 @@ public:
 
     /* override */ tbb::task * try_put_task( const T &v ) {
         ++my_counters[(int)v];
-        return const_cast<tbb::task *>(tbb::flow::interface7::SUCCESSFULLY_ENQUEUED);
+        return const_cast<tbb::task *>(tbb::flow::interface8::SUCCESSFULLY_ENQUEUED);
     }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-    /*override*/void internal_add_built_predecessor(tbb::flow::sender<T> &) {}
-    /*override*/void internal_delete_built_predecessor(tbb::flow::sender<T> &) {}
-    /*override*/void copy_predecessors(std::vector<tbb::flow::sender<T>*> &) {}
+    typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
+    built_predecessors_type mbp;
+    /*override*/ built_predecessors_type &built_predecessors() { return mbp; }
+    typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
+    typedef typename tbb::flow::receiver<T>::predecessor_type predecessor_type;
+    /*override*/void internal_add_built_predecessor(predecessor_type &) {}
+    /*override*/void internal_delete_built_predecessor(predecessor_type &) {}
+    /*override*/void copy_predecessors(predecessor_list_type &) {}
     /*override*/size_t predecessor_count() { return 0; }
-    /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) { }
-#else
-    /*override*/void reset_receiver() { }
+    /*override*/void clear_predecessors() { }
 #endif
+    /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) { }
 
 };
 
@@ -84,17 +88,17 @@ void test_serial_broadcasts() {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         ASSERT(b.successor_count() == 0, NULL);
         ASSERT(b.predecessor_count() == 0, NULL);
-        typename tbb::flow::broadcast_node<T>::successor_vector_type my_succs;
+        typename tbb::flow::broadcast_node<T>::successor_list_type my_succs;
         b.copy_successors(my_succs);
         ASSERT(my_succs.size() == 0, NULL);
-        typename tbb::flow::broadcast_node<T>::predecessor_vector_type my_preds;
+        typename tbb::flow::broadcast_node<T>::predecessor_list_type my_preds;
         b.copy_predecessors(my_preds);
         ASSERT(my_preds.size() == 0, NULL);
 #endif
 
         for ( int r = 0; r < num_receivers; ++r ) {
             tbb::flow::make_edge( b, receivers[r] );
-        } 
+        }
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         ASSERT( b.successor_count() == (size_t)num_receivers, NULL);
 #endif
@@ -108,9 +112,9 @@ void test_serial_broadcasts() {
                 ASSERT( receivers[r][n] == 1, NULL );
             }
             tbb::flow::remove_edge( b, receivers[r] );
-        } 
+        }
         ASSERT( b.try_put( (T)0 ), NULL );
-        for ( int r = 0; r < num_receivers; ++r ) 
+        for ( int r = 0; r < num_receivers; ++r )
             ASSERT( receivers[0][0] == 1, NULL ) ;
 
         delete [] receivers;
@@ -126,14 +130,14 @@ class native_body : private NoAssign {
 
 public:
 
-    native_body( tbb::flow::broadcast_node<T> &b ) : my_b(b) {} 
+    native_body( tbb::flow::broadcast_node<T> &b ) : my_b(b) {}
 
     void operator()(int) const {
         for (int n = 0; n < N; ++n ) {
             ASSERT( my_b.try_put( (T)n ), NULL );
         }
     }
- 
+
 };
 
 template< typename T >
@@ -143,7 +147,7 @@ void run_parallel_broadcasts(int p, tbb::flow::broadcast_node<T>& b) {
 
         for ( int r = 0; r < num_receivers; ++r ) {
             tbb::flow::make_edge( b, receivers[r] );
-        } 
+        }
 
         NativeParallelFor( p, native_body<T>( b ) );
 
@@ -152,9 +156,9 @@ void run_parallel_broadcasts(int p, tbb::flow::broadcast_node<T>& b) {
                 ASSERT( (int)receivers[r][n] == p, NULL );
             }
             tbb::flow::remove_edge( b, receivers[r] );
-        } 
+        }
         ASSERT( b.try_put( (T)0 ), NULL );
-        for ( int r = 0; r < num_receivers; ++r ) 
+        for ( int r = 0; r < num_receivers; ++r )
             ASSERT( (int)receivers[r][0] == p, NULL ) ;
 
         delete [] receivers;
@@ -168,13 +172,12 @@ void test_parallel_broadcasts(int p) {
     tbb::flow::graph g;
     tbb::flow::broadcast_node<T> b(g);
     run_parallel_broadcasts(p, b);
-    
+
     // test copy constructor
     tbb::flow::broadcast_node<T> b_copy(b);
     run_parallel_broadcasts(p, b_copy);
 }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
 // broadcast_node does not allow successors to try_get from it (it does not allow
 // the flow edge to switch) so we only need test the forward direction.
 template<typename T>
@@ -202,7 +205,7 @@ void test_resets() {
         if (testNo == 0) g.reset();
     }
 
-    g.reset(tbb::flow::rf_extract);
+    g.reset(tbb::flow::rf_clear_edges);
     for(T i= 0; i <= 3; i += 1) {
         b0.try_put(i);
     }
@@ -215,6 +218,7 @@ void test_resets() {
     ASSERT(!q0.try_get(j), "edge between nodes not removed");
 }
 
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
 void test_extract() {
     int dont_care;
     tbb::flow::graph g;
@@ -314,7 +318,7 @@ void test_extract() {
 }
 #endif  // TBB_PREVIEW_FLOW_GRAPH_FEATURES
 
-int TestMain() { 
+int TestMain() {
     if( MinThread<1 ) {
         REPORT("number of threads must be positive\n");
         exit(1);
@@ -330,9 +334,9 @@ int TestMain() {
        test_parallel_broadcasts<int_convertable_type>(p);
    }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
    test_resets<int>();
    test_resets<float>();
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
    test_extract();
 #endif
 

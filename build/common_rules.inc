@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -51,7 +51,6 @@ CPLUS_FLAGS += $(DEFINE_KEY)__TBB_CPF_BUILD=1
 endif
 LINK_FLAGS += $(LDFLAGS)
 LIB_LINK_FLAGS += $(LDFLAGS)
-CPLUS_FLAGS_NOSTRICT = $(subst -strict-ansi,-ansi,$(CPLUS_FLAGS))
 
 LIB_LINK_CMD ?= $(CPLUS) $(PIC_KEY)
 ifeq ($(origin LIB_OUTPUT_KEY), undefined)
@@ -92,7 +91,7 @@ endef
 LINK_FILES+=$(TEST_LIBS)
 # Rule for generating executable test
 %.$(TEST_EXT): %.$(OBJ) $(TEST_LIBS) $(TEST_PREREQUISITE) $(if $(use_proxy),$(PROXY.LIB))
-	$(call make-test-binary,$@,$< $(LINK_FILES))
+	$(call make-test-binary,$@,$< $(LINK_FILES) $(PIE_FLAG))
 
 # Rules for generating a test DLL
 %_dll.$(DLL): LINK_FLAGS += $(PIC_KEY) $(DYLIB_KEY)
@@ -112,7 +111,8 @@ LINK_FILES+=$(TEST_LIBS)
 	$(ASM) $(ASM_FLAGS) -o $@ $*.tmp
 
 # Rule for generating .E file if needed for visual inspection
-# Note that due to mapping for ICL all uses of PREPROC_ONLY should be immediately followed by a file name
+# Note that ICL treats an argument after PREPROC_ONLY as a file to open,
+# so all uses of PREPROC_ONLY should be immediately followed by a file name
 %.E: %.cpp
 	$(CPLUS) $(CPLUS_FLAGS) $(CXX_ONLY_FLAGS) $(INCLUDES) $(PREPROC_ONLY) $< >$@
 

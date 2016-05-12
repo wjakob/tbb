@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -18,7 +18,7 @@
     reasons why the executable file might be covered by the GNU General Public License.
 */
 
-/** @file harness_graph.cpp     
+/** @file harness_graph.cpp
     This contains common helper classes and functions for testing graph nodes
 **/
 
@@ -33,7 +33,7 @@
 #include "tbb/task.h"
 #include "tbb/task_scheduler_init.h"
 
-#define WAIT_MAX 100000
+#define WAIT_MAX 2000000
 #define BACKOFF_WAIT(ex,msg) \
 { \
     int wait_cnt = 0; \
@@ -70,7 +70,7 @@ struct convertor {
 template<typename InputType>
 struct convertor<InputType,tbb::flow::continue_msg> {
     static tbb::flow::continue_msg convert_value(const InputType &/*i*/) {
-        return tbb::flow::continue_msg(); 
+        return tbb::flow::continue_msg();
     }
 };
 
@@ -154,11 +154,11 @@ struct harness_graph_executor {
     static inline OutputType func( InputType v ) {
         size_t c; // Declaration separate from initialization to avoid ICC internal error on IA-64 architecture
         c = current_executors.fetch_and_increment();
-        ASSERT( max_executors == 0 || c <= max_executors, NULL ); 
+        ASSERT( max_executors == 0 || c <= max_executors, NULL );
         ++execute_count;
         OutputType v2 = (*fptr)(v);
         current_executors.fetch_and_decrement();
-        return v2; 
+        return v2;
     }
 
     template< typename RW >
@@ -177,7 +177,7 @@ struct harness_graph_executor {
         OutputType operator()( InputType i ) {
            typename RW::scoped_lock l( harness_graph_executor::mutex_holder<RW>::mutex, /*write=*/false );
            my_execute_count.fetch_and_increment();
-           return harness_graph_executor::func(i); 
+           return harness_graph_executor::func(i);
         }
     };
     typedef tfunctor<tbb::null_rw_mutex> functor;
@@ -204,7 +204,7 @@ struct harness_graph_multifunction_executor {
     static inline void func( const InputType &v, ports_type &p ) {
         size_t c; // Declaration separate from initialization to avoid ICC internal error on IA-64 architecture
         c = current_executors.fetch_and_increment();
-        ASSERT( max_executors == 0 || c <= max_executors, NULL ); 
+        ASSERT( max_executors == 0 || c <= max_executors, NULL );
         ASSERT(tbb::flow::tuple_size<OutputTuple>::value == 1, NULL);
         ++execute_count;
         (*fptr)(v,p);
@@ -289,7 +289,7 @@ struct harness_counting_receiver : public tbb::flow::receiver<T>, NoCopy {
 
     /* override */ tbb::task *try_put_task( const T & ) {
       ++my_count;
-      return const_cast<tbb::task *>(tbb::flow::interface7::SUCCESSFULLY_ENQUEUED);
+      return const_cast<tbb::task *>(tbb::flow::interface8::SUCCESSFULLY_ENQUEUED);
     }
 
     void validate() {
@@ -298,15 +298,18 @@ struct harness_counting_receiver : public tbb::flow::receiver<T>, NoCopy {
     }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-    /*override*/void internal_add_built_predecessor(tbb::flow::sender<T> &) {}
-    /*override*/void internal_delete_built_predecessor(tbb::flow::sender<T> &) {}
-    /*override*/void copy_predecessors(std::vector<tbb::flow::sender<T> *> &) { }
+    typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
+    built_predecessors_type mbp;
+    /*override*/ built_predecessors_type &built_predecessors() { return mbp; }
+    typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
+    typedef typename tbb::flow::receiver<T>::predecessor_type predecessor_type;
+    /*override*/void internal_add_built_predecessor(predecessor_type &) {}
+    /*override*/void internal_delete_built_predecessor(predecessor_type &) {}
+    /*override*/void copy_predecessors(predecessor_list_type &) { }
     /*override*/size_t predecessor_count() { return 0; }
-    /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) { my_count = 0; }
-#else
-    /*override*/void reset_receiver() { my_count = 0; }
+    /*override*/void clear_predecessors() { my_count = 0; };
 #endif
-
+    /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) { my_count = 0; }
 };
 
 //! Counts the number of puts received
@@ -347,7 +350,7 @@ struct harness_mapped_receiver : public tbb::flow::receiver<T>, NoCopy {
       } else {
           ++my_count;
       }
-      return const_cast<tbb::task *>(tbb::flow::interface7::SUCCESSFULLY_ENQUEUED);
+      return const_cast<tbb::task *>(tbb::flow::interface8::SUCCESSFULLY_ENQUEUED);
     }
 
     void validate() {
@@ -362,14 +365,22 @@ struct harness_mapped_receiver : public tbb::flow::receiver<T>, NoCopy {
         }
     }
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
-    /*override*/void internal_add_built_predecessor(tbb::flow::sender<T> &) {}
-    /*override*/void internal_delete_built_predecessor(tbb::flow::sender<T> &) {}
-    /*override*/void copy_predecessors(std::vector<tbb::flow::sender<T> *> &) { }
+    typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
+    built_predecessors_type mbp;
+    /*override*/ built_predecessors_type &built_predecessors() { return mbp; }
+    typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
+    typedef typename tbb::flow::receiver<T>::predecessor_type predecessor_type;
+    /*override*/void internal_add_built_predecessor(predecessor_type &) {}
+    /*override*/void internal_delete_built_predecessor(predecessor_type &) {}
+    /*override*/void copy_predecessors(predecessor_list_type &) { }
     /*override*/size_t predecessor_count() { return 0; }
-    /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) { my_count = 0; if(my_map) delete my_map; my_map = new map_type; }
-#else
-    /*override*/void reset_receiver() { my_count = 0; if(my_map) delete my_map; my_map = new map_type; }
+    /*override*/void clear_predecessors() { my_count = 0; };
 #endif
+    /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) {
+        my_count = 0;
+        if(my_map) delete my_map;
+        my_map = new map_type;
+    }
 
 };
 
@@ -377,7 +388,7 @@ struct harness_mapped_receiver : public tbb::flow::receiver<T>, NoCopy {
 template< typename T >
 struct harness_counting_sender : public tbb::flow::sender<T>, NoCopy {
 
-    typedef tbb::flow::receiver<T> successor_type;
+    typedef typename tbb::flow::sender<T>::successor_type successor_type;
     tbb::atomic< successor_type * > my_receiver;
     tbb::atomic< size_t > my_count;
     tbb::atomic< size_t > my_received;
@@ -407,13 +418,18 @@ struct harness_counting_sender : public tbb::flow::sender<T>, NoCopy {
     }
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    typedef typename tbb::flow::sender<T>::successor_list_type successor_list_type;
+    typedef typename tbb::flow::sender<T>::built_successors_type built_successors_type;
+    built_successors_type bst;
+    /*override*/ built_successors_type &built_successors() { return bst; }
     /* override */ void internal_add_built_successor( successor_type &) {}
     /* override */ void internal_delete_built_successor( successor_type &) {}
-    /* override */ void copy_successors(std::vector<successor_type *> &) { }
+    /* override */ void copy_successors(successor_list_type &) { }
+    /*override*/ void clear_successors() { my_receiver = NULL; }
     /* override */ size_t successor_count() { return 0; }
 #endif
 
-    /* override */ bool try_get( T & v ) { 
+    /* override */ bool try_get( T & v ) {
         size_t i = my_count.fetch_and_increment();
         if ( i < my_limit ) {
            v = T( i );
@@ -442,16 +458,16 @@ struct harness_counting_sender : public tbb::flow::sender<T>, NoCopy {
         while ( s->try_put( T(i) ) ) {
             ++my_received;
             i = my_count.fetch_and_increment();
-        } 
+        }
     }
 
     void try_put_until_limit() {
         successor_type *s = my_receiver;
 
-        for ( int i = 0; i < (int)my_limit; ++i ) { 
+        for ( int i = 0; i < (int)my_limit; ++i ) {
             ASSERT( s->try_put( T(i) ), NULL );
             ++my_received;
-        } 
+        }
         ASSERT( my_received == my_limit, NULL );
     }
 
@@ -504,7 +520,9 @@ struct serial_continue_body {
 // return true if all elements of sv appear in tv.
 template<typename SV, typename TV>
 bool lists_match(SV &sv, TV &tv) {
-    if(sv.size() != tv.size()) return false;
+    if(sv.size() != tv.size()) {
+        return false;
+    }
     std::vector<bool> bv(sv.size(), false);
     for(typename TV::iterator itv = tv.begin(); itv != tv.end(); ++itv) {
         int ibv = 0;
@@ -523,6 +541,7 @@ found_it:
     }
     return true;
 }
+#endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
 
 template<typename T, typename BufferType>
 void test_resets() {
@@ -534,7 +553,7 @@ void test_resets() {
     tbb::flow::queue_node<T>  q0(g);
     T j;
     bool nFound[NN];
-    
+
     // reset empties buffer
     for(T i = 0; i < NN; ++i) {
         b0.try_put(i);
@@ -627,16 +646,18 @@ void test_resets() {
             serial_fn_state0 = 0;  // release the function_node.
             g.wait_for_all();  // wait for all the tasks to complete.
         }
-        g.reset(tbb::flow::rf_extract);
+        g.reset(tbb::flow::rf_clear_edges);
         // test that no one is a successor to the buffer now.
         serial_fn_state0 = 1;  // let the function_node go if it gets an input message
         b0.try_put((T)23);
         g.wait_for_all();
         ASSERT((int)serial_fn_state0 == 1, "function_node executed when it shouldn't");
         T outt;
-        ASSERT(b0.try_get(outt) && (T)23 == outt, "node lost its input"); 
+        ASSERT(b0.try_get(outt) && (T)23 == outt, "node lost its input");
     }
 }
+
+#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
 
 template< typename NODE_TYPE >
 class test_buffer_base_extract {
@@ -652,38 +673,40 @@ protected:
     typename NODE_TYPE::successor_type *ms_ptr;
     typename NODE_TYPE::predecessor_type *mp_ptr;
 
-    typename NODE_TYPE::predecessor_vector_type in0_p_vec;
-    typename NODE_TYPE::successor_vector_type in0_s_vec;
-    typename NODE_TYPE::predecessor_vector_type in1_p_vec;
-    typename NODE_TYPE::successor_vector_type in1_s_vec;
-    typename NODE_TYPE::predecessor_vector_type out0_p_vec;
-    typename NODE_TYPE::successor_vector_type out0_s_vec;
-    typename NODE_TYPE::predecessor_vector_type out1_p_vec;
-    typename NODE_TYPE::successor_vector_type out1_s_vec;
-    typename NODE_TYPE::predecessor_vector_type mp_vec;
-    typename NODE_TYPE::successor_vector_type ms_vec;
+    typename NODE_TYPE::predecessor_list_type in0_p_list;
+    typename NODE_TYPE::successor_list_type in0_s_list;
+    typename NODE_TYPE::predecessor_list_type in1_p_list;
+    typename NODE_TYPE::successor_list_type in1_s_list;
+    typename NODE_TYPE::predecessor_list_type out0_p_list;
+    typename NODE_TYPE::successor_list_type out0_s_list;
+    typename NODE_TYPE::predecessor_list_type out1_p_list;
+    typename NODE_TYPE::successor_list_type out1_s_list;
+    typename NODE_TYPE::predecessor_list_type mp_list;
+    typename NODE_TYPE::predecessor_list_type::iterator mp_list_iter;
+    typename NODE_TYPE::successor_list_type ms_list;
+    typename NODE_TYPE::successor_list_type::iterator ms_list_iter;
 
-    virtual void set_up_vectors() {
-        in0_p_vec.clear(); 
-        in0_s_vec.clear();
-        in1_p_vec.clear(); 
-        in1_s_vec.clear();
-        mp_vec.clear(); 
-        ms_vec.clear();
-        out0_p_vec.clear(); 
-        out0_s_vec.clear();
-        out1_p_vec.clear(); 
-        out1_s_vec.clear();
-        in0.copy_predecessors(in0_p_vec);
-        in0.copy_successors(in0_s_vec);
-        in1.copy_predecessors(in1_p_vec);
-        in1.copy_successors(in1_s_vec);
-        middle.copy_predecessors(mp_vec);
-        middle.copy_successors(ms_vec);
-        out0.copy_predecessors(out0_p_vec);
-        out0.copy_successors(out0_s_vec);
-        out1.copy_predecessors(out1_p_vec);
-        out1.copy_successors(out1_s_vec);
+    virtual void set_up_lists() {
+        in0_p_list.clear();
+        in0_s_list.clear();
+        in1_p_list.clear();
+        in1_s_list.clear();
+        mp_list.clear();
+        ms_list.clear();
+        out0_p_list.clear();
+        out0_s_list.clear();
+        out1_p_list.clear();
+        out1_s_list.clear();
+        in0.copy_predecessors(in0_p_list);
+        in0.copy_successors(in0_s_list);
+        in1.copy_predecessors(in1_p_list);
+        in1.copy_successors(in1_s_list);
+        middle.copy_predecessors(mp_list);
+        middle.copy_successors(ms_list);
+        out0.copy_predecessors(out0_p_list);
+        out0.copy_successors(out0_s_list);
+        out1.copy_predecessors(out1_p_list);
+        out1.copy_successors(out1_s_list);
     }
 
     void make_and_validate_full_graph() {
@@ -697,34 +720,36 @@ protected:
         tbb::flow::make_edge( middle, out0 );
         tbb::flow::make_edge( middle, out1 );
 
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 1 && in0_s_vec.size() == 1 && in0_s_vec[0] == ms_ptr, "expected 1 successor" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 1 && in1_s_vec.size() == 1 && in1_s_vec[0] == ms_ptr, "expected 1 successor" );
-        ASSERT( middle.predecessor_count() == 2 && mp_vec.size() == 2, "expected 2 predecessors" );
-        ASSERT( middle.successor_count() == 2 && ms_vec.size() == 2, "expected 2 successors" );
-        ASSERT( out0.predecessor_count() == 1 && out0_p_vec.size() == 1 && out0_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 1 && out1_p_vec.size() == 1 && out1_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 1 && in0_s_list.size() == 1 && *(in0_s_list.begin()) == ms_ptr, "expected 1 successor" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 1 && in1_s_list.size() == 1 && *(in1_s_list.begin()) == ms_ptr, "expected 1 successor" );
+        ASSERT( middle.predecessor_count() == 2 && mp_list.size() == 2, "expected 2 predecessors" );
+        ASSERT( middle.successor_count() == 2 && ms_list.size() == 2, "expected 2 successors" );
+        ASSERT( out0.predecessor_count() == 1 && out0_p_list.size() == 1 && *(out0_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 1 && out1_p_list.size() == 1 && *(out1_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
 
-        int first_pred = mp_vec[0] == ins[0] ? 0 : ( mp_vec[0] == ins[1] ? 1 : -1 );
-        int second_pred = mp_vec[1] == ins[0] ? 0 : ( mp_vec[1] == ins[1] ? 1 : -1 );
-        ASSERT( first_pred != -1 && second_pred != -1 && first_pred != second_pred, "bad predecessor(s) for middle" ); 
+        int first_pred = *(mp_list.begin()) == ins[0] ? 0 : ( *(mp_list.begin()) == ins[1] ? 1 : -1 );
+        mp_list_iter = mp_list.begin(); ++mp_list_iter;
+        int second_pred = *mp_list_iter == ins[0] ? 0 : ( *mp_list_iter == ins[1] ? 1 : -1 );
+        ASSERT( first_pred != -1 && second_pred != -1 && first_pred != second_pred, "bad predecessor(s) for middle" );
 
-        int first_succ = ms_vec[0] == outs[0] ? 0 : ( ms_vec[0] == outs[1] ? 1 : -1 );
-        int second_succ = ms_vec[1] == outs[0] ? 0 : ( ms_vec[1] == outs[1] ? 1 : -1 );
-        ASSERT( first_succ != -1 && second_succ != -1 && first_succ != second_succ, "bad successor(s) for middle" ); 
- 
+        int first_succ = *(ms_list.begin()) == outs[0] ? 0 : ( *(ms_list.begin()) == outs[1] ? 1 : -1 );
+        ms_list_iter = ++(ms_list.begin());
+        int second_succ = *ms_list_iter == outs[0] ? 0 : ( *ms_list_iter == outs[1] ? 1 : -1 );
+        ASSERT( first_succ != -1 && second_succ != -1 && first_succ != second_succ, "bad successor(s) for middle" );
+
         in0.try_put(1);
         in1.try_put(2);
         g.wait_for_all();
 
         int r = 0;
         int v = 0;
-    
+
         ASSERT( in0.try_get(v) == false, "buffer should not have a value" );
         ASSERT( in1.try_get(v) == false, "buffer should not have a value" );
         ASSERT( middle.try_get(v) == false, "buffer should not have a value" );
@@ -748,29 +773,29 @@ protected:
         /*           middle        */
         /*         /       \       */
         /*     in1           out1  */
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 0 && in0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 1 && in1_s_vec.size() == 1 && in1_s_vec[0] == ms_ptr, "expected 1 successor" );
-        ASSERT( middle.predecessor_count() == 1 && mp_vec.size() == 1, "expected 1 predecessor" );
-        ASSERT( middle.successor_count() == 1 && ms_vec.size() == 1, "expected 1 successor" );
-        ASSERT( out0.predecessor_count() == 0 && out0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 1 && out1_p_vec.size() == 1 && out1_p_vec[0] == mp_ptr, "expected 1 predecessor" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
-    
-        ASSERT( middle.predecessor_count() == 1 && mp_vec.size() == 1, "expected two predecessors" );
-        ASSERT( middle.successor_count() == 1 && ms_vec.size() == 1, "expected two successors" );
-    
-        ASSERT( mp_vec[0] == ins[1], "incorrect predecessor" );
-        ASSERT( ms_vec[0] == outs[1], "incorrect successor" );
-    
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 0 && in0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 1 && in1_s_list.size() == 1 && *(in1_s_list.begin()) == ms_ptr, "expected 1 successor" );
+        ASSERT( middle.predecessor_count() == 1 && mp_list.size() == 1, "expected 1 predecessor" );
+        ASSERT( middle.successor_count() == 1 && ms_list.size() == 1, "expected 1 successor" );
+        ASSERT( out0.predecessor_count() == 0 && out0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 1 && out1_p_list.size() == 1 && *(out1_p_list.begin()) == mp_ptr, "expected 1 predecessor" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
+
+        ASSERT( middle.predecessor_count() == 1 && mp_list.size() == 1, "expected two predecessors" );
+        ASSERT( middle.successor_count() == 1 && ms_list.size() == 1, "expected two successors" );
+
+        ASSERT( *(mp_list.begin()) == ins[1], "incorrect predecessor" );
+        ASSERT( *(ms_list.begin()) == outs[1], "incorrect successor" );
+
         in0.try_put(1);
         in1.try_put(2);
         g.wait_for_all();
-    
+
         int v = 0;
         ASSERT( in0.try_get(v) == true && v == 1, "buffer should have a value of 1" );
         ASSERT( in1.try_get(v) == false, "buffer should not have a value" );
@@ -786,26 +811,26 @@ protected:
         /*           middle        */
         /*                         */
         /*     in1           out1  */
-        set_up_vectors();
+        set_up_lists();
 
-        ASSERT( in0.predecessor_count() == 0 && in0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in0.successor_count() == 0 && in0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( in1.predecessor_count() == 0 && in1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( in1.successor_count() == 0 && in1_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( middle.predecessor_count() == 0 && mp_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( middle.successor_count() == 0 && ms_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out0.predecessor_count() == 0 && out0_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out0.successor_count() == 0 && out0_s_vec.size() == 0, "expected 0 successors" );
-        ASSERT( out1.predecessor_count() == 0 && out1_p_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( out1.successor_count() == 0 && out1_s_vec.size() == 0, "expected 0 successors" );
-    
-        ASSERT( middle.predecessor_count() == 0 && mp_vec.size() == 0, "expected 0 predecessors" );
-        ASSERT( middle.successor_count() == 0 && ms_vec.size() == 0, "expected 0 successors" );
-    
+        ASSERT( in0.predecessor_count() == 0 && in0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in0.successor_count() == 0 && in0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( in1.predecessor_count() == 0 && in1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( in1.successor_count() == 0 && in1_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( middle.predecessor_count() == 0 && mp_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( middle.successor_count() == 0 && ms_list.size() == 0, "expected 0 successors" );
+        ASSERT( out0.predecessor_count() == 0 && out0_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out0.successor_count() == 0 && out0_s_list.size() == 0, "expected 0 successors" );
+        ASSERT( out1.predecessor_count() == 0 && out1_p_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( out1.successor_count() == 0 && out1_s_list.size() == 0, "expected 0 successors" );
+
+        ASSERT( middle.predecessor_count() == 0 && mp_list.size() == 0, "expected 0 predecessors" );
+        ASSERT( middle.successor_count() == 0 && ms_list.size() == 0, "expected 0 successors" );
+
         in0.try_put(1);
         in1.try_put(2);
         g.wait_for_all();
-    
+
         int v = 0;
         ASSERT( in0.try_get(v) == true && v == 1, "buffer should have a value of 1" );
         ASSERT( in1.try_get(v) == true && v == 2, "buffer should have a value of 2" );
@@ -820,7 +845,7 @@ protected:
 
 public:
 
-    test_buffer_base_extract(tbb::flow::graph &_g, NODE_TYPE &i0, NODE_TYPE &i1, NODE_TYPE &m, NODE_TYPE &o0, NODE_TYPE &o1) : 
+    test_buffer_base_extract(tbb::flow::graph &_g, NODE_TYPE &i0, NODE_TYPE &i1, NODE_TYPE &m, NODE_TYPE &o0, NODE_TYPE &o1) :
         g(_g), in0(i0), in1(i1), middle(m), out0(o0), out1(o1) {
         ins[0] = &in0;
         ins[1] = &in1;
@@ -829,7 +854,7 @@ public:
         ms_ptr = static_cast< typename NODE_TYPE::successor_type * >(&middle);
         mp_ptr = static_cast< typename NODE_TYPE::predecessor_type *>(&middle);
     }
- 
+
     virtual ~test_buffer_base_extract() {}
 
     void run_tests() {
@@ -850,7 +875,7 @@ public:
 
         make_and_validate_full_graph();
     }
-   
+
 };
 
 template< typename NODE_TYPE >
@@ -863,7 +888,7 @@ protected:
     NODE_TYPE my_out0;
     NODE_TYPE my_out1;
 public:
-    test_buffer_extract() : test_buffer_base_extract<NODE_TYPE>( my_g, my_in0, my_in1, my_middle, my_out0, my_out1), 
+    test_buffer_extract() : test_buffer_base_extract<NODE_TYPE>( my_g, my_in0, my_in1, my_middle, my_out0, my_out1),
                             my_in0(my_g), my_in1(my_g), my_middle(my_g), my_out0(my_g), my_out1(my_g) { }
 };
 
@@ -884,27 +909,27 @@ protected:
     count_t out1_count;
 
     struct always_zero { size_t operator()(int) { return 0; } };
-    struct always_inc { 
+    struct always_inc {
         count_t *c;
         always_inc(count_t &_c) : c(&_c) {}
-        size_t operator()(int) { 
+        size_t operator()(int) {
             return c->fetch_and_increment();
-        } 
+        }
     };
 
-    /*override*/void set_up_vectors() {
+    /*override*/void set_up_lists() {
         middle_count = 0;
         out0_count = 0;
         out1_count = 0;
         my_g.reset(); // reset the sequencer nodes to start at 0 again
-        test_buffer_base_extract< my_node_t >::set_up_vectors();
+        test_buffer_base_extract< my_node_t >::set_up_lists();
     }
 
 
 public:
-    test_buffer_extract() : test_buffer_base_extract<my_node_t>( my_g, my_in0, my_in1, my_middle, my_out0, my_out1), 
-                            my_in0(my_g, always_zero()), my_in1(my_g, always_zero()), my_middle(my_g, always_inc(middle_count)), 
-                            my_out0(my_g, always_inc(out0_count)), my_out1(my_g, always_inc(out1_count)) { 
+    test_buffer_extract() : test_buffer_base_extract<my_node_t>( my_g, my_in0, my_in1, my_middle, my_out0, my_out1),
+                            my_in0(my_g, always_zero()), my_in1(my_g, always_zero()), my_middle(my_g, always_inc(middle_count)),
+                            my_out0(my_g, always_inc(out0_count)), my_out1(my_g, always_inc(out1_count)) {
     }
 };
 
@@ -924,7 +949,7 @@ void test_extract_on_node() {
         tbb::flow::make_edge(node0, q2);
         q0.try_put(ItemType(i));
         g.wait_for_all();
-    
+
         /* q0               */
         /*   \              */
         /*    \             */
@@ -932,16 +957,14 @@ void test_extract_on_node() {
         /*    /             */
         /*   /              */
         /* q1               */
-    
+
         ASSERT(node0.predecessor_count() == 2 && q0.successor_count() == 1 && q1.successor_count() == 1, "bad predecessor count");
         ASSERT(node0.successor_count() == 1 && q2.predecessor_count() == 1, "bad successor count");
 
         ASSERT(q2.try_get(dont_care) && int(dont_care) == i, "item not forwarded");
-        typename NType<ItemType>::successor_vector_type sv;
-        typename NType<ItemType>::predecessor_vector_type pv;
-        std::vector<tbb::flow::receiver<ItemType>*> sv1;
-        std::vector<tbb::flow::sender<ItemType>*> pv1;
-    
+        typename NType<ItemType>::successor_list_type sv, sv1;
+        typename NType<ItemType>::predecessor_list_type pv, pv1;
+
         pv1.push_back(&q0);
         pv1.push_back(&q1);
         sv1.push_back(&q2);
@@ -949,7 +972,7 @@ void test_extract_on_node() {
         node0.copy_successors(sv);
         ASSERT(lists_match(pv,pv1), "predecessor vector incorrect");
         ASSERT(lists_match(sv,sv1), "successor vector incorrect");
-    
+
         if(i == 0) {
             node0.extract();
         }
@@ -970,6 +993,7 @@ void test_extract_on_node() {
         ASSERT(pv.size() == 0, "error in pred array count after extract");
         ASSERT(node0.successor_count() == 0 && q2.predecessor_count() == 0, "error in succ count after extract");
         ASSERT(sv.size() == 0, "error in succ array count after extract");
+        g.wait_for_all();
     }
 }
 

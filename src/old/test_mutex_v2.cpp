@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -17,6 +17,9 @@
     by the GNU General Public License. This exception does not however invalidate any other
     reasons why the executable file might be covered by the GNU General Public License.
 */
+
+#define HARNESS_DEFAULT_MIN_THREADS 1
+#define HARNESS_DEFAULT_MAX_THREADS 3
 
 //------------------------------------------------------------------------
 // Test TBB mutexes when used with parallel_for.h

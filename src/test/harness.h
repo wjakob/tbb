@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -83,7 +83,11 @@ int TestMain ();
 #if _WIN32||_WIN64
     #include "tbb/machine/windows_api.h"
     #if _WIN32_WINNT > 0x0501 && _MSC_VER && !_M_ARM
+        // Suppress "typedef ignored ... when no variable is declared" warning by vc14
+        #pragma warning (push)
+        #pragma warning (disable: 4091)
         #include <dbghelp.h>
+        #pragma warning (pop)
         #pragma comment (lib, "dbghelp.lib")
     #endif
     #if _XBOX
@@ -127,7 +131,7 @@ void print_call_stack() {
     #elif __SUNPRO_CC
         REPORT("Call stack info:\n");
         printstack(fileno(stdout));
-    #elif _WIN32_WINNT > 0x0501 && _MSC_VER && !__TBB_WIN8UI_SUPPORT
+    #elif _WIN32_WINNT > 0x0501 && _MSC_VER>=1500 && !__TBB_WIN8UI_SUPPORT
         const int sz = 62; // XP limitation for number of frames
         void *buff[sz];
         int n = CaptureStackBackTrace(0, sz, buff, NULL);
@@ -144,7 +148,7 @@ void print_call_stack() {
             if(!SymFromAddr( GetCurrentProcess(), DWORD64(buff[i]), &offset, &sym )) {
                 sym.Address = ULONG64(buff[i]); offset = 0; sym.Name[0] = 0;
             }
-            REPORT("[%d] %016I64LX+%04I64LX: %s\n", i, sym.Address, offset, sym.Name); //TODO: print module name
+            REPORT("[%d] %016I64X+%04I64X: %s\n", i, sym.Address, offset, sym.Name); //TODO: print module name
         }
     #endif /*BACKTRACE_FUNCTION_AVAILABLE*/
 }
@@ -712,6 +716,31 @@ public:
             a = Primes[seed % (sizeof(Primes) / sizeof(Primes[0]))];
         }
     };
+    int SetEnv( const char *envname, const char *envval ) {
+        ASSERT( envname && envval, "Harness::SetEnv() requires two valid C strings" );
+#if __TBB_WIN8UI_SUPPORT
+        ASSERT( false, "Harness::SetEnv() should not be called in code built for win8ui" );
+        return -1;
+#elif !(_MSC_VER || __MINGW32__ || __MINGW64__)
+        // On POSIX systems use setenv
+        return setenv(envname, envval, /*overwrite=*/1);
+#elif __STDC_SECURE_LIB__>=200411
+        // this macro is set in VC & MinGW if secure API functions are present
+        return _putenv_s(envname, envval);
+#else
+        // If no secure API on Windows, use _putenv
+        size_t namelen = strlen(envname), valuelen = strlen(envval);
+        char* buf = new char[namelen+valuelen+2];
+        strncpy(buf, envname, namelen);
+        buf[namelen] = '=';
+        strncpy(buf+namelen+1, envval, valuelen);
+        buf[namelen+1+valuelen] = char(0);
+        int status = _putenv(buf);
+        delete[] buf;
+        return status;
+#endif
+    }
+
 } // namespace Harness
 
 #endif /* tbb_tests_harness_H */

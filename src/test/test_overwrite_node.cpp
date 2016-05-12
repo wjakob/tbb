@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -23,7 +23,7 @@
 #include "tbb/task_scheduler_init.h"
 
 #define N 300
-#define T 4 
+#define T 4
 #define M 5
 
 template< typename R >
@@ -50,7 +50,7 @@ void simple_read_write_tests() {
 
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
         ASSERT(n.successor_count() == M, NULL);
-        typename tbb::flow::overwrite_node<R>::successor_vector_type my_succs;
+        typename tbb::flow::overwrite_node<R>::successor_list_type my_succs;
         n.copy_successors(my_succs);
         ASSERT(my_succs.size() == M, NULL);
         ASSERT(n.predecessor_count() == 0, NULL);
@@ -138,7 +138,7 @@ void parallel_read_write_tests() {
     }
 }
 
-int TestMain() { 
+int TestMain() {
     if( MinThread<1 ) {
         REPORT("number of threads must be positive\n");
         exit(1);

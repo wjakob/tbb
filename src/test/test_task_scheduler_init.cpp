@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -36,36 +36,63 @@
     #pragma warning (pop)
 #endif
 
+#include "harness_concurrency_tracker.h"
+#include "harness_concurrency_checker.h"
+#include "harness_task.h"
 #include "harness.h"
+
+const int DefaultThreads = tbb::task_scheduler_init::default_num_threads();
+
+namespace tbb { namespace internal {
+size_t __TBB_EXPORTED_FUNC get_initial_auto_partitioner_divisor();
+}}
+
+int ArenaConcurrency() {
+    return int(tbb::internal::get_initial_auto_partitioner_divisor()/4); // TODO: expose through task_arena interface?
+}
+
+// Generally, TBB does not guarantee mandatory parallelism. This test uses some whitebox knowledge about when all the threads can be available
+bool test_mandatory_parallelism = true;
 
 //! Test that task::initialize and task::terminate work when doing nothing else.
 /** maxthread is treated as the "maximum" number of worker threads. */
 void InitializeAndTerminate( int maxthread ) {
     __TBB_TRY {
-        for( int i=0; i<200; ++i ) {
+        for( int i=0; i<256; ++i ) {
+            int threads = (std::rand() % maxthread) + 1;
             switch( i&3 ) {
                 default: {
-                    tbb::task_scheduler_init init( std::rand() % maxthread + 1 );
+                    tbb::task_scheduler_init init( threads );
                     ASSERT(init.is_active(), NULL);
+                    ASSERT(ArenaConcurrency()==threads, NULL);
+                    ASSERT(!test_mandatory_parallelism || Harness::CanReachConcurrencyLevel(threads), NULL);
+                    if(i&0x20) tbb::task::enqueue( (*new( tbb::task::allocate_root() ) TaskGenerator(2,6)) ); // a work deferred to workers
                     break;
                 }
-                case 0: {   
+                case 0: {
                     tbb::task_scheduler_init init;
                     ASSERT(init.is_active(), NULL);
+                    ASSERT(ArenaConcurrency()==init.default_num_threads(), NULL);
+                    ASSERT(!test_mandatory_parallelism || Harness::CanReachConcurrencyLevel(init.default_num_threads()), NULL);
+                    if(i&0x40) tbb::task::enqueue( (*new( tbb::task::allocate_root() ) TaskGenerator(3,5)) ); // a work deferred to workers
                     break;
                 }
                 case 1: {
-                    tbb::task_scheduler_init init( tbb::task_scheduler_init::automatic );
+                    tbb::task_scheduler_init init( tbb::task_scheduler_init::deferred );
+                    ASSERT(!init.is_active(), "init should not be active; initialization was deferred");
+                    init.initialize( threads );
                     ASSERT(init.is_active(), NULL);
+                    ASSERT(ArenaConcurrency()==threads, NULL);
+                    ASSERT(!test_mandatory_parallelism || Harness::CanReachConcurrencyLevel(threads), NULL);
+                    init.terminate();
+                    ASSERT(!init.is_active(), "init should not be active; it was terminated");
                     break;
                 }
                 case 2: {
-                    tbb::task_scheduler_init init( tbb::task_scheduler_init::deferred );
-                    ASSERT(!init.is_active(), "init should not be active; initialization was deferred");
-                    init.initialize( std::rand() % maxthread + 1 );
+                    tbb::task_scheduler_init init( tbb::task_scheduler_init::automatic );
                     ASSERT(init.is_active(), NULL);
-                    init.terminate();
-                    ASSERT(!init.is_active(), "init should not be active; it was terminated");
+                    ASSERT(ArenaConcurrency()==init.default_num_threads(), NULL);
+                    ASSERT(!test_mandatory_parallelism || Harness::CanReachConcurrencyLevel(init.default_num_threads()), NULL);
                     break;
                 }
             }
@@ -94,7 +121,6 @@ struct ThreadedInit {
 #include <tchar.h>
 #endif /* _MSC_VER */
 
-#include "harness_concurrency_tracker.h"
 #include "tbb/parallel_for.h"
 #include "tbb/blocked_range.h"
 
@@ -109,14 +135,14 @@ public:
     }
 };
 
-/** The test will fail in particular if task_scheduler_init mistakenly hooks up 
+/** The test will fail in particular if task_scheduler_init mistakenly hooks up
     auto-initialization mechanism. **/
 void AssertExplicitInitIsNotSupplanted () {
     int hardwareConcurrency = tbb::task_scheduler_init::default_num_threads();
     tbb::task_scheduler_init init(1);
     Harness::ConcurrencyTracker::Reset();
     tbb::parallel_for( Range(0, hardwareConcurrency * 2, 1), ConcurrencyTrackingBody(), tbb::simple_partitioner() );
-    ASSERT( Harness::ConcurrencyTracker::PeakParallelism() == 1, 
+    ASSERT( Harness::ConcurrencyTracker::PeakParallelism() == 1,
             "Manual init provided more threads than requested. See also the comment at the beginning of main()." );
 }
 
@@ -133,9 +159,32 @@ int TestMain () {
     #endif
 #endif /* _MSC_VER && !__TBB_NO_IMPLICIT_LINKAGE && !__TBB_LIB_NAME */
     std::srand(2);
-    InitializeAndTerminate(MaxThread);
+    REMARK("testing master thread\n");
+    int override = DefaultThreads*2;
+    {   // work-around shared RML
+        tbb::task_scheduler_init init( override );
+        if( !Harness::CanReachConcurrencyLevel( override, 3. ) ) {
+            override = DefaultThreads;
+            if( MaxThread > DefaultThreads )
+                MaxThread = DefaultThreads;
+#if RML_USE_WCRM
+            REPORT("Known issue: shared RML for ConcRT does not support oversubscription\n");
+            test_mandatory_parallelism = false; // we cannot rely on ConcRT to provide all the requested threads
+#else
+            REPORT("Known issue: machine is heavy loaded or shared RML which does not support oversubscription is loaded\n");
+#endif
+        }
+    }
+    InitializeAndTerminate( override ); // test initialization of more than default number of threads
     for( int p=MinThread; p<=MaxThread; ++p ) {
         REMARK("testing with %d threads\n", p );
+        // protect market with excess threads from default initializations
+        // TODO IDEA: enhance task_scheduler_init to serve as global_control setting so that
+        // number of threads > default concurrency will be requested from market.
+        // Such settings must be aggregated via 'max' function and 'max_allowed_parallelism' control
+        // (which has 'min' aggregation) will have precedence over it.
+        tbb::task_scheduler_init init( tbb::task_scheduler_init::deferred );
+        if( MaxThread > DefaultThreads ) init.initialize( MaxThread );
         NativeParallelFor( p, ThreadedInit() );
     }
     AssertExplicitInitIsNotSupplanted();

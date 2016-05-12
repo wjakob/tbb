@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -17,6 +17,10 @@
     by the GNU General Public License. This exception does not however invalidate any other
     reasons why the executable file might be covered by the GNU General Public License.
 */
+
+#if _MSC_VER
+#define _SCL_SECURE_NO_WARNINGS
+#endif
 
 #include "tbb/concurrent_vector.h"
 #include "tbb/tbb_allocator.h"
@@ -168,6 +172,9 @@ struct CheckElement {
 #include "tbb/parallel_for.h"
 #include "harness.h"
 
+//! Problem size
+const size_t N = 500000;
+
 //! Test parallel access by iterators
 void TestParallelFor( int nthread ) {
     typedef tbb::concurrent_vector<int> vector_t;
@@ -243,8 +250,8 @@ void CheckIteratorComparison( V& u ) {
             ASSERT( (i>j)==(i_count>j_count), NULL );
             ASSERT( (i<=j)==(i_count<=j_count), NULL );
             ASSERT( (i>=j)==(i_count>=j_count), NULL );
-            ASSERT( !(i==i2), NULL ); 
-            ASSERT( i!=i2, NULL ); 
+            ASSERT( !(i==i2), NULL );
+            ASSERT( i!=i2, NULL );
             ++j;
             ++i2;
         }
@@ -922,11 +929,19 @@ namespace test_move_in_shrink_to_fit_helpers {
         int i;
         dummy(int an_i) __TBB_NOTHROW : Harness::StateTrackable<>(0), i(an_i)  {};
 #if __TBB_CPP11_IMPLICIT_MOVE_MEMBERS_GENERATION_BROKEN
-        dummy(dummy &&src) __TBB_NOTHROW : Harness::StateTrackable<>(std::move(src)), i(src.i)  {};
-    //somehow magically this declaration make std::is_nothrow_move_constructible<pod>::value to works correctly on icc14+msvc2013
+        dummy(const dummy &src) __TBB_NOTHROW : Harness::StateTrackable<>(src), i(src.i)  {};
+        dummy(dummy &&src) __TBB_NOTHROW : Harness::StateTrackable<>(std::move(src)), i(src.i) {};
+
+        dummy& operator=(dummy &&src) __TBB_NOTHROW {
+            Harness::StateTrackable<>::operator=(std::move(src));
+            i = src.i;
+            return *this;
+        }
+
+        //somehow magically this declaration make std::is_nothrow_move_constructible<pod>::value to works correctly on icc14+msvc2013
         ~dummy() __TBB_NOTHROW {};
 #endif //__TBB_CPP11_IMPLICIT_MOVE_MEMBERS_GENERATION_BROKEN
-        friend bool operator== ( const dummy & lhs, const dummy & rhs){ return lhs.i == rhs.i; }
+        friend bool operator== (const dummy &lhs, const dummy &rhs){ return lhs.i == rhs.i; }
     };
 }
 void TestSerialMoveInShrinkToFit(){
@@ -1595,8 +1610,9 @@ void Examine( tbb::concurrent_vector<Type, Allocator> c, const std::vector<Type>
     std::copy( c.begin(), c.begin() + 5, std::back_inserter( c2 ) );
 
     c.grow_by( c2.begin(), c2.end() );
-    ASSERT( Harness::IsEqual()(c.front(), *(c2.rend()-1)), NULL );
-    ASSERT( Harness::IsEqual()(c.back(), *c2.rbegin()), NULL);
+    const vector_t& cvcr = c;
+    ASSERT( Harness::IsEqual()(cvcr.front(), *(c2.rend()-1)), NULL );
+    ASSERT( Harness::IsEqual()(cvcr.back(), *c2.rbegin()), NULL);
     ASSERT( Harness::IsEqual()(*c.cbegin(), *(c.crend()-1)), NULL );
     ASSERT( Harness::IsEqual()(*(c.cend()-1), *c.crbegin()), NULL );
     c.swap( c2 );
@@ -1671,14 +1687,14 @@ void TestTypes() {
     for ( int i=0; i<NUMBER; ++i ) intArr.push_back(i);
     TypeTester</*default_construction_present = */true>( intArr );
 
-#if __TBB_CPP11_REFERENCE_WRAPPER_PRESENT
+#if __TBB_CPP11_REFERENCE_WRAPPER_PRESENT && !__TBB_REFERENCE_WRAPPER_COMPILATION_BROKEN
     std::vector< std::reference_wrapper<int> > refArr;
     // The constructor of std::reference_wrapper<T> from T& is explicit in some versions of libstdc++.
     for ( int i=0; i<NUMBER; ++i ) refArr.push_back( std::reference_wrapper<int>(intArr[i]) );
     TypeTester</*default_construction_present = */false>( refArr );
 #else
     REPORT( "Known issue: C++11 reference wrapper tests are skipped.\n" );
-#endif /* __TBB_CPP11_REFERENCE_WRAPPER_PRESENT */
+#endif /* __TBB_CPP11_REFERENCE_WRAPPER_PRESENT && !__TBB_REFERENCE_WRAPPER_COMPILATION_BROKEN */
 
     std::vector< tbb::atomic<int> > tbbIntArr( NUMBER );
     for ( int i=0; i<NUMBER; ++i ) tbbIntArr[i] = i;
@@ -1767,7 +1783,7 @@ int TestMain () {
     TestExceptionSafetyGuaranteesMoveConstructorWithUnEqualAllocatorExceptionInElementCtor<c_vector_type>();
     TestExceptionSafetyGuaranteesForMoveAssignOperatorWithUnEqualAllocatorMemoryFailure();
     TestExceptionSafetyGuaranteesForMoveAssignOperatorWithUnEqualAllocatorExceptionInElementCtor();
-    TestPushBackMoveExceptionSafety();    
+    TestPushBackMoveExceptionSafety();
 #if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
     TestEmplaceBackExceptionSafety();
 #endif /*__TBB_CPP11_VARIADIC_TEMPLATES_PRESENT */

@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -23,39 +23,38 @@
 
 #include "one_bit_adder.h"
 
-class four_bit_adder {
+typedef composite_node< tuple< signal_t, signal_t, signal_t, signal_t, signal_t, signal_t, signal_t, signal_t, signal_t >,
+                      tuple< signal_t, signal_t, signal_t, signal_t, signal_t > > fba_base_type;
+
+class four_bit_adder : public fba_base_type {
     graph& my_graph;
     std::vector<one_bit_adder> four_adders; 
- public:
-    four_bit_adder(graph& g) : my_graph(g), four_adders(4, one_bit_adder(g)) {
+public:
+    four_bit_adder(graph& g) : fba_base_type(g), my_graph(g), four_adders(4, one_bit_adder(g)) {
         make_connections();
+        set_up_composite();
     }
     four_bit_adder(const four_bit_adder& src) : 
-        my_graph(src.my_graph), four_adders(4, one_bit_adder(src.my_graph)) 
+        fba_base_type(src.my_graph), my_graph(src.my_graph), four_adders(4, one_bit_adder(src.my_graph)) 
     {
         make_connections();
+        set_up_composite();
     }
     ~four_bit_adder() {}
-    receiver<signal_t>& get_A(size_t bit) {
-        return four_adders[bit].get_A();
-    }
-    receiver<signal_t>& get_B(size_t bit) {
-        return four_adders[bit].get_B();
-    }
-    receiver<signal_t>& get_CI() {
-        return four_adders[0].get_CI();
-    }
-    sender<signal_t>& get_out(size_t bit) {
-        return four_adders[bit].get_out();
-    }
-    sender<signal_t>& get_CO() {
-        return four_adders[3].get_CO();
-    }
+
 private:
     void make_connections() {
-        make_edge(four_adders[0].get_CO(), four_adders[1].get_CI());
-        make_edge(four_adders[1].get_CO(), four_adders[2].get_CI());
-        make_edge(four_adders[2].get_CO(), four_adders[3].get_CI());
+        make_edge(output_port<1>(four_adders[0]), input_port<0>(four_adders[1]));
+        make_edge(output_port<1>(four_adders[1]), input_port<0>(four_adders[2]));
+        make_edge(output_port<1>(four_adders[2]), input_port<0>(four_adders[3]));
+    }
+    void set_up_composite() {
+
+        fba_base_type::input_ports_type input_tuple(input_port<0>(four_adders[0]/*CI*/), input_port<1>(four_adders[0]), input_port<2>(four_adders[0]), input_port<1>(four_adders[1]), input_port<2>(four_adders[1]), input_port<1>(four_adders[2]), input_port<2>(four_adders[2]), input_port<1>(four_adders[3]), input_port<2>(four_adders[3])); 
+
+       fba_base_type::output_ports_type output_tuple(output_port<0>(four_adders[0]), output_port<0>(four_adders[1]), output_port<0>(four_adders[2]), output_port<0>(four_adders[3]),output_port<1>(four_adders[3]/*CO*/));
+
+        fba_base_type::set_external_ports(input_tuple, output_tuple);
     }
 };
 

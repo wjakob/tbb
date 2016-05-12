@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -467,7 +467,7 @@ public:
         }
         if( DagTask* t = successor_to_below ) {
             t->sum_from_above = sum;
-            if( t->decrement_ref_count()==0 )
+            if( t->add_ref_count(-1)==0 )
                 // Test using bypass to evaluate DAG
                 return t;
         }
@@ -775,6 +775,26 @@ void TestMastersIsolation ( int p ) {
     }
 }
 
+struct waitable_task : tbb::task {
+    tbb::task* execute() {
+        recycle_as_safe_continuation(); // do not destroy the task after execution
+        set_parent(this);               // decrement its own ref_count after completion
+        __TBB_Yield();
+        return NULL;
+    }
+};
+void TestWaitableTask() {
+    waitable_task &wt = *new( tbb::task::allocate_root() ) waitable_task;
+    for( int i = 0; i < 100000; i++ ) {
+        wt.set_ref_count(2);            // prepare for waiting on it
+        wt.spawn(wt);
+        if( i&1 ) __TBB_Yield();
+        wt.wait_for_all();
+    }
+    wt.set_parent(NULL);                // prevents assertions and atomics in task::destroy
+    tbb::task::destroy(wt);
+}
+
 int TestMain () {
 #if TBB_USE_EXCEPTIONS
     TestUnconstructibleTask<1>();
@@ -797,5 +817,6 @@ int TestMain () {
         TestRelaxedOwnership( p );
         TestMastersIsolation( p );
     }
+    TestWaitableTask();
     return Harness::Done;
 }

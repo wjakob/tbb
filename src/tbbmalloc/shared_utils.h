@@ -1,5 +1,5 @@
 /*
-    Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 
     This file is part of Threading Building Blocks. Threading Building Blocks is free software;
     you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -60,4 +60,30 @@ inline size_t arrayLength(const T(&)[N]) {
     return N;
 }
 
+#if defined(min)
+#undef min
+#endif
+
+template<typename T>
+T min ( const T& val1, const T& val2 ) {
+    return val1 < val2 ? val1 : val2;
+}
+
+namespace rml {
+namespace internal {
+
+/*
+ * Best estimate of cache line size, for the purpose of avoiding false sharing.
+ * Too high causes memory overhead, too low causes false-sharing overhead.
+ * Because, e.g., 32-bit code might run on a 64-bit system with a larger cache line size,
+ * it would probably be better to probe at runtime where possible and/or allow for an environment variable override,
+ * but currently this is still used for compile-time layout of class Block, so the change is not entirely trivial.
+ */
+#if __powerpc64__ || __ppc64__ || __bgp__
+const uint32_t estimatedCacheLineSize = 128;
+#else
+const uint32_t estimatedCacheLineSize =  64;
+#endif
+
+}} // namespaces
 #endif /* __TBB_shared_utils_H */

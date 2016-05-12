@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -20,14 +20,16 @@
 
 ifeq (icc,$(compiler))
   export COMPILER_VERSION := ICC: $(shell icc -V </dev/null 2>&1 | grep 'Version')
-  ifneq (,$(findstring IA-32, $(COMPILER_VERSION)))
+  ifneq (,$(findstring running on IA-32, $(COMPILER_VERSION)))
     export arch:=ia32
-  endif
-  ifneq (,$(findstring Intel(R) 64, $(COMPILER_VERSION)))
-    export arch:=intel64
-  endif
-  ifneq (,$(findstring IA-64, $(COMPILER_VERSION)))
-    export arch:=ia64
+  else
+    ifneq (,$(findstring running on Intel(R) 64, $(COMPILER_VERSION)))
+      export arch:=intel64
+    else
+      ifneq (,$(findstring IA-64, $(COMPILER_VERSION)))
+        export arch:=ia64
+      endif
+    endif
   endif
   ifeq (,$(arch))
     $(warning "Unknown Intel compiler")
@@ -136,3 +138,5 @@ RML.DLL = $(RML_NO_VERSION.DLL).1
 RML.LIB = $(RML_NO_VERSION.DLL)
 
 TEST_LAUNCHER=sh $(tbb_root)/build/test_launcher.sh $(largs)
+
+OPENCL.LIB = -lOpenCL

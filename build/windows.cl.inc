@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -27,6 +27,9 @@
 CPLUS = cl /nologo
 LINK_FLAGS = /link /nologo
 LIB_LINK_FLAGS=/link /nologo /DLL /MAP /DEBUG /fixed:no /INCREMENTAL:NO /DYNAMICBASE /NXCOMPAT
+
+# no possibility to select standard for the compiler
+CXX_STD_FLAGS =
 
 ifeq ($(arch), ia32)
 	LIB_LINK_FLAGS += /SAFESEH
@@ -91,9 +94,15 @@ ifeq (ok,$(call detect_js,/minversion cl 17))
         CPLUS_FLAGS += /volatile:iso
 endif
 
+# Since VS2013, VC++ uses the same .pdb file for different sources so we need
+# to add /FS (Force Synchronous PDB Writes)
+ifeq (ok,$(call detect_js,/minversion cl 18))
+        CPLUS_FLAGS += /FS
+endif
+
 CPLUS_FLAGS += /DUSE_WINTHREAD /D_CRT_SECURE_NO_DEPRECATE \
         /D_WIN32_WINNT=$(_WIN32_WINNT)
-C_FLAGS = $(CPLUS_FLAGS)
+C_FLAGS = $(subst $(EH_FLAGS),,$(CPLUS_FLAGS))
 
 #------------------------------------------------------------------------------
 # End of setting compiler flags.
@@ -127,11 +136,7 @@ endif
 #------------------------------------------------------------------------------
 # Setting tbbmalloc data.
 #------------------------------------------------------------------------------
-ifneq ($(target_ui), win8ui)
-M_CPLUS_FLAGS = $(subst $(EH_FLAGS),/EHs-,$(CPLUS_FLAGS))
-else
 M_CPLUS_FLAGS = $(CPLUS_FLAGS)
-endif
 #------------------------------------------------------------------------------
 # End of setting tbbmalloc data.
 #------------------------------------------------------------------------------

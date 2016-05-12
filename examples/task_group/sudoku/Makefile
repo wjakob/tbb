@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -22,18 +22,18 @@ PROG=sudoku
 ARGS=4 input1 verbose
 PERF_RUN_ARGS=auto input1 silent
 
-# The C++ compiler
+# icpc by default
 ifneq (,$(shell which icc 2>/dev/null))
-CXX=icc
-endif # which icc
+    CXX=icpc
+endif
+
+# autodetect C++11 support
+include ../../common/examples-common.inc
 
 TBBLIB = -ltbb
 TBBLIB_DEBUG = -ltbb_debug
 
 ifneq (,$(filter icc icpc,$(CXX)))
-ifneq (0,$(cpp0x))
-CXX0XFLAGS?=-std=c++0x -D_TBB_CPP0X
-endif
 ifeq ($(offload), mic)
 override CXXFLAGS += -D__TBB_MIC_OFFLOAD=1
 # Replace -ltbb with -tbb in the offload mode
@@ -49,6 +49,8 @@ run_cmd=../../common/android.linux.launcher.sh
 else
 LIBS+= -lrt 
 endif
+else ifeq ($(shell uname), Darwin)
+override CXXFLAGS += -Wl,-rpath,$(TBBROOT)/lib
 endif
 
 all:	release test

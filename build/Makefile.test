@@ -1,4 +1,4 @@
-# Copyright 2005-2014 Intel Corporation.  All Rights Reserved.
+# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
 #
 # This file is part of Threading Building Blocks. Threading Building Blocks is free software;
 # you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -65,6 +65,7 @@ SCHEDULER_DEPENDENCIES = $(TBB_ASM.OBJ) tbb_misc.$(OBJ)
 SCHEDULER_DIRECTLY_INCLUDED = test_task_leaks.$(TEST_EXT) \
  test_task_assertions.$(TEST_EXT) \
  test_fast_random.$(TEST_EXT) \
+ test_global_control_whitebox.$(TEST_EXT) \
  test_concurrent_queue_whitebox.$(TEST_EXT)
 
 # Necessary to locate version_string.ver referenced from directly included tbb_misc.cpp
@@ -76,15 +77,6 @@ $(SCHEDULER_DIRECTLY_INCLUDED): LIBS += $(LIBDL)
 $(SCHEDULER_DIRECTLY_INCLUDED): LINK_TBB.LIB =
 $(SCHEDULER_DIRECTLY_INCLUDED): LINK_FILES += $(SCHEDULER_DEPENDENCIES)
 $(SCHEDULER_DIRECTLY_INCLUDED): $(SCHEDULER_DEPENDENCIES)
-
-# Tests that use some features of C++11
-TEST_TBB_CPP11 = test_lambda.$(TEST_EXT) test_cache_aligned_allocator_STL.$(TEST_EXT)
-
-ifneq (0,$(cpp0x))
-# Made CPP11 tests use NOSTRICT flags because -strict-ansi combined with
-# -std=c++0x on ICC 13.0 results in a compile error when stdlib is included
-$(TEST_TBB_CPP11):  CPLUS_FLAGS := $(CPLUS_FLAGS_NOSTRICT)
-endif
 
 # test_tbb_header detects "multiple definition" linker error using the test that covers the whole library
 TWICE_LINKED_TESTS = test_tbb_header.$(TEST_EXT) \
@@ -104,12 +96,13 @@ $(TWICE_LINKED_TESTS): LINK_FILES+=$(@:.$(TEST_EXT)=_secondary.$(OBJ))
 %_compiler_builtins.$(TEST_EXT): LINK_TBB.LIB =
 %_compiler_builtins.$(OBJ): CPLUS_FLAGS+=$(DEFINE_KEY)__TBB_TEST_BUILTINS=1 $(DEFINE_KEY)TBB_USE_ASSERT=0
 
-# The test_dynamic_link test doesn't depend on the TBB library
-test_dynamic_link.$(TEST_EXT): LINK_TBB.LIB =
+# dynamic_link tests don't depend on the TBB library
+test_dynamic_link%.$(TEST_EXT): LINK_TBB.LIB =
 test_dynamic_link.$(TEST_EXT): LIBS += $(LIBDL)
 
 # The main list of TBB tests
 TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
+	test_global_control.$(TEST_EXT)              \
 	test_tbb_fork.$(TEST_EXT)                    \
 	test_assembly_compiler_builtins.$(TEST_EXT)  \
 	test_aligned_space.$(TEST_EXT)               \
@@ -132,6 +125,7 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_mutex_native_threads.$(TEST_EXT)        \
 	test_rwm_upgrade_downgrade.$(TEST_EXT)       \
 	test_cache_aligned_allocator.$(TEST_EXT)     \
+        test_cache_aligned_allocator_STL.$(TEST_EXT) \
 	test_parallel_for.$(TEST_EXT)                \
 	test_parallel_reduce.$(TEST_EXT)             \
 	test_parallel_sort.$(TEST_EXT)               \
@@ -141,6 +135,7 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_pipeline.$(TEST_EXT)                    \
 	test_pipeline_with_tbf.$(TEST_EXT)           \
 	test_parallel_pipeline.$(TEST_EXT)           \
+        test_lambda.$(TEST_EXT)                      \
 	test_task_scheduler_init.$(TEST_EXT)         \
 	test_task_scheduler_observer.$(TEST_EXT)     \
 	test_task.$(TEST_EXT)                        \
@@ -198,9 +193,10 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_tagged_msg.$(TEST_EXT)                  \
 	test_partitioner_whitebox.$(TEST_EXT)        \
 	test_flow_graph_whitebox.$(TEST_EXT)         \
+	test_composite_node.$(TEST_EXT)              \
+	test_async_node.$(TEST_EXT)                  \
+	test_async_msg.$(TEST_EXT)                   \
 	test_tbb_version.$(TEST_EXT)                 # insert new files right above
-
-TEST_TBB_PLAIN.EXE += $(TEST_TBB_CPP11)
 
 # skip mode_plugin for now
 skip_tests += test_model_plugin
@@ -216,20 +212,25 @@ test_tbb_openmp:
 endif
 
 ifdef CILK_AVAILABLE
-test_cilk_dynamic_load.$(TEST_EXT): LIBS += $(LIBDL)
-test_cilk_dynamic_load.$(TEST_EXT): test_cilk_dynamic_load_dll.$(DLL)
-
 # Workaround on cilkrts linkage known issue (see Intel(R) C++ Composer XE 2011 Release Notes)
 # The issue reveals itself if a version of binutils is prior to 2.17
 ifeq (linux_icc,$(tbb_os)_$(compiler))
 test_cilk_interop.$(TEST_EXT): LIBS += -lcilkrts
 endif
-test_tbb_cilk: test_cilk_interop.$(TEST_EXT) test_cilk_dynamic_load.$(TEST_EXT)
+test_tbb_cilk: test_cilk_interop.$(TEST_EXT)
 	$(run_cmd) ./test_cilk_interop.$(TEST_EXT) $(args)
-	$(run_cmd) ./test_cilk_dynamic_load.$(TEST_EXT) $(args)
 else
 test_tbb_cilk:
 	@echo "Intel(R) Cilk(TM) Plus is not available"
+endif
+
+test_opencl_node.$(TEST_EXT): LIBS += $(OPENCL.LIB)
+
+ifeq (windows,$(tbb_os))
+ifneq (gcc,$(compiler))
+test_opencl_node.$(TEST_EXT): override CXXFLAGS += /bigobj
+test_join_node.$(TEST_EXT): override CXXFLAGS += /bigobj
+endif
 endif
 
 $(TEST_TBB_PLAIN.EXE): WARNING_KEY += $(TEST_WARNING_KEY)
