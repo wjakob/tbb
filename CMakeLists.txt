@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
-include_directories(include src src/rml/include)
+include_directories(include src src/rml/include ${CMAKE_CURRENT_BINARY_DIR})
 
 option(TBB_BUILD_SHARED          "Build TBB shared library" ON)
 option(TBB_BUILD_STATIC          "Build TBB static library" ON)
