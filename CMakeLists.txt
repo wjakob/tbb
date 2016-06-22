@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8)
 project(tbb CXX)
 
+include (CheckCXXCompilerFlag)
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Release' as none was specified.")
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
@@ -60,7 +62,11 @@ elseif(WIN32)
     cmake_minimum_required (VERSION 3.1)
     enable_language(ASM_MASM)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GS- /Zc:wchar_t /Zc:forScope /DUSE_WINTHREAD")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600 /volatile:iso")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600")
+    check_cxx_compiler_flag ("/volatile:iso" SUPPORTS_VOLATILE_FLAG)
+    if (SUPPORTS_VOLATILE_FLAG)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /volatile:iso")
+    endif ()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4267 /wd4800 /wd4146 /wd4244 /wd4018")
 
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
