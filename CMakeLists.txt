@@ -57,37 +57,35 @@ if (APPLE)
 endif()
 
 if (UNIX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DUSE_PTHREAD")
-  if(NOT CMAKE_CXX_FLAGS MATCHES "-mno-rtm")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mrtm")
-  endif()
+  set(CMAKE_CXX_FLAGS "-std=c++11 -DUSE_PTHREAD ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-mrtm ${CMAKE_CXX_FLAGS}")
 elseif(WIN32)
   if (MSVC)
     cmake_minimum_required (VERSION 3.1)
     enable_language(ASM_MASM)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GS- /Zc:wchar_t /Zc:forScope /DUSE_WINTHREAD")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600")
+    set(CMAKE_CXX_FLAGS "/GS- /Zc:wchar_t /Zc:forScope /DUSE_WINTHREAD ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "/D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600 ${CMAKE_CXX_FLAGS}")
     check_cxx_compiler_flag ("/volatile:iso" SUPPORTS_VOLATILE_FLAG)
     if (SUPPORTS_VOLATILE_FLAG)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /volatile:iso")
+      set(CMAKE_CXX_FLAGS "/volatile:iso ${CMAKE_CXX_FLAGS}")
     endif ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4267 /wd4800 /wd4146 /wd4244 /wd4018")
+    set(CMAKE_CXX_FLAGS "/wd4267 /wd4800 /wd4146 /wd4244 /wd4018 ${CMAKE_CXX_FLAGS}")
 
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
       list(APPEND tbb_src src/tbb/intel64-masm/atomic_support.asm
         src/tbb/intel64-masm/itsx.asm src/tbb/intel64-masm/intel64_misc.asm)
       list(APPEND tbbmalloc_src src/tbb/intel64-masm/atomic_support.asm)
-      set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /DEM64T=1")
+      set(CMAKE_ASM_MASM_FLAGS "/DEM64T=1 ${CMAKE_ASM_MASM_FLAGS}")
     else()
       list(APPEND tbb_src src/tbb/ia32-masm/atomic_support.asm
         src/tbb/ia32-masm/itsx.asm src/tbb/ia32-masm/lock_byte.asm)
       # Enable SAFESEH feature for assembly (x86 builds only).
-      set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /safeseh")
+      set(CMAKE_ASM_MASM_FLAGS "/safeseh ${CMAKE_ASM_MASM_FLAGS}")
     endif()
   elseif (MINGW)
     add_definitions(-DUSE_WINTHREAD)
     add_definitions(-D_WIN32_WINNT=0x0502)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads")
+    set(CMAKE_CXX_FLAGS "-mthreads ${CMAKE_CXX_FLAGS}")
   endif ()
 endif()
 
@@ -102,17 +100,24 @@ endif ()
 # Linker export definitions
 if (APPLE)
   set (ARCH_PREFIX "mac")
-elseif(MSVC)
+elseif(WIN32)
   set (ARCH_PREFIX "win")
 else ()
-  # MinGW uses gcc def format
   set (ARCH_PREFIX "lin")
 endif ()
+
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(ARCH_PREFIX "${ARCH_PREFIX}64")
 else()
   set(ARCH_PREFIX "${ARCH_PREFIX}32")
 endif()
+
+if (MINGW)
+  set (ARCH_PREFIX "${ARCH_PREFIX}-gcc")
+  # there's no win32-gcc-tbb-export.def, use lin32-tbb-export.def
+  execute_process (COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/lin32-tbb-export.def ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/win32-gcc-tbb-export.def)
+endif()
+
 if (MSVC)
   add_custom_command(OUTPUT tbb.def
     COMMAND ${CMAKE_CXX_COMPILER} /TC /EP ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/${ARCH_PREFIX}-tbb-export.def  -I ${CMAKE_CURRENT_SOURCE_DIR}/include > tbb.def
