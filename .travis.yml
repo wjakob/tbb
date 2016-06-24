@@ -1,15 +1,6 @@
 language: cpp
 sudo: false
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.8
-      - g++-4.8-multilib
-      - g++-multilib
-      - binutils-mingw-w64-x86-64
-      - gcc-mingw-w64-x86-64
+
 matrix:
   include:
     - os: linux
@@ -38,8 +29,17 @@ matrix:
       addons:
         apt:
           packages:
-            - gcc-mingw-w64-base
-            - binutils-mingw-w64-x86-64
-            - gcc-mingw-w64-x86-64
             - g++-mingw-w64-x86-64
-            - gcc-mingw-w64
+            - gcc-mingw-w64-x86-64
+            - binutils-mingw-w64-x86-64
+    - os: linux
+      compiler: i686-w64-mingw32-g++
+      script:
+        - cmake -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ -DCMAKE_TOOLCHAIN_FILE=build/mingw_cross_toolchain.cmake -DGNU_HOST=i686-w64-mingw32 .
+        - make -j 2
+      addons:
+        apt:
+          packages:
+            - g++-mingw-w64-i686
+            - gcc-mingw-w64-i686
+            - binutils-mingw-w64-i686
