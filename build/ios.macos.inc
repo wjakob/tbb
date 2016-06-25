@@ -20,7 +20,7 @@ ifneq ($(arch),$(filter $(arch),ia32 intel64 armv7 armv7s arm64))
   $(error $(arch) is unknown architecture. Known arhitechtures are ia32 intel64 armv7 armv7s arm64)
 endif
 
-# if target is ios but arch is ia32/intel64 then build for 32/64 simulator!
+# If target is ios but arch is ia32/intel64 then build for 32/64 simulator!
 ifeq (,$(SDKROOT))
   ifeq ($(arch),$(filter $(arch),ia32 intel64))
     export SDKROOT:=$(shell xcodebuild -sdk -version | grep -o -E '/.*SDKs/iPhoneSimulator.*' 2>/dev/null)
