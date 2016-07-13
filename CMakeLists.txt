@@ -138,6 +138,10 @@ if (TBB_BUILD_STATIC)
   set_property(TARGET tbb_static APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
   install(TARGETS tbb_static ARCHIVE DESTINATION lib)
   target_include_directories(tbb_static PUBLIC include)
+
+  if (UNIX)
+    target_link_libraries (tbb_static "dl" "pthread")
+  endif ()
 endif()
 
 if (TBB_BUILD_SHARED)
