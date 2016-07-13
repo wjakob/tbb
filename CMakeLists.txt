@@ -139,8 +139,14 @@ if (TBB_BUILD_STATIC)
   install(TARGETS tbb_static ARCHIVE DESTINATION lib)
   target_include_directories(tbb_static PUBLIC include)
 
-  if (UNIX)
-    target_link_libraries (tbb_static "dl" "pthread")
+  find_library (LIBDL_LIBRARIES dl)
+  if (LIBDL_LIBRARIES)
+    target_link_libraries (tbb_static ${LIBDL_LIBRARIES})
+  endif ()
+
+  find_library (LIBPTHREAD_LIBRARIES pthread)
+  if (LIBPTHREAD_LIBRARIES)
+    target_link_libraries (tbb_static ${LIBPTHREAD_LIBRARIES})
   endif ()
 endif()
 
