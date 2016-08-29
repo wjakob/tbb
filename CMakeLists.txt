@@ -58,10 +58,18 @@ if (APPLE)
 endif()
 
 if (UNIX)
-  set(CMAKE_CXX_FLAGS "-std=c++11 -DUSE_PTHREAD ${CMAKE_CXX_FLAGS}")
-  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Intel")
-    set(CMAKE_CXX_FLAGS "-mrtm ${CMAKE_CXX_FLAGS}")
-  endif()
+  add_definitions (-DUSE_PTHREAD)
+
+  check_cxx_compiler_flag ("-std=c++11" SUPPORTS_STDCXX11)
+  if (SUPPORTS_STDCXX11)
+    set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+  endif ()
+
+  check_cxx_compiler_flag ("-mrtm" SUPPORTS_MRTM)
+  if (SUPPORTS_MRTM)
+    set (CMAKE_CXX_FLAGS "-mrtm ${CMAKE_CXX_FLAGS}")
+  endif ()
+
 elseif(WIN32)
   if (MSVC)
     #pragma comment( linker, "/nodefaultlib:tbb_debug.lib" )
