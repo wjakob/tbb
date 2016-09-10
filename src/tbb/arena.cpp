@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "tbb/global_control.h" // thread_stack_size
@@ -151,7 +151,7 @@ void arena::process( generic_scheduler& s ) {
         // Try to steal a task.
         // Passing reference count is technically unnecessary in this context,
         // but omitting it here would add checks inside the function.
-        task* t = s.receive_or_steal_task( s.my_dummy_task->prefix().ref_count );
+        task* t = s.receive_or_steal_task( __TBB_ISOLATION_ARG( s.my_dummy_task->prefix().ref_count, no_isolation ) );
         if (t) {
             // A side effect of receive_or_steal_task is that my_innermost_running_task can be set.
             // But for the outermost dispatch loop of a worker it has to be NULL.
@@ -413,8 +413,8 @@ bool arena::is_out_of_work() {
                     // snapshot taking procedure invalidates the attempt, and returns
                     // this thread into the dispatch loop.
 #if __TBB_TASK_PRIORITY
+                    uintptr_t reload_epoch = __TBB_load_with_acquire( my_reload_epoch );
                     intptr_t top_priority = my_top_priority;
-                    uintptr_t reload_epoch = my_reload_epoch;
                     // Inspect primary task pools first
 #endif /* __TBB_TASK_PRIORITY */
                     size_t k;
@@ -753,7 +753,7 @@ class delegated_task : public task {
     internal::delegate_base & my_delegate;
     concurrent_monitor & my_monitor;
     task * my_root;
-    /*override*/ task* execute() {
+    task* execute() __TBB_override {
         generic_scheduler& s = *(generic_scheduler*)prefix().owner;
         __TBB_ASSERT(s.worker_outermost_level() || s.master_outermost_level(), "expected to be enqueued and received on the outermost level");
         // but this task can mimics outermost level, detect it
@@ -828,7 +828,7 @@ void task_arena_base::internal_execute( internal::delegate_base& d) const {
                     task_group_context::default_traits & ~task_group_context::exact_exception );
                 exception_container.register_pending_exception();
                 __TBB_ASSERT(exception_container.my_exception, NULL);
-                exception_container.my_exception->throw_self();
+                TbbRethrowException( exception_container.my_exception );
             }
         }
 #endif
@@ -867,7 +867,7 @@ void task_arena_base::internal_execute( internal::delegate_base& d) const {
 #if TBB_USE_EXCEPTIONS
         // process possible exception
         if( task_group_context::exception_container_type *pe = exec_context.my_exception )
-            pe->throw_self();
+            TbbRethrowException( pe );
 #endif
     }
 }
@@ -876,7 +876,7 @@ void task_arena_base::internal_execute( internal::delegate_base& d) const {
 // TODO: it will be rather reworked for one source of notification from is_out_of_work
 class wait_task : public task {
     binary_semaphore & my_signal;
-    /*override*/ task* execute() {
+    task* execute() __TBB_override {
         generic_scheduler* s = governor::local_scheduler_if_initialized();
         __TBB_ASSERT( s, NULL );
         __TBB_ASSERT( s->master_outermost_level() || s->worker_outermost_level(), "The enqueued task can be processed only on outermost level" );
@@ -929,7 +929,47 @@ void task_arena_base::internal_wait() const {
     return s? int(s->my_arena_index) : -1;
 }
 
+#if __TBB_TASK_ISOLATION
+class isolation_guard : tbb::internal::no_copy {
+    isolation_tag &guarded;
+    isolation_tag previous_value;
+public:
+    isolation_guard( isolation_tag &isolation ) : guarded( isolation ), previous_value( isolation ) {}
+    ~isolation_guard() {
+        guarded = previous_value;
+    }
+};
 
+void isolate_within_arena( delegate_base& d, intptr_t reserved ) {
+    __TBB_ASSERT( reserved == 0, NULL );
+    // TODO: Decide what to do if the scheduler is not initialized. Is there a use case for it?
+    generic_scheduler* s = governor::local_scheduler_weak();
+    __TBB_ASSERT( s, "this_task_arena::isolate() needs an initialized scheduler" );
+    // Theoretically, we can keep the current isolation in the scheduler; however, it makes sense to store it in innermost
+    // running task because it can in principle be queried via task::self().
+    isolation_tag& current_isolation = s->my_innermost_running_task->prefix().isolation;
+    // We temporarily change the isolation tag of the currently running task. It will be restored in the destructor of the guard.
+    isolation_guard guard( current_isolation );
+    current_isolation = reinterpret_cast<isolation_tag>(&d);
+    d();
+}
+#endif /* __TBB_TASK_ISOLATION */
+
+int task_arena_base::internal_max_concurrency(const task_arena *ta) {
+    arena* a = NULL;
+    if( ta ) // for special cases of ta->max_concurrency()
+        a = ta->my_arena;
+    else if( generic_scheduler* s = governor::local_scheduler_if_initialized() )
+        a = s->my_arena; // the current arena if any
+
+    if( a ) { // Get parameters from the arena
+        __TBB_ASSERT( !ta || ta->my_max_concurrency==1, NULL );
+        return a->my_num_reserved_slots + a->my_max_num_workers;
+    } else {
+        __TBB_ASSERT( !ta || ta->my_max_concurrency==automatic, NULL );
+        return int(governor::default_num_threads());
+    }
+}
 } // tbb::interfaceX::internal
 } // tbb::interfaceX
 } // tbb

@@ -1,0 +1,629 @@
+The system is: Darwin - 15.6.0 - x86_64
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /usr/local/bin/g++-6 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+
+The CXX compiler identification is GNU, found in "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/3.6.1/CompilerIdCXX/a.out"
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_5a7cf/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_5a7cf.dir/build.make CMakeFiles/cmTC_5a7cf.dir/build
+Building CXX object CMakeFiles/cmTC_5a7cf.dir/testCXXCompiler.cxx.o
+/usr/local/bin/g++-6      -o CMakeFiles/cmTC_5a7cf.dir/testCXXCompiler.cxx.o -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTC_5a7cf
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5a7cf.dir/link.txt --verbose=1
+/usr/local/bin/g++-6     -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_5a7cf.dir/testCXXCompiler.cxx.o  -o cmTC_5a7cf  
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_3166d/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_3166d.dir/build.make CMakeFiles/cmTC_3166d.dir/build
+Building CXX object CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o
+/usr/local/bin/g++-6      -o CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o -c /usr/local/Cellar/cmake/3.6.1/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+Linking CXX executable cmTC_3166d
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3166d.dir/link.txt --verbose=1
+/usr/local/bin/g++-6     -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_3166d   
+Using built-in specs.
+COLLECT_GCC=/usr/local/bin/g++-6
+COLLECT_LTO_WRAPPER=/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/lto-wrapper
+Target: x86_64-apple-darwin15.6.0
+Configured with: ../configure --build=x86_64-apple-darwin15.6.0 --prefix=/usr/local/Cellar/gcc/6.1.0_1 --libdir=/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6 --enable-languages=c,c++,objc,obj-c++,fortran --program-suffix=-6 --with-gmp=/usr/local/opt/gmp --with-mpfr=/usr/local/opt/mpfr --with-mpc=/usr/local/opt/libmpc --with-isl=/usr/local/opt/isl --with-system-zlib --enable-libstdcxx-time=yes --enable-stage1-checking --enable-checking=release --enable-lto --with-build-config=bootstrap-debug --disable-werror --with-pkgversion='Homebrew gcc 6.1.0_1' --with-bugurl=https://github.com/Homebrew/homebrew/issues --enable-plugin --disable-nls --enable-multilib
+Thread model: posix
+gcc version 6.1.0 (Homebrew gcc 6.1.0_1) 
+COMPILER_PATH=/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/
+LIBRARY_PATH=/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../../
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_3166d' '-mmacosx-version-min=10.11.6' '-shared-libgcc' '-mtune=core2'
+ /usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/collect2 -dynamic -arch x86_64 -macosx_version_min 10.11.6 -weak_reference_mismatches non-weak -o cmTC_3166d -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../.. -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -no_compact_unwind -lSystem -lgcc_ext.10.5 -lgcc -lSystem -v
+collect2 version 6.1.0
+/usr/bin/ld -dynamic -arch x86_64 -macosx_version_min 10.11.6 -weak_reference_mismatches non-weak -o cmTC_3166d -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../.. -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -no_compact_unwind -lSystem -lgcc_ext.10.5 -lgcc -lSystem -v
+@(#)PROGRAM:ld  PROJECT:ld64-264.3.102
+configured to support archs: armv6 armv7 armv7s arm64 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em (tvOS)
+@(#)PROGRAM:ld  PROJECT:ld64-264.3.102
+configured to support archs: armv6 armv7 armv7s arm64 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em (tvOS)
+Library search paths:
+	/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0
+	/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6
+	/usr/lib
+	/usr/local/lib
+Framework search paths:
+	/Library/Frameworks/
+	/System/Library/Frameworks/
+ /usr/bin/nm -n CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o
+
+
+Parsed CXX implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:"/usr/bin/make" "cmTC_3166d/fast"]
+  ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_3166d.dir/build.make CMakeFiles/cmTC_3166d.dir/build]
+  ignore line: [Building CXX object CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/usr/local/bin/g++-6      -o CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o -c /usr/local/Cellar/cmake/3.6.1/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Linking CXX executable cmTC_3166d]
+  ignore line: [/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3166d.dir/link.txt --verbose=1]
+  ignore line: [/usr/local/bin/g++-6     -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_3166d   ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/local/bin/g++-6]
+  ignore line: [COLLECT_LTO_WRAPPER=/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/lto-wrapper]
+  ignore line: [Target: x86_64-apple-darwin15.6.0]
+  ignore line: [Configured with: ../configure --build=x86_64-apple-darwin15.6.0 --prefix=/usr/local/Cellar/gcc/6.1.0_1 --libdir=/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6 --enable-languages=c,c++,objc,obj-c++,fortran --program-suffix=-6 --with-gmp=/usr/local/opt/gmp --with-mpfr=/usr/local/opt/mpfr --with-mpc=/usr/local/opt/libmpc --with-isl=/usr/local/opt/isl --with-system-zlib --enable-libstdcxx-time=yes --enable-stage1-checking --enable-checking=release --enable-lto --with-build-config=bootstrap-debug --disable-werror --with-pkgversion='Homebrew gcc 6.1.0_1' --with-bugurl=https://github.com/Homebrew/homebrew/issues --enable-plugin --disable-nls --enable-multilib]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 6.1.0 (Homebrew gcc 6.1.0_1) ]
+  ignore line: [COMPILER_PATH=/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/]
+  ignore line: [LIBRARY_PATH=/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../../]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_3166d' '-mmacosx-version-min=10.11.6' '-shared-libgcc' '-mtune=core2']
+  link line: [ /usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/collect2 -dynamic -arch x86_64 -macosx_version_min 10.11.6 -weak_reference_mismatches non-weak -o cmTC_3166d -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../.. -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -no_compact_unwind -lSystem -lgcc_ext.10.5 -lgcc -lSystem -v]
+    arg [/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/collect2] ==> ignore
+    arg [-dynamic] ==> ignore
+    arg [-arch] ==> ignore
+    arg [x86_64] ==> ignore
+    arg [-macosx_version_min] ==> ignore
+    arg [10.11.6] ==> ignore
+    arg [-weak_reference_mismatches] ==> ignore
+    arg [non-weak] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_3166d] ==> ignore
+    arg [-L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0] ==> dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0]
+    arg [-L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../..] ==> dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../..]
+    arg [-search_paths_first] ==> ignore
+    arg [-headerpad_max_install_names] ==> ignore
+    arg [-v] ==> ignore
+    arg [CMakeFiles/cmTC_3166d.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [-lstdc++] ==> lib [stdc++]
+    arg [-no_compact_unwind] ==> ignore
+    arg [-lSystem] ==> lib [System]
+    arg [-lgcc_ext.10.5] ==> lib [gcc_ext.10.5]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lSystem] ==> lib [System]
+    arg [-v] ==> ignore
+  Library search paths: [;/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0;/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6;/usr/lib;/usr/local/lib]
+  Framework search paths: [;/Library/Frameworks/;/System/Library/Frameworks/]
+  remove lib [System]
+  remove lib [gcc_ext.10.5]
+  remove lib [gcc]
+  remove lib [System]
+  collapse library dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0] ==> [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0]
+  collapse library dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../..] ==> [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6]
+  collapse library dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0] ==> [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0]
+  collapse library dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6] ==> [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6]
+  collapse library dir [/usr/lib] ==> [/usr/lib]
+  collapse library dir [/usr/local/lib] ==> [/usr/local/lib]
+  collapse framework dir [/Library/Frameworks/] ==> [/Library/Frameworks]
+  collapse framework dir [/System/Library/Frameworks/] ==> [/System/Library/Frameworks]
+  implicit libs: [stdc++]
+  implicit dirs: [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0;/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6;/usr/lib;/usr/local/lib]
+  implicit fwks: [/Library/Frameworks;/System/Library/Frameworks]
+
+
+
+
+Detecting CXX [-std=c++14] compiler features compiled with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_31e77/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_31e77.dir/build.make CMakeFiles/cmTC_31e77.dir/build
+Building CXX object CMakeFiles/cmTC_31e77.dir/feature_tests.cxx.o
+/usr/local/bin/g++-6     -std=c++14 -o CMakeFiles/cmTC_31e77.dir/feature_tests.cxx.o -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_31e77
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_31e77.dir/link.txt --verbose=1
+/usr/local/bin/g++-6     -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_31e77.dir/feature_tests.cxx.o  -o cmTC_31e77  
+
+
+    Feature record: CXX_FEATURE:1cxx_aggregate_default_initializers
+    Feature record: CXX_FEATURE:1cxx_alias_templates
+    Feature record: CXX_FEATURE:1cxx_alignas
+    Feature record: CXX_FEATURE:1cxx_alignof
+    Feature record: CXX_FEATURE:1cxx_attributes
+    Feature record: CXX_FEATURE:1cxx_attribute_deprecated
+    Feature record: CXX_FEATURE:1cxx_auto_type
+    Feature record: CXX_FEATURE:1cxx_binary_literals
+    Feature record: CXX_FEATURE:1cxx_constexpr
+    Feature record: CXX_FEATURE:1cxx_contextual_conversions
+    Feature record: CXX_FEATURE:1cxx_decltype
+    Feature record: CXX_FEATURE:1cxx_decltype_auto
+    Feature record: CXX_FEATURE:1cxx_decltype_incomplete_return_types
+    Feature record: CXX_FEATURE:1cxx_default_function_template_args
+    Feature record: CXX_FEATURE:1cxx_defaulted_functions
+    Feature record: CXX_FEATURE:1cxx_defaulted_move_initializers
+    Feature record: CXX_FEATURE:1cxx_delegating_constructors
+    Feature record: CXX_FEATURE:1cxx_deleted_functions
+    Feature record: CXX_FEATURE:1cxx_digit_separators
+    Feature record: CXX_FEATURE:1cxx_enum_forward_declarations
+    Feature record: CXX_FEATURE:1cxx_explicit_conversions
+    Feature record: CXX_FEATURE:1cxx_extended_friend_declarations
+    Feature record: CXX_FEATURE:1cxx_extern_templates
+    Feature record: CXX_FEATURE:1cxx_final
+    Feature record: CXX_FEATURE:1cxx_func_identifier
+    Feature record: CXX_FEATURE:1cxx_generalized_initializers
+    Feature record: CXX_FEATURE:1cxx_generic_lambdas
+    Feature record: CXX_FEATURE:1cxx_inheriting_constructors
+    Feature record: CXX_FEATURE:1cxx_inline_namespaces
+    Feature record: CXX_FEATURE:1cxx_lambdas
+    Feature record: CXX_FEATURE:1cxx_lambda_init_captures
+    Feature record: CXX_FEATURE:1cxx_local_type_template_args
+    Feature record: CXX_FEATURE:1cxx_long_long_type
+    Feature record: CXX_FEATURE:1cxx_noexcept
+    Feature record: CXX_FEATURE:1cxx_nonstatic_member_init
+    Feature record: CXX_FEATURE:1cxx_nullptr
+    Feature record: CXX_FEATURE:1cxx_override
+    Feature record: CXX_FEATURE:1cxx_range_for
+    Feature record: CXX_FEATURE:1cxx_raw_string_literals
+    Feature record: CXX_FEATURE:1cxx_reference_qualified_functions
+    Feature record: CXX_FEATURE:1cxx_relaxed_constexpr
+    Feature record: CXX_FEATURE:1cxx_return_type_deduction
+    Feature record: CXX_FEATURE:1cxx_right_angle_brackets
+    Feature record: CXX_FEATURE:1cxx_rvalue_references
+    Feature record: CXX_FEATURE:1cxx_sizeof_member
+    Feature record: CXX_FEATURE:1cxx_static_assert
+    Feature record: CXX_FEATURE:1cxx_strong_enums
+    Feature record: CXX_FEATURE:1cxx_template_template_parameters
+    Feature record: CXX_FEATURE:1cxx_thread_local
+    Feature record: CXX_FEATURE:1cxx_trailing_return_types
+    Feature record: CXX_FEATURE:1cxx_unicode_literals
+    Feature record: CXX_FEATURE:1cxx_uniform_initialization
+    Feature record: CXX_FEATURE:1cxx_unrestricted_unions
+    Feature record: CXX_FEATURE:1cxx_user_literals
+    Feature record: CXX_FEATURE:1cxx_variable_templates
+    Feature record: CXX_FEATURE:1cxx_variadic_macros
+    Feature record: CXX_FEATURE:1cxx_variadic_templates
+
+
+Detecting CXX [-std=c++11] compiler features compiled with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_b71cc/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_b71cc.dir/build.make CMakeFiles/cmTC_b71cc.dir/build
+Building CXX object CMakeFiles/cmTC_b71cc.dir/feature_tests.cxx.o
+/usr/local/bin/g++-6     -std=c++11 -o CMakeFiles/cmTC_b71cc.dir/feature_tests.cxx.o -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_b71cc
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b71cc.dir/link.txt --verbose=1
+/usr/local/bin/g++-6     -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_b71cc.dir/feature_tests.cxx.o  -o cmTC_b71cc  
+
+
+    Feature record: CXX_FEATURE:0cxx_aggregate_default_initializers
+    Feature record: CXX_FEATURE:1cxx_alias_templates
+    Feature record: CXX_FEATURE:1cxx_alignas
+    Feature record: CXX_FEATURE:1cxx_alignof
+    Feature record: CXX_FEATURE:1cxx_attributes
+    Feature record: CXX_FEATURE:0cxx_attribute_deprecated
+    Feature record: CXX_FEATURE:1cxx_auto_type
+    Feature record: CXX_FEATURE:0cxx_binary_literals
+    Feature record: CXX_FEATURE:1cxx_constexpr
+    Feature record: CXX_FEATURE:0cxx_contextual_conversions
+    Feature record: CXX_FEATURE:1cxx_decltype
+    Feature record: CXX_FEATURE:0cxx_decltype_auto
+    Feature record: CXX_FEATURE:1cxx_decltype_incomplete_return_types
+    Feature record: CXX_FEATURE:1cxx_default_function_template_args
+    Feature record: CXX_FEATURE:1cxx_defaulted_functions
+    Feature record: CXX_FEATURE:1cxx_defaulted_move_initializers
+    Feature record: CXX_FEATURE:1cxx_delegating_constructors
+    Feature record: CXX_FEATURE:1cxx_deleted_functions
+    Feature record: CXX_FEATURE:0cxx_digit_separators
+    Feature record: CXX_FEATURE:1cxx_enum_forward_declarations
+    Feature record: CXX_FEATURE:1cxx_explicit_conversions
+    Feature record: CXX_FEATURE:1cxx_extended_friend_declarations
+    Feature record: CXX_FEATURE:1cxx_extern_templates
+    Feature record: CXX_FEATURE:1cxx_final
+    Feature record: CXX_FEATURE:1cxx_func_identifier
+    Feature record: CXX_FEATURE:1cxx_generalized_initializers
+    Feature record: CXX_FEATURE:0cxx_generic_lambdas
+    Feature record: CXX_FEATURE:1cxx_inheriting_constructors
+    Feature record: CXX_FEATURE:1cxx_inline_namespaces
+    Feature record: CXX_FEATURE:1cxx_lambdas
+    Feature record: CXX_FEATURE:0cxx_lambda_init_captures
+    Feature record: CXX_FEATURE:1cxx_local_type_template_args
+    Feature record: CXX_FEATURE:1cxx_long_long_type
+    Feature record: CXX_FEATURE:1cxx_noexcept
+    Feature record: CXX_FEATURE:1cxx_nonstatic_member_init
+    Feature record: CXX_FEATURE:1cxx_nullptr
+    Feature record: CXX_FEATURE:1cxx_override
+    Feature record: CXX_FEATURE:1cxx_range_for
+    Feature record: CXX_FEATURE:1cxx_raw_string_literals
+    Feature record: CXX_FEATURE:1cxx_reference_qualified_functions
+    Feature record: CXX_FEATURE:0cxx_relaxed_constexpr
+    Feature record: CXX_FEATURE:0cxx_return_type_deduction
+    Feature record: CXX_FEATURE:1cxx_right_angle_brackets
+    Feature record: CXX_FEATURE:1cxx_rvalue_references
+    Feature record: CXX_FEATURE:1cxx_sizeof_member
+    Feature record: CXX_FEATURE:1cxx_static_assert
+    Feature record: CXX_FEATURE:1cxx_strong_enums
+    Feature record: CXX_FEATURE:1cxx_template_template_parameters
+    Feature record: CXX_FEATURE:1cxx_thread_local
+    Feature record: CXX_FEATURE:1cxx_trailing_return_types
+    Feature record: CXX_FEATURE:1cxx_unicode_literals
+    Feature record: CXX_FEATURE:1cxx_uniform_initialization
+    Feature record: CXX_FEATURE:1cxx_unrestricted_unions
+    Feature record: CXX_FEATURE:1cxx_user_literals
+    Feature record: CXX_FEATURE:0cxx_variable_templates
+    Feature record: CXX_FEATURE:1cxx_variadic_macros
+    Feature record: CXX_FEATURE:1cxx_variadic_templates
+
+
+Detecting CXX [-std=c++98] compiler features compiled with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_95dba/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_95dba.dir/build.make CMakeFiles/cmTC_95dba.dir/build
+Building CXX object CMakeFiles/cmTC_95dba.dir/feature_tests.cxx.o
+/usr/local/bin/g++-6     -std=c++98 -o CMakeFiles/cmTC_95dba.dir/feature_tests.cxx.o -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/feature_tests.cxx
+Linking CXX executable cmTC_95dba
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_95dba.dir/link.txt --verbose=1
+/usr/local/bin/g++-6     -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_95dba.dir/feature_tests.cxx.o  -o cmTC_95dba  
+
+
+    Feature record: CXX_FEATURE:0cxx_aggregate_default_initializers
+    Feature record: CXX_FEATURE:0cxx_alias_templates
+    Feature record: CXX_FEATURE:0cxx_alignas
+    Feature record: CXX_FEATURE:0cxx_alignof
+    Feature record: CXX_FEATURE:0cxx_attributes
+    Feature record: CXX_FEATURE:0cxx_attribute_deprecated
+    Feature record: CXX_FEATURE:0cxx_auto_type
+    Feature record: CXX_FEATURE:0cxx_binary_literals
+    Feature record: CXX_FEATURE:0cxx_constexpr
+    Feature record: CXX_FEATURE:0cxx_contextual_conversions
+    Feature record: CXX_FEATURE:0cxx_decltype
+    Feature record: CXX_FEATURE:0cxx_decltype_auto
+    Feature record: CXX_FEATURE:0cxx_decltype_incomplete_return_types
+    Feature record: CXX_FEATURE:0cxx_default_function_template_args
+    Feature record: CXX_FEATURE:0cxx_defaulted_functions
+    Feature record: CXX_FEATURE:0cxx_defaulted_move_initializers
+    Feature record: CXX_FEATURE:0cxx_delegating_constructors
+    Feature record: CXX_FEATURE:0cxx_deleted_functions
+    Feature record: CXX_FEATURE:0cxx_digit_separators
+    Feature record: CXX_FEATURE:0cxx_enum_forward_declarations
+    Feature record: CXX_FEATURE:0cxx_explicit_conversions
+    Feature record: CXX_FEATURE:0cxx_extended_friend_declarations
+    Feature record: CXX_FEATURE:0cxx_extern_templates
+    Feature record: CXX_FEATURE:0cxx_final
+    Feature record: CXX_FEATURE:0cxx_func_identifier
+    Feature record: CXX_FEATURE:0cxx_generalized_initializers
+    Feature record: CXX_FEATURE:0cxx_generic_lambdas
+    Feature record: CXX_FEATURE:0cxx_inheriting_constructors
+    Feature record: CXX_FEATURE:0cxx_inline_namespaces
+    Feature record: CXX_FEATURE:0cxx_lambdas
+    Feature record: CXX_FEATURE:0cxx_lambda_init_captures
+    Feature record: CXX_FEATURE:0cxx_local_type_template_args
+    Feature record: CXX_FEATURE:0cxx_long_long_type
+    Feature record: CXX_FEATURE:0cxx_noexcept
+    Feature record: CXX_FEATURE:0cxx_nonstatic_member_init
+    Feature record: CXX_FEATURE:0cxx_nullptr
+    Feature record: CXX_FEATURE:0cxx_override
+    Feature record: CXX_FEATURE:0cxx_range_for
+    Feature record: CXX_FEATURE:0cxx_raw_string_literals
+    Feature record: CXX_FEATURE:0cxx_reference_qualified_functions
+    Feature record: CXX_FEATURE:0cxx_relaxed_constexpr
+    Feature record: CXX_FEATURE:0cxx_return_type_deduction
+    Feature record: CXX_FEATURE:0cxx_right_angle_brackets
+    Feature record: CXX_FEATURE:0cxx_rvalue_references
+    Feature record: CXX_FEATURE:0cxx_sizeof_member
+    Feature record: CXX_FEATURE:0cxx_static_assert
+    Feature record: CXX_FEATURE:0cxx_strong_enums
+    Feature record: CXX_FEATURE:1cxx_template_template_parameters
+    Feature record: CXX_FEATURE:0cxx_thread_local
+    Feature record: CXX_FEATURE:0cxx_trailing_return_types
+    Feature record: CXX_FEATURE:0cxx_unicode_literals
+    Feature record: CXX_FEATURE:0cxx_uniform_initialization
+    Feature record: CXX_FEATURE:0cxx_unrestricted_unions
+    Feature record: CXX_FEATURE:0cxx_user_literals
+    Feature record: CXX_FEATURE:0cxx_variable_templates
+    Feature record: CXX_FEATURE:0cxx_variadic_macros
+    Feature record: CXX_FEATURE:0cxx_variadic_templates
+Performing C++ SOURCE FILE Test SUPPORTS_STDCXX11 succeeded with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_1c814/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_1c814.dir/build.make CMakeFiles/cmTC_1c814.dir/build
+Building CXX object CMakeFiles/cmTC_1c814.dir/src.cxx.o
+/usr/local/bin/g++-6     -DSUPPORTS_STDCXX11   -std=c++11 -o CMakeFiles/cmTC_1c814.dir/src.cxx.o -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_1c814
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1c814.dir/link.txt --verbose=1
+/usr/local/bin/g++-6    -DSUPPORTS_STDCXX11 -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_1c814.dir/src.cxx.o  -o cmTC_1c814  
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test SUPPORTS_MRTM succeeded with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_02199/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_02199.dir/build.make CMakeFiles/cmTC_02199.dir/build
+Building CXX object CMakeFiles/cmTC_02199.dir/src.cxx.o
+/usr/local/bin/g++-6     -std=c++11  -DSUPPORTS_MRTM   -mrtm -o CMakeFiles/cmTC_02199.dir/src.cxx.o -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_02199
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_02199.dir/link.txt --verbose=1
+/usr/local/bin/g++-6   -std=c++11  -DSUPPORTS_MRTM -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_02199.dir/src.cxx.o  -o cmTC_02199  
+
+Source file was:
+int main() { return 0; }
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /usr/local/bin/gcc-6 
+Build flags: 
+Id flags: 
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is GNU, found in "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/3.6.1/CompilerIdC/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_a7f77/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_a7f77.dir/build.make CMakeFiles/cmTC_a7f77.dir/build
+Building C object CMakeFiles/cmTC_a7f77.dir/testCCompiler.c.o
+/usr/local/bin/gcc-6     -o CMakeFiles/cmTC_a7f77.dir/testCCompiler.c.o   -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTC_a7f77
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a7f77.dir/link.txt --verbose=1
+/usr/local/bin/gcc-6    -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_a7f77.dir/testCCompiler.c.o  -o cmTC_a7f77  
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_11041/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_11041.dir/build.make CMakeFiles/cmTC_11041.dir/build
+Building C object CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o
+/usr/local/bin/gcc-6     -o CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o   -c /usr/local/Cellar/cmake/3.6.1/share/cmake/Modules/CMakeCCompilerABI.c
+Linking C executable cmTC_11041
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_11041.dir/link.txt --verbose=1
+/usr/local/bin/gcc-6    -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o  -o cmTC_11041   
+Using built-in specs.
+COLLECT_GCC=/usr/local/bin/gcc-6
+COLLECT_LTO_WRAPPER=/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/lto-wrapper
+Target: x86_64-apple-darwin15.6.0
+Configured with: ../configure --build=x86_64-apple-darwin15.6.0 --prefix=/usr/local/Cellar/gcc/6.1.0_1 --libdir=/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6 --enable-languages=c,c++,objc,obj-c++,fortran --program-suffix=-6 --with-gmp=/usr/local/opt/gmp --with-mpfr=/usr/local/opt/mpfr --with-mpc=/usr/local/opt/libmpc --with-isl=/usr/local/opt/isl --with-system-zlib --enable-libstdcxx-time=yes --enable-stage1-checking --enable-checking=release --enable-lto --with-build-config=bootstrap-debug --disable-werror --with-pkgversion='Homebrew gcc 6.1.0_1' --with-bugurl=https://github.com/Homebrew/homebrew/issues --enable-plugin --disable-nls --enable-multilib
+Thread model: posix
+gcc version 6.1.0 (Homebrew gcc 6.1.0_1) 
+COMPILER_PATH=/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/
+LIBRARY_PATH=/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../../
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_11041' '-mmacosx-version-min=10.11.6' '-mtune=core2'
+ /usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/collect2 -dynamic -arch x86_64 -macosx_version_min 10.11.6 -weak_reference_mismatches non-weak -o cmTC_11041 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../.. -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o -no_compact_unwind -lSystem -lgcc_ext.10.5 -lgcc -lSystem -v
+collect2 version 6.1.0
+/usr/bin/ld -dynamic -arch x86_64 -macosx_version_min 10.11.6 -weak_reference_mismatches non-weak -o cmTC_11041 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../.. -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o -no_compact_unwind -lSystem -lgcc_ext.10.5 -lgcc -lSystem -v
+@(#)PROGRAM:ld  PROJECT:ld64-264.3.102
+configured to support archs: armv6 armv7 armv7s arm64 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em (tvOS)
+@(#)PROGRAM:ld  PROJECT:ld64-264.3.102
+configured to support archs: armv6 armv7 armv7s arm64 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em (tvOS)
+Library search paths:
+	/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0
+	/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6
+	/usr/lib
+	/usr/local/lib
+Framework search paths:
+	/Library/Frameworks/
+	/System/Library/Frameworks/
+ /usr/bin/nm -n CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command:"/usr/bin/make" "cmTC_11041/fast"]
+  ignore line: [/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_11041.dir/build.make CMakeFiles/cmTC_11041.dir/build]
+  ignore line: [Building C object CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/usr/local/bin/gcc-6     -o CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o   -c /usr/local/Cellar/cmake/3.6.1/share/cmake/Modules/CMakeCCompilerABI.c]
+  ignore line: [Linking C executable cmTC_11041]
+  ignore line: [/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_11041.dir/link.txt --verbose=1]
+  ignore line: [/usr/local/bin/gcc-6    -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o  -o cmTC_11041   ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/usr/local/bin/gcc-6]
+  ignore line: [COLLECT_LTO_WRAPPER=/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/lto-wrapper]
+  ignore line: [Target: x86_64-apple-darwin15.6.0]
+  ignore line: [Configured with: ../configure --build=x86_64-apple-darwin15.6.0 --prefix=/usr/local/Cellar/gcc/6.1.0_1 --libdir=/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6 --enable-languages=c,c++,objc,obj-c++,fortran --program-suffix=-6 --with-gmp=/usr/local/opt/gmp --with-mpfr=/usr/local/opt/mpfr --with-mpc=/usr/local/opt/libmpc --with-isl=/usr/local/opt/isl --with-system-zlib --enable-libstdcxx-time=yes --enable-stage1-checking --enable-checking=release --enable-lto --with-build-config=bootstrap-debug --disable-werror --with-pkgversion='Homebrew gcc 6.1.0_1' --with-bugurl=https://github.com/Homebrew/homebrew/issues --enable-plugin --disable-nls --enable-multilib]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 6.1.0 (Homebrew gcc 6.1.0_1) ]
+  ignore line: [COMPILER_PATH=/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/]
+  ignore line: [LIBRARY_PATH=/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/:/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../../]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_11041' '-mmacosx-version-min=10.11.6' '-mtune=core2']
+  link line: [ /usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/collect2 -dynamic -arch x86_64 -macosx_version_min 10.11.6 -weak_reference_mismatches non-weak -o cmTC_11041 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0 -L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../.. -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o -no_compact_unwind -lSystem -lgcc_ext.10.5 -lgcc -lSystem -v]
+    arg [/usr/local/Cellar/gcc/6.1.0_1/libexec/gcc/x86_64-apple-darwin15.6.0/6.1.0/collect2] ==> ignore
+    arg [-dynamic] ==> ignore
+    arg [-arch] ==> ignore
+    arg [x86_64] ==> ignore
+    arg [-macosx_version_min] ==> ignore
+    arg [10.11.6] ==> ignore
+    arg [-weak_reference_mismatches] ==> ignore
+    arg [non-weak] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_11041] ==> ignore
+    arg [-L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0] ==> dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0]
+    arg [-L/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../..] ==> dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../..]
+    arg [-search_paths_first] ==> ignore
+    arg [-headerpad_max_install_names] ==> ignore
+    arg [-v] ==> ignore
+    arg [CMakeFiles/cmTC_11041.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-no_compact_unwind] ==> ignore
+    arg [-lSystem] ==> lib [System]
+    arg [-lgcc_ext.10.5] ==> lib [gcc_ext.10.5]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lSystem] ==> lib [System]
+    arg [-v] ==> ignore
+  Library search paths: [;/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0;/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6;/usr/lib;/usr/local/lib]
+  Framework search paths: [;/Library/Frameworks/;/System/Library/Frameworks/]
+  remove lib [System]
+  remove lib [gcc_ext.10.5]
+  remove lib [gcc]
+  remove lib [System]
+  collapse library dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0] ==> [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0]
+  collapse library dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0/../../..] ==> [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6]
+  collapse library dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0] ==> [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0]
+  collapse library dir [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6] ==> [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6]
+  collapse library dir [/usr/lib] ==> [/usr/lib]
+  collapse library dir [/usr/local/lib] ==> [/usr/local/lib]
+  collapse framework dir [/Library/Frameworks/] ==> [/Library/Frameworks]
+  collapse framework dir [/System/Library/Frameworks/] ==> [/System/Library/Frameworks]
+  implicit libs: []
+  implicit dirs: [/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6/gcc/x86_64-apple-darwin15.6.0/6.1.0;/usr/local/Cellar/gcc/6.1.0_1/lib/gcc/6;/usr/lib;/usr/local/lib]
+  implicit fwks: [/Library/Frameworks;/System/Library/Frameworks]
+
+
+
+
+Detecting C [-std=c11] compiler features compiled with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_208ba/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_208ba.dir/build.make CMakeFiles/cmTC_208ba.dir/build
+Building C object CMakeFiles/cmTC_208ba.dir/feature_tests.c.o
+/usr/local/bin/gcc-6    -std=c11 -o CMakeFiles/cmTC_208ba.dir/feature_tests.c.o   -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/feature_tests.c
+Linking C executable cmTC_208ba
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_208ba.dir/link.txt --verbose=1
+/usr/local/bin/gcc-6    -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_208ba.dir/feature_tests.c.o  -o cmTC_208ba  
+
+
+    Feature record: C_FEATURE:1c_function_prototypes
+    Feature record: C_FEATURE:1c_restrict
+    Feature record: C_FEATURE:1c_static_assert
+    Feature record: C_FEATURE:1c_variadic_macros
+
+
+Detecting C [-std=c99] compiler features compiled with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_e7462/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_e7462.dir/build.make CMakeFiles/cmTC_e7462.dir/build
+Building C object CMakeFiles/cmTC_e7462.dir/feature_tests.c.o
+/usr/local/bin/gcc-6    -std=c99 -o CMakeFiles/cmTC_e7462.dir/feature_tests.c.o   -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/feature_tests.c
+Linking C executable cmTC_e7462
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e7462.dir/link.txt --verbose=1
+/usr/local/bin/gcc-6    -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_e7462.dir/feature_tests.c.o  -o cmTC_e7462  
+
+
+    Feature record: C_FEATURE:1c_function_prototypes
+    Feature record: C_FEATURE:1c_restrict
+    Feature record: C_FEATURE:0c_static_assert
+    Feature record: C_FEATURE:1c_variadic_macros
+
+
+Detecting C [-std=c90] compiler features compiled with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_94d73/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_94d73.dir/build.make CMakeFiles/cmTC_94d73.dir/build
+Building C object CMakeFiles/cmTC_94d73.dir/feature_tests.c.o
+/usr/local/bin/gcc-6    -std=c90 -o CMakeFiles/cmTC_94d73.dir/feature_tests.c.o   -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/feature_tests.c
+Linking C executable cmTC_94d73
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_94d73.dir/link.txt --verbose=1
+/usr/local/bin/gcc-6    -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_94d73.dir/feature_tests.c.o  -o cmTC_94d73  
+
+
+    Feature record: C_FEATURE:1c_function_prototypes
+    Feature record: C_FEATURE:0c_restrict
+    Feature record: C_FEATURE:0c_static_assert
+    Feature record: C_FEATURE:0c_variadic_macros
+Determining if the include file pthread.h exists passed with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_5c6ec/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_5c6ec.dir/build.make CMakeFiles/cmTC_5c6ec.dir/build
+Building C object CMakeFiles/cmTC_5c6ec.dir/CheckIncludeFile.c.o
+/usr/local/bin/gcc-6     -o CMakeFiles/cmTC_5c6ec.dir/CheckIncludeFile.c.o   -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_5c6ec
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5c6ec.dir/link.txt --verbose=1
+/usr/local/bin/gcc-6    -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_5c6ec.dir/CheckIncludeFile.c.o  -o cmTC_5c6ec  
+
+
+Determining if the pthread_create exist passed with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_cda5a/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_cda5a.dir/build.make CMakeFiles/cmTC_cda5a.dir/build
+Building C object CMakeFiles/cmTC_cda5a.dir/CheckSymbolExists.c.o
+/usr/local/bin/gcc-6     -o CMakeFiles/cmTC_cda5a.dir/CheckSymbolExists.c.o   -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_cda5a
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cda5a.dir/link.txt --verbose=1
+/usr/local/bin/gcc-6    -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_cda5a.dir/CheckSymbolExists.c.o  -o cmTC_cda5a  
+
+File /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Performing C SOURCE FILE Test OpenMP_FLAG_DETECTED succeeded with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_942ed/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_942ed.dir/build.make CMakeFiles/cmTC_942ed.dir/build
+Building C object CMakeFiles/cmTC_942ed.dir/src.c.o
+/usr/local/bin/gcc-6    -DOpenMP_FLAG_DETECTED -fopenmp   -o CMakeFiles/cmTC_942ed.dir/src.c.o   -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_942ed
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_942ed.dir/link.txt --verbose=1
+/usr/local/bin/gcc-6   -DOpenMP_FLAG_DETECTED -fopenmp -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_942ed.dir/src.c.o  -o cmTC_942ed  
+
+Source file was:
+
+#include <omp.h>
+int main() {
+#ifdef _OPENMP
+  return 0;
+#else
+  breaks_on_purpose
+#endif
+}
+
+Performing C++ SOURCE FILE Test OpenMP_FLAG_DETECTED succeeded with the following output:
+Change Dir: /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_44af5/fast"
+/Applications/Xcode.app/Contents/Developer/usr/bin/make -f CMakeFiles/cmTC_44af5.dir/build.make CMakeFiles/cmTC_44af5.dir/build
+Building CXX object CMakeFiles/cmTC_44af5.dir/src.cxx.o
+/usr/local/bin/g++-6     -mrtm -std=c++11  -DOpenMP_FLAG_DETECTED -fopenmp   -o CMakeFiles/cmTC_44af5.dir/src.cxx.o -c /Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_44af5
+/usr/local/Cellar/cmake/3.6.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_44af5.dir/link.txt --verbose=1
+/usr/local/bin/g++-6   -mrtm -std=c++11  -DOpenMP_FLAG_DETECTED -fopenmp -Wl,-search_paths_first -Wl,-headerpad_max_install_names   CMakeFiles/cmTC_44af5.dir/src.cxx.o  -o cmTC_44af5  
+
+Source file was:
+
+#include <omp.h>
+int main() {
+#ifdef _OPENMP
+  return 0;
+#else
+  breaks_on_purpose
+#endif
+}
+

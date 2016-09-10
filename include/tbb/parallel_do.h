@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef __TBB_parallel_do_H
@@ -28,31 +28,37 @@
 #include <iterator>
 
 namespace tbb {
-
+namespace interface9 {
 //! @cond INTERNAL
 namespace internal {
     template<typename Body, typename Item> class parallel_do_feeder_impl;
-    template<typename Body> class do_group_task;
 } // namespace internal
 //! @endcond
 
 //! Class the user supplied algorithm body uses to add new tasks
 /** \param Item Work item type **/
-template<typename Item>
-class parallel_do_feeder: internal::no_copy
-{
-    parallel_do_feeder() {}
-    virtual ~parallel_do_feeder () {}
-    virtual void internal_add( const Item& item ) = 0;
-    template<typename Body_, typename Item_> friend class internal::parallel_do_feeder_impl;
-public:
-    //! Add a work item to a running parallel_do.
-    // TODO: add an overload for r-value reference
-    void add( const Item& item ) {internal_add(item);}
-};
+    template<typename Item>
+    class parallel_do_feeder: ::tbb::internal::no_copy
+    {
+        parallel_do_feeder() {}
+        virtual ~parallel_do_feeder () {}
+        virtual void internal_add_copy( const Item& item ) = 0;
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+        virtual void internal_add_move( Item&& item ) = 0;
+#endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
+        template<typename Body_, typename Item_> friend class internal::parallel_do_feeder_impl;
+    public:
+        //! Add a work item to a running parallel_do.
+        void add( const Item& item ) {internal_add_copy(item);}
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+        void add( Item&& item ) {internal_add_move(std::move(item));}
+#endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
+    };
 
 //! @cond INTERNAL
 namespace internal {
+    template<typename Body> class do_group_task;
+
     //! For internal use only.
     /** Selects one of the two possible forms of function call member operator.
         @ingroup algorithms **/
@@ -92,8 +98,13 @@ namespace internal {
             my_value(value), my_feeder(feeder)
         {}
 
-        /*override*/
-        task* execute()
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+        do_iteration_task( Item&& value, feeder_type& feeder ) :
+            my_value(std::move(value)), my_feeder(feeder)
+        {}
+#endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
+
+        task* execute() __TBB_override
         {
             // TODO: use move semantics for my_value
             parallel_do_operator_selector<Body, Item>::call(*my_feeder.my_body, my_value, my_feeder);
@@ -115,8 +126,7 @@ namespace internal {
             my_iter(iter), my_feeder(feeder)
         {}
 
-        /*override*/
-        task* execute()
+        task* execute() __TBB_override
         {
             parallel_do_operator_selector<Body, Item>::call(*my_feeder.my_body, *my_iter, my_feeder);
             return NULL;
@@ -133,15 +143,20 @@ namespace internal {
     template<class Body, typename Item>
     class parallel_do_feeder_impl : public parallel_do_feeder<Item>
     {
-        /*override*/
-        void internal_add( const Item& item )
+        void internal_add_copy( const Item& item ) __TBB_override
         {
             typedef do_iteration_task<Body, Item> iteration_type;
-
             iteration_type& t = *new (task::allocate_additional_child_of(*my_barrier)) iteration_type(item, *this);
-
-            t.spawn( t );
+            task::spawn(t);
         }
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+        void internal_add_move( Item&& item ) __TBB_override
+        {
+            typedef do_iteration_task<Body, Item> iteration_type;
+            iteration_type& t = *new (task::allocate_additional_child_of(*my_barrier)) iteration_type(std::move(item), *this);
+            task::spawn(t);
+        }
+#endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
     public:
         const Body* my_body;
         empty_task* my_barrier;
@@ -186,7 +201,7 @@ namespace internal {
             : my_feeder(feeder), my_first(first), my_size(size)
         {}
 
-        /*override*/ task* execute()
+        task* execute() __TBB_override
         {
             typedef do_iteration_task_iter<Iterator, Body, Item> iteration_type;
             __TBB_ASSERT( my_size>0, NULL );
@@ -223,7 +238,7 @@ namespace internal {
             : my_feeder(feeder), my_size(0)
         {}
 
-        /*override*/ task* execute()
+        task* execute() __TBB_override
         {
             typedef do_iteration_task_iter<Item*, Body, Item> iteration_type;
             __TBB_ASSERT( my_size>0, NULL );
@@ -277,7 +292,7 @@ namespace internal {
             templates. Besides template functions would always fall back to the least
             efficient variant (the one for input iterators) in case of iterators having
             custom tags derived from basic ones. */
-        /*override*/ task* execute()
+        task* execute() __TBB_override
         {
             typedef typename std::iterator_traits<Iterator>::iterator_category iterator_tag;
             return run( (iterator_tag*)NULL );
@@ -293,7 +308,7 @@ namespace internal {
             block_type& t = *new( allocate_additional_child_of(*my_feeder.my_barrier) ) block_type(my_feeder);
             size_t k=0;
             while( !(my_first == my_last) ) {
-                // TODO: move *my_first
+                // Move semantics are automatically used when supported by the iterator
                 new (t.my_arg.begin() + k) Item(*my_first);
                 ++my_first;
                 if( ++k==block_type::max_arg_size ) {
@@ -399,7 +414,7 @@ namespace internal {
 #endif // __TBB_TASK_GROUP_CONTEXT
         )
     {
-        run_parallel_do<Iterator, Body, typename strip<Item>::type>( first, last, body
+        run_parallel_do<Iterator, Body, typename ::tbb::internal::strip<Item>::type>( first, last, body
 #if __TBB_TASK_GROUP_CONTEXT
             , context
 #endif // __TBB_TASK_GROUP_CONTEXT
@@ -416,7 +431,7 @@ namespace internal {
 #endif // __TBB_TASK_GROUP_CONTEXT
         )
     {
-        run_parallel_do<Iterator, Body, typename strip<Item>::type>( first, last, body
+        run_parallel_do<Iterator, Body, typename ::tbb::internal::strip<Item>::type>( first, last, body
 #if __TBB_TASK_GROUP_CONTEXT
             , context
 #endif // __TBB_TASK_GROUP_CONTEXT
@@ -424,8 +439,8 @@ namespace internal {
     }
 
 } // namespace internal
+} // namespace interface9
 //! @endcond
-
 
 /** \page parallel_do_body_req Requirements on parallel_do body
     Class \c Body implementing the concept of parallel_do body must define:
@@ -459,7 +474,7 @@ void parallel_do( Iterator first, Iterator last, const Body& body )
 #if __TBB_TASK_GROUP_CONTEXT
     task_group_context context;
 #endif // __TBB_TASK_GROUP_CONTEXT
-    internal::select_parallel_do( first, last, body, &Body::operator()
+    interface9::internal::select_parallel_do( first, last, body, &Body::operator()
 #if __TBB_TASK_GROUP_CONTEXT
         , context
 #endif // __TBB_TASK_GROUP_CONTEXT
@@ -484,7 +499,7 @@ void parallel_do( Iterator first, Iterator last, const Body& body, task_group_co
 {
     if ( first == last )
         return;
-    internal::select_parallel_do( first, last, body, &Body::operator(), context );
+    interface9::internal::select_parallel_do( first, last, body, &Body::operator(), context );
 }
 
 template<typename Range, typename Body>
@@ -500,6 +515,8 @@ void parallel_do(const Range& rng, const Body& body, task_group_context& context
 #endif // __TBB_TASK_GROUP_CONTEXT
 
 //@}
+
+using interface9::parallel_do_feeder;
 
 } // namespace
 

@@ -1,0 +1,1 @@
+/usr/local/bin/g++-6   -mrtm -std=c++11  -O3 -DNDEBUG -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/test_cilk_interop.dir/src/test/test_cilk_interop.cpp.o  -o test_cilk_interop  libtbb.dylib libtbbmalloc.dylib /usr/lib/libdl.dylib -Wl,-rpath,/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release 
