@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>Requirements on parallel_do body</title>
+<title>Requirements on parallel_for body</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,29 +26,22 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="index.html">Main Page</a></li><li class="navelem"><a class="el" href="a00008.html">TBB concepts</a></li>  </ul>
+<li class="navelem"><a class="el" href="index.html">Main Page</a></li><li class="navelem"><a class="el" href="a00007.html">TBB concepts</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">Requirements on parallel_do body </div>  </div>
+<div class="title">Requirements on parallel_for body </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Class <code>Body</code> implementing the concept of parallel_do body must define:</p>
+<div class="textblock"><p>Class <code>Body</code> implementing the concept of parallel_for body must define:</p>
 <ul>
-<li><div class="fragment"><div class="line">B::operator()(</div>
-<div class="line">        cv_item_type item,</div>
-<div class="line">        parallel_do_feeder&lt;item_type&gt;&amp; feeder</div>
-<div class="line">) <span class="keyword">const</span></div>
-<div class="line"></div>
-<div class="line">OR</div>
-<div class="line"></div>
-<div class="line">B::operator()( cv_item_type&amp; item ) <span class="keyword">const</span></div>
-</div><!-- fragment --> Process item. May be invoked concurrently for the same <code>this</code> but different <code>item</code>.</li>
-<li><div class="fragment"><div class="line">item_type( <span class="keyword">const</span> item_type&amp; ) </div>
-</div><!-- fragment --> Copy a work item.</li>
-<li><div class="fragment"><div class="line">~item_type() </div>
-</div><!-- fragment --> Destroy a work item </li>
+<li><div class="fragment"><div class="line">Body::Body( <span class="keyword">const</span> Body&amp; ); </div>
+</div><!-- fragment --> Copy constructor</li>
+<li><div class="fragment"><div class="line">Body::~Body(); </div>
+</div><!-- fragment --> Destructor</li>
+<li><div class="fragment"><div class="line"><span class="keywordtype">void</span> Body::operator()( Range&amp; r ) <span class="keyword">const</span>; </div>
+</div><!-- fragment --> Function call operator applying the body to range <code>r</code>. </li>
 </ul>
 </div></div><!-- contents -->
 <hr>

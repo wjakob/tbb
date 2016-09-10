@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 /* This header contains code shared by test_omp_server.cpp and test_tbb_server.cpp 
@@ -138,25 +138,25 @@ public:
     tbb::atomic<bool> expect_close_connection;
 
     MyJob *job_array;
- 
-    /*override*/version_type version() const {
+
+    version_type version() const __TBB_override {
         ASSERT( state==live, NULL );
         return 1;
     }
- 
-    /*override*/size_type max_job_count() const {
+
+    size_type max_job_count() const __TBB_override {
         ASSERT( state==live, NULL );
         return my_max_job_count;
     }
 
-    /*override*/size_t min_stack_size() const {
+    size_t min_stack_size() const __TBB_override {
         ASSERT( state==live, NULL );
         return my_stack_size;
     }
 
-    /*override*/policy_type policy() const {return Client::throughput;} 
+    policy_type policy() const __TBB_override {return Client::throughput;}
 
-    /*override*/void acknowledge_close_connection() {
+    void acknowledge_close_connection() __TBB_override {
         ASSERT( expect_close_connection, NULL );
         for( size_t k=next_job_index; k>0; ) {
             --k;
@@ -166,10 +166,10 @@ public:
         job_array = NULL;
         ASSERT( my_server, NULL );
         update( destroyed, live );
-        delete this; 
+        delete this;
     }
 
-    /*override*/void cleanup( job& j_ ) {
+    void cleanup( job& j_ ) __TBB_override {
         REMARK("client %d: cleanup(%p) called\n",client_id(),&j_);
         ASSERT( state==live, NULL );
         MyJob& j = static_cast<MyJob&>(j_);

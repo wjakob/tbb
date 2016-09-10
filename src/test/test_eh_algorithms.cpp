@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #define HARNESS_DEFAULT_MIN_THREADS 2
@@ -378,7 +378,7 @@ template<class B>
 class ParForLauncherTask : public tbb::task {
     tbb::task_group_context &my_ctx;
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         tbb::parallel_for( range_type(0, FLAT_RANGE, FLAT_GRAIN), B(), tbb::simple_partitioner(), my_ctx );
         return NULL;
     }
@@ -395,7 +395,7 @@ void TestCancelation1 () {
 class CancellatorTask2 : public tbb::task {
     tbb::task_group_context &m_GroupToCancel;
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         Harness::ConcurrencyTracker ct;
         WaitUntilConcurrencyPeaks();
         m_GroupToCancel.cancel_group_execution();
@@ -844,7 +844,7 @@ template<class B, class Iterator>
 class ParDoWorkerTask : public tbb::task {
     tbb::task_group_context &my_ctx;
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         PREPARE_RANGE(Iterator, INNER_ITER_RANGE);
         tbb::parallel_do<Iterator, B>( begin, end, B(), my_ctx );
         return NULL;
@@ -949,7 +949,7 @@ public:
         m_Buffer[NUM_ITEMS] = c_DataEndTag;
     }
 
-    void* operator()( void* ) {
+    void* operator()( void* ) __TBB_override {
         size_t item = m_Item.fetch_and_increment();
         if(g_Master == Harness::CurrentTid()) g_MasterExecuted = true;
         else g_NonMasterExecuted = true;
@@ -980,7 +980,7 @@ public:
         : filter(is_parallel? tbb::filter::parallel : tbb::filter::serial_in_order),
         m_Value(value), m_Operation(_operation)
     {}
-    void* operator()(void* item) {
+    void* operator()(void* item) __TBB_override {
         size_t &value = *(size_t*)item;
         if(g_Master == Harness::CurrentTid()) g_MasterExecuted = true;
         else g_NonMasterExecuted = true;
@@ -1030,7 +1030,7 @@ class SimpleFilter : public tbb::filter {
     bool m_canThrow;
 public:
     SimpleFilter (tbb::filter::mode _mode, bool canThrow ) : filter (_mode), m_canThrow(canThrow) {}
-    void* operator()(void* item) {
+    void* operator()(void* item) __TBB_override {
         ++g_CurExecuted;
         if(g_Master == Harness::CurrentTid()) g_MasterExecuted = true;
         else g_NonMasterExecuted = true;
@@ -1115,7 +1115,7 @@ class OuterFilter : public tbb::filter {
 public:
     OuterFilter (tbb::filter::mode _mode, bool ) : filter (_mode) {}
 
-    void* operator()(void* item) {
+    void* operator()(void* item) __TBB_override {
         ++g_OuterParCalls;
         SimplePipeline testPipeline(serial_parallel);
         testPipeline.run();
@@ -1151,7 +1151,7 @@ class OuterFilterWithIsolatedCtx : public tbb::filter {
 public:
     OuterFilterWithIsolatedCtx(tbb::filter::mode m, bool ) : filter(m) {}
 
-    void* operator()(void* item) {
+    void* operator()(void* item) __TBB_override {
         ++g_OuterParCalls;
         tbb::task_group_context ctx(tbb::task_group_context::isolated);
         // create inner pipeline with serial input, parallel output filter, second filter throws
@@ -1234,7 +1234,7 @@ class OuterFilterWithEhBody : public tbb::filter {
 public:
     OuterFilterWithEhBody(tbb::filter::mode m, bool ) : filter(m) {}
 
-    void* operator()(void* item) {
+    void* operator()(void* item) __TBB_override {
         tbb::task_group_context ctx(tbb::task_group_context::isolated);
         ++g_OuterParCalls;
         SimplePipeline testPipeline(serial_parallel);
@@ -1304,7 +1304,7 @@ public:
     FinalizationBaseFilter ( tbb::filter::mode m ) : filter(m) {}
 
     // Deletes buffers if exception occurred
-    virtual void finalize( void* item ) {
+    virtual void finalize( void* item ) __TBB_override {
         size_t* m_Item = (size_t*)item;
         delete[] m_Item;
         --g_AllocatedCount;
@@ -1317,7 +1317,7 @@ public:
     InputFilterWithFinalization() : FinalizationBaseFilter(tbb::filter::serial) {
         g_TotalCount = 0;
     }
-    void* operator()( void* ){
+    void* operator()( void* ) __TBB_override {
         if (g_TotalCount == NUM_BUFFERS)
             return NULL;
         size_t* item = new size_t[BUFFER_SIZE];
@@ -1334,7 +1334,7 @@ class ProcessingFilterWithFinalization : public FinalizationBaseFilter {
 public:
     ProcessingFilterWithFinalization (tbb::filter::mode _mode, bool) : FinalizationBaseFilter (_mode) {}
 
-    void* operator()( void* item) {
+    void* operator()( void* item) __TBB_override {
         if(g_Master == Harness::CurrentTid()) g_MasterExecuted = true;
         else g_NonMasterExecuted = true;
         if( tbb::task::self().is_cancelled()) ++g_TGCCancelled;
@@ -1352,7 +1352,7 @@ class OutputFilterWithFinalization : public FinalizationBaseFilter {
 public:
     OutputFilterWithFinalization (tbb::filter::mode m) : FinalizationBaseFilter (m) {}
 
-    void* operator()( void* item){
+    void* operator()( void* item) __TBB_override {
         size_t* m_Item = (size_t*)item;
         delete[] m_Item;
         --g_AllocatedCount;
@@ -1398,7 +1398,7 @@ public:
     FilterToCancel(bool is_parallel)
         : filter( is_parallel ? tbb::filter::parallel : tbb::filter::serial_in_order )
     {}
-    void* operator()(void* item) {
+    void* operator()(void* item) __TBB_override {
         ++g_CurExecuted;
         CancellatorTask::WaitUntilReady();
         return item;
@@ -1411,7 +1411,7 @@ class PipelineLauncherTask : public tbb::task {
 public:
     PipelineLauncherTask ( tbb::task_group_context& ctx ) : my_ctx(ctx) {}
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         // Run test when serial filter is the first non-input filter
         InputFilter inputFilter;
         Filter_to_cancel filterToCancel(true);
@@ -1449,7 +1449,7 @@ public:
         : filter ( is_parallel ? tbb::filter::parallel : tbb::filter::serial_in_order)
     {}
 
-    void* operator()(void* item) {
+    void* operator()(void* item) __TBB_override {
         ++g_CurExecuted;
         Harness::ConcurrencyTracker ct;
         // The test will hang (and be timed out by the test system) if is_cancelled() is broken
@@ -1499,11 +1499,11 @@ public:
     MyCapturedException () : tbb::captured_exception("MyCapturedException", "test") { ++m_refCount; }
     ~MyCapturedException () throw() { --m_refCount; }
 
-    MyCapturedException* move () throw() {
+    MyCapturedException* move () throw() __TBB_override {
         MyCapturedException* movee = (MyCapturedException*)malloc(sizeof(MyCapturedException));
         return ::new (movee) MyCapturedException;
     }
-    void destroy () throw() {
+    void destroy () throw() __TBB_override {
         this->~MyCapturedException();
         free(this);
     }

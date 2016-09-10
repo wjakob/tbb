@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "tbb/task_scheduler_init.h"
@@ -37,7 +37,6 @@
 #endif
 
 #include "harness_concurrency_tracker.h"
-#include "harness_concurrency_checker.h"
 #include "harness_task.h"
 #include "harness.h"
 
@@ -65,7 +64,8 @@ void InitializeAndTerminate( int maxthread ) {
                     tbb::task_scheduler_init init( threads );
                     ASSERT(init.is_active(), NULL);
                     ASSERT(ArenaConcurrency()==(threads==1)?2:threads, NULL);
-                    ASSERT(!test_mandatory_parallelism || Harness::CanReachConcurrencyLevel(threads), NULL);
+                    if (test_mandatory_parallelism)
+                        Harness::ExactConcurrencyLevel::check(threads, Harness::ExactConcurrencyLevel::Serialize);
                     if(i&0x20) tbb::task::enqueue( (*new( tbb::task::allocate_root() ) TaskGenerator(2,6)) ); // a work deferred to workers
                     break;
                 }
@@ -73,7 +73,8 @@ void InitializeAndTerminate( int maxthread ) {
                     tbb::task_scheduler_init init;
                     ASSERT(init.is_active(), NULL);
                     ASSERT(ArenaConcurrency()==(DefaultThreads==1)?2:init.default_num_threads(), NULL);
-                    ASSERT(!test_mandatory_parallelism || Harness::CanReachConcurrencyLevel(init.default_num_threads()), NULL);
+                    if (test_mandatory_parallelism)
+                        Harness::ExactConcurrencyLevel::check(init.default_num_threads(), Harness::ExactConcurrencyLevel::Serialize);
                     if(i&0x40) tbb::task::enqueue( (*new( tbb::task::allocate_root() ) TaskGenerator(3,5)) ); // a work deferred to workers
                     break;
                 }
@@ -83,7 +84,8 @@ void InitializeAndTerminate( int maxthread ) {
                     init.initialize( threads );
                     ASSERT(init.is_active(), NULL);
                     ASSERT(ArenaConcurrency()==(threads==1)?2:threads, NULL);
-                    ASSERT(!test_mandatory_parallelism || Harness::CanReachConcurrencyLevel(threads), NULL);
+                    if (test_mandatory_parallelism)
+                        Harness::ExactConcurrencyLevel::check(threads, Harness::ExactConcurrencyLevel::Serialize);
                     init.terminate();
                     ASSERT(!init.is_active(), "init should not be active; it was terminated");
                     break;
@@ -92,7 +94,8 @@ void InitializeAndTerminate( int maxthread ) {
                     tbb::task_scheduler_init init( tbb::task_scheduler_init::automatic );
                     ASSERT(init.is_active(), NULL);
                     ASSERT(ArenaConcurrency()==(DefaultThreads==1)?2:init.default_num_threads(), NULL);
-                    ASSERT(!test_mandatory_parallelism || Harness::CanReachConcurrencyLevel(init.default_num_threads()), NULL);
+                    if (test_mandatory_parallelism)
+                        Harness::ExactConcurrencyLevel::check(init.default_num_threads(), Harness::ExactConcurrencyLevel::Serialize);
                     break;
                 }
             }
@@ -121,28 +124,31 @@ struct ThreadedInit {
 #include <tchar.h>
 #endif /* _MSC_VER */
 
-#include "tbb/parallel_for.h"
-#include "tbb/blocked_range.h"
-
-typedef tbb::blocked_range<int> Range;
-
-class ConcurrencyTrackingBody {
-public:
-    void operator() ( const Range& ) const {
-        Harness::ConcurrencyTracker ct;
-        for ( volatile int i = 0; i < 1000000; ++i )
-            ;
-    }
-};
-
 /** The test will fail in particular if task_scheduler_init mistakenly hooks up
     auto-initialization mechanism. **/
 void AssertExplicitInitIsNotSupplanted () {
     tbb::task_scheduler_init init(1);
-    Harness::ConcurrencyTracker::Reset();
-    tbb::parallel_for( Range(0, DefaultThreads * 2, 1), ConcurrencyTrackingBody(), tbb::simple_partitioner() );
-    ASSERT( Harness::ConcurrencyTracker::PeakParallelism() == 1,
-            "Manual init provided more threads than requested. See also the comment at the beginning of main()." );
+
+    Harness::ExactConcurrencyLevel::check(1);
+}
+
+struct TestNoWorkerSurplusRun {
+    void operator() (int) const {
+        const unsigned THREADS = tbb::tbb_thread::hardware_concurrency()*2/3;
+        for (int j=0; j<10; j++) {
+            tbb::task_scheduler_init t(THREADS);
+            Harness::ExactConcurrencyLevel::Combinable unique;
+
+            for (int i=0; i<50; i++)
+                Harness::ExactConcurrencyLevel::checkLessOrEqual(THREADS, &unique);
+        }
+    }
+};
+
+void TestNoWorkerSurplus () {
+    // Run the test in a special thread because otherwise the surplus issue
+    // is not observed for some hardware configurations
+    NativeParallelFor( 1, TestNoWorkerSurplusRun() );
 }
 
 int TestMain () {
@@ -159,11 +165,11 @@ int TestMain () {
 #endif /* _MSC_VER && !__TBB_NO_IMPLICIT_LINKAGE && !__TBB_LIB_NAME */
     std::srand(2);
     REMARK("testing master thread\n");
-    int override = DefaultThreads*2;
+    int threads = DefaultThreads*2;
     {   // work-around shared RML
-        tbb::task_scheduler_init init( override );
-        if( !Harness::CanReachConcurrencyLevel( override, 3. ) ) {
-            override = DefaultThreads;
+        tbb::task_scheduler_init init( threads );
+        if( !Harness::ExactConcurrencyLevel::isEqual( threads ) ) {
+            threads = DefaultThreads;
             if( MaxThread > DefaultThreads )
                 MaxThread = DefaultThreads;
 #if RML_USE_WCRM
@@ -174,7 +180,7 @@ int TestMain () {
 #endif
         }
     }
-    InitializeAndTerminate( override ); // test initialization of more than default number of threads
+    InitializeAndTerminate( threads ); // test initialization of more than default number of threads
     for( int p=MinThread; p<=MaxThread; ++p ) {
         REMARK("testing with %d threads\n", p );
         // protect market with excess threads from default initializations

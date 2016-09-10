@@ -1,25 +1,28 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
-// undefine __TBB_CPF_BUILD to simulate user's setup
-#undef __TBB_CPF_BUILD
+#if __TBB_CPF_BUILD
+    #define TBB_PREVIEW_TASK_ISOLATION 1
+    // undefine __TBB_CPF_BUILD to simulate user's setup
+    #undef __TBB_CPF_BUILD
+#endif
 
 #define TBB_PREVIEW_LOCAL_OBSERVER 1
 #define __TBB_EXTRA_DEBUG 1
@@ -40,6 +43,14 @@
 #include <cstdio>
 
 #include "harness_fp.h"
+
+#if __TBB_TASK_ISOLATION
+// Whitebox stuff for TestIsolatedExecuteNS::ContinuationTest().
+// TODO: Consider better approach instead of the whitebox approach.
+#define private public
+#include "tbb/task.h"
+#undef private
+#endif /* __TBB_TASK_ISOLATION */
 
 #include "tbb/task_arena.h"
 #include "tbb/task_scheduler_observer.h"
@@ -126,9 +137,8 @@ class ArenaObserver : public tbb::task_scheduler_observer {
     int myId;               // unique observer/arena id within a test
     int myMaxConcurrency;   // concurrency of the associated arena
     int myNumReservedSlots; // reserved slots in the associated arena
-    /*override*/
-    void on_scheduler_entry( bool is_worker ) {
-        int current_index = tbb::task_arena::current_thread_index();
+    void on_scheduler_entry( bool is_worker ) __TBB_override {
+        int current_index = tbb::this_task_arena::current_thread_index();
         REMARK("a %s #%p is entering arena %d from %d on slot %d\n", is_worker?"worker":"master",
                 &local_id.local(), myId, local_id.local(), current_index );
         ASSERT(current_index<(myMaxConcurrency>1?myMaxConcurrency:2), NULL);
@@ -140,11 +150,12 @@ class ArenaObserver : public tbb::task_scheduler_observer {
         local_id.local() = myId;
         slot_id.local() = current_index;
     }
-    /*override*/
-    void on_scheduler_exit( bool is_worker ) {
+    void on_scheduler_exit( bool is_worker ) __TBB_override {
         REMARK("a %s #%p is leaving arena %d to %d\n", is_worker?"worker":"master",
                 &local_id.local(), myId, old_id.local());
         ASSERT(local_id.local() == myId, "nesting of arenas is broken");
+        ASSERT(slot_id.local() == tbb::this_task_arena::current_thread_index(), NULL);
+         //!deprecated, remove when tbb::task_arena::current_thread_index is removed.
         ASSERT(slot_id.local() == tbb::task_arena::current_thread_index(), NULL);
         slot_id.local() = -2;
         local_id.local() = old_id.local();
@@ -166,6 +177,8 @@ public:
 
 struct IndexTrackingBody { // Must be used together with ArenaObserver
     void operator() ( const Range& ) const {
+        ASSERT(slot_id.local() == tbb::this_task_arena::current_thread_index(), NULL);
+        //!deprecated, remove when tbb::task_arena::current_thread_index is removed.
         ASSERT(slot_id.local() == tbb::task_arena::current_thread_index(), NULL);
         for ( volatile int i = 0; i < 50000; ++i )
             ;
@@ -401,12 +414,12 @@ struct TestArenaEntryBody : FPModeContext {
     void operator()() { // inside task_arena::execute()
         // synchronize with other stages
         int stage = my_stage++;
-        int slot = tbb::task_arena::current_thread_index();
+        int slot = tbb::this_task_arena::current_thread_index();
         ASSERT(slot >= 0 && slot <= 1, "master or the only worker");
         // wait until the third stage is delegated and then starts on slot 0
         while(my_stage < 2+slot) __TBB_Yield();
         // deduct its entry type and put it into id, it helps to find source of a problem
-        my_id << (stage < 3 ? (tbb::task_arena::current_thread_index()?
+        my_id << (stage < 3 ? (tbb::this_task_arena::current_thread_index()?
                               "delegated_to_worker" : stage < 2? "direct" : "delegated_to_master")
                             : stage == 3? "nested_same_ctx" : "nested_alien_ctx");
         REMARK("running %s\n", my_id.str().c_str());
@@ -510,8 +523,12 @@ public:
     }
     // Arena's functor
     void operator()() const {
-        int idx = tbb::task_arena::current_thread_index();
+        ASSERT( tbb::task_arena::current_thread_index() == tbb::this_task_arena::current_thread_index(), NULL );
+        int idx = tbb::this_task_arena::current_thread_index();
         ASSERT( idx < (my_max_concurrency > 1 ? my_max_concurrency : 2), NULL );
+        ASSERT( my_a.max_concurrency() == tbb::this_task_arena::max_concurrency(), NULL );
+        int max_arena_concurrency = tbb::this_task_arena::max_concurrency();
+        ASSERT( max_arena_concurrency == my_max_concurrency, NULL );
         if ( my_worker_barrier ) {
             if ( local_id.local() == 1 ) {
                 // Master thread in a reserved slot
@@ -567,7 +584,7 @@ struct TaskArenaValidator : public task_arena_internals {
     int my_slot_at_construction;
     TaskArenaValidator( const task_arena_internals& other )
     : task_arena_internals(other) /*copies the internal state of other*/ {
-        my_slot_at_construction = tbb::task_arena::current_thread_index();
+        my_slot_at_construction = tbb::this_task_arena::current_thread_index();
     }
     // Inspect the internal state
     int concurrency() { return my_max_concurrency; }
@@ -576,6 +593,9 @@ struct TaskArenaValidator : public task_arena_internals {
     // This method should be called in task_arena::execute() for a captured arena
     // by the same thread that created the validator.
     void operator()() {
+        ASSERT( tbb::this_task_arena::current_thread_index()==my_slot_at_construction,
+                "Current thread index has changed since the validator construction" );
+        //!deprecated
         ASSERT( tbb::task_arena::current_thread_index()==my_slot_at_construction,
                 "Current thread index has changed since the validator construction" );
     }
@@ -588,10 +608,16 @@ void ValidateAttachedArena( tbb::task_arena& arena, bool expect_activated,
         TaskArenaValidator validator( arena );
         ASSERT( validator.concurrency()==expect_concurrency, "Unexpected arena size" );
         ASSERT( validator.reserved_for_masters()==expect_masters, "Unexpected # of reserved slots" );
-        if( tbb::task_arena::current_thread_index()!=-1 ) {
+        if ( tbb::this_task_arena::current_thread_index() != tbb::task_arena::not_initialized ) {
+            ASSERT( tbb::task_arena::current_thread_index() >= 0 && 
+                tbb::this_task_arena::current_thread_index() >= 0, NULL);
             // for threads already in arena, check that the thread index remains the same
             arena.execute( validator );
+        } else { // not_initialized
+            // Test the deprecated method
+            ASSERT( tbb::task_arena::current_thread_index()==-1, NULL);
         }
+        
         // Ideally, there should be a check for having the same internal arena object,
         // but that object is not easily accessible for implicit arenas.
     }
@@ -693,9 +719,276 @@ void TestConstantFunctorRequirement() {
     a.enqueue( tf, tbb::priority_normal );
 #endif
 }
+//--------------------------------------------------//
+#if __TBB_TASK_ISOLATION
+#include "tbb/parallel_reduce.h"
+// Test this_task_arena::isolate
+namespace TestIsolatedExecuteNS {
+    //--------------------------------------------------//
+    template <typename NestedPartitioner>
+    class NestedParFor : NoAssign {
+    public:
+        NestedParFor() {}
+        void operator()() const {
+            NestedPartitioner p;
+            tbb::parallel_for( 0, 10, Harness::DummyBody( 10 ), p );
+        }
+    };
 
+    template <typename NestedPartitioner>
+    class ParForBody : NoAssign {
+        bool myOuterIsolation;
+        tbb::enumerable_thread_specific<int> &myEts;
+        tbb::atomic<bool> &myIsStolen;
+    public:
+        ParForBody( bool outer_isolation, tbb::enumerable_thread_specific<int> &ets, tbb::atomic<bool> &is_stolen )
+            : myOuterIsolation( outer_isolation ), myEts( ets ), myIsStolen( is_stolen ) {}
+        void operator()( int ) const {
+            int &e = myEts.local();
+            if ( e++ > 0 ) myIsStolen = true;
+            if ( myOuterIsolation )
+                NestedParFor<NestedPartitioner>()();
+            else
+                tbb::this_task_arena::isolate( NestedParFor<NestedPartitioner>() );
+            --e;
+        }
+    };
+
+    template <typename OuterPartitioner, typename NestedPartitioner>
+    class OuterParFor : NoAssign {
+        bool myOuterIsolation;
+        tbb::atomic<bool> &myIsStolen;
+    public:
+        OuterParFor( bool outer_isolation, tbb::atomic<bool> &is_stolen ) : myOuterIsolation( outer_isolation ), myIsStolen( is_stolen ) {}
+        void operator()() const {
+            tbb::enumerable_thread_specific<int> ets( 0 );
+            OuterPartitioner p;
+            tbb::parallel_for( 0, 1000, ParForBody<NestedPartitioner>( myOuterIsolation, ets, myIsStolen ), p );
+        }
+    };
+
+    template <typename OuterPartitioner, typename NestedPartitioner>
+    void TwoLoopsTest( bool outer_isolation ) {
+        tbb::atomic<bool> is_stolen;
+        is_stolen = false;
+        const int max_repeats = 100;
+        if ( outer_isolation ) {
+            for ( int i = 0; i <= max_repeats; ++i ) {
+                tbb::this_task_arena::isolate( OuterParFor<OuterPartitioner, NestedPartitioner>( outer_isolation, is_stolen ) );
+                if ( is_stolen ) break;
+            }
+            ASSERT_WARNING( is_stolen, "isolate() should not block stealing on nested levels without isolation" );
+        } else {
+            for ( int i = 0; i <= max_repeats; ++i ) {
+                OuterParFor<OuterPartitioner, NestedPartitioner>( outer_isolation, is_stolen )();
+            }
+            ASSERT( !is_stolen, "isolate() on nested levels should prevent stealing from outer leves" );
+        }
+    }
+
+    void TwoLoopsTest( bool outer_isolation ) {
+        TwoLoopsTest<tbb::simple_partitioner, tbb::simple_partitioner>( outer_isolation );
+        TwoLoopsTest<tbb::simple_partitioner, tbb::affinity_partitioner>( outer_isolation );
+        TwoLoopsTest<tbb::affinity_partitioner, tbb::simple_partitioner>( outer_isolation );
+        TwoLoopsTest<tbb::affinity_partitioner, tbb::affinity_partitioner>( outer_isolation );
+    }
+
+    void TwoLoopsTest() {
+        TwoLoopsTest( true );
+        TwoLoopsTest( false );
+    }
+    //--------------------------------------------------//
+    class HeavyMixTestBody {
+        tbb::enumerable_thread_specific<Harness::FastRandom>& myRandom;
+        tbb::enumerable_thread_specific<int>& myIsolatedLevel;
+        int myNestedLevel;
+        bool myHighPriority;
+
+        template <typename Partitioner>
+        class IsolatedBody {
+            const HeavyMixTestBody &myHeavyMixTestBody;
+            Partitioner &myPartitioner;
+        public:
+            IsolatedBody( const HeavyMixTestBody &body, Partitioner &partitioner )
+                : myHeavyMixTestBody( body ), myPartitioner( partitioner ) {}
+            void operator()() const {
+                tbb::parallel_for( 0, 2,
+                    HeavyMixTestBody( myHeavyMixTestBody.myRandom, myHeavyMixTestBody.myIsolatedLevel,
+                        myHeavyMixTestBody.myNestedLevel + 1, myHeavyMixTestBody.myHighPriority ),
+                    myPartitioner );
+            }
+        };
+
+        template <typename Partitioner>
+        void RunNextLevel( Harness::FastRandom& rnd, int &isolated_level ) const {
+            Partitioner p;
+            switch ( rnd.get() % 3 ) {
+                case 0: {
+                    // No features
+                    tbb::task_group_context ctx;
+                    if ( myHighPriority )
+                        ctx.set_priority( tbb::priority_high );
+                    tbb::parallel_for( 0, 2, HeavyMixTestBody( myRandom, myIsolatedLevel, myNestedLevel + 1, myHighPriority ), p, ctx );
+                    break;
+                }
+                case 1: {
+                    // High priority
+                    tbb::task_group_context ctx;
+                    ctx.set_priority( tbb::priority_high );
+                    tbb::parallel_for( 0, 2, HeavyMixTestBody( myRandom, myIsolatedLevel, myNestedLevel + 1, true ), p, ctx );
+                    break;
+                }
+                case 2: {
+                    // Isolation
+                    int previous_isolation = isolated_level;
+                    isolated_level = myNestedLevel;
+                    tbb::this_task_arena::isolate( IsolatedBody<Partitioner>( *this, p ) );
+                    isolated_level = previous_isolation;
+                    break;
+                }
+            }
+        }
+    public:
+        HeavyMixTestBody( tbb::enumerable_thread_specific<Harness::FastRandom>& random, 
+            tbb::enumerable_thread_specific<int>& isolated_level, int nested_level, bool high_priority )
+            : myRandom( random ), myIsolatedLevel( isolated_level )
+            , myNestedLevel( nested_level ), myHighPriority( high_priority ) {}
+        void operator()( int ) const {
+            int &isolated_level = myIsolatedLevel.local();
+            ASSERT( myNestedLevel > isolated_level, "The outer-level task should not be stolen on isolated level" );
+            if ( myNestedLevel == 20 )
+                return;
+            Harness::FastRandom &rnd = myRandom.local();
+            if ( rnd.get() % 2 == 1 ) {
+                RunNextLevel<tbb::auto_partitioner>( rnd, isolated_level );
+            } else {
+                RunNextLevel<tbb::affinity_partitioner>( rnd, isolated_level );
+            }
+        }
+    };
+
+    struct RandomInitializer {
+        Harness::FastRandom operator()() {
+            return Harness::FastRandom( tbb::this_task_arena::current_thread_index() );
+        }
+    };
+
+    void HeavyMixTest() {
+        tbb::task_scheduler_init init( tbb::task_scheduler_init::default_num_threads() < 3 ? 3 : tbb::task_scheduler_init::automatic );
+        RandomInitializer init_random;
+        tbb::enumerable_thread_specific<Harness::FastRandom> random( init_random );
+        tbb::enumerable_thread_specific<int> isolated_level( 0 );
+        for ( int i = 0; i < 5; ++i ) {
+            HeavyMixTestBody b( random, isolated_level, 1, false );
+            b( 0 );
+            REMARK( "\rHeavyMixTest: %d of 10", i+1 );
+        }
+        REMARK( "\n" );
+    }
+    //--------------------------------------------------//
+    struct ContinuationTestReduceBody : NoAssign {
+        tbb::internal::isolation_tag myIsolation;
+        ContinuationTestReduceBody( tbb::internal::isolation_tag isolation ) : myIsolation( isolation ) {}
+        ContinuationTestReduceBody( ContinuationTestReduceBody& b, tbb::split ) : myIsolation( b.myIsolation ) {}
+        void operator()( tbb::blocked_range<int> ) {}
+        void join( ContinuationTestReduceBody& ) {
+            tbb::internal::isolation_tag isolation = tbb::task::self().prefix().isolation;
+            ASSERT( isolation == myIsolation, "The continuations should preserve children's isolation" );
+        }
+    };
+    struct ContinuationTestIsolated {
+        void operator()() const {
+            ContinuationTestReduceBody b( tbb::task::self().prefix().isolation );
+            tbb::parallel_deterministic_reduce( tbb::blocked_range<int>( 0, 100 ), b );
+        }
+    };
+    struct ContinuationTestParForBody : NoAssign {
+        tbb::enumerable_thread_specific<int> &myEts;
+    public:
+        ContinuationTestParForBody( tbb::enumerable_thread_specific<int> &ets ) : myEts( ets ){}
+        void operator()( int ) const {
+            int &e = myEts.local();
+            ++e;
+            ASSERT( e==1, "The task is stolen on isolated level" );
+            tbb::this_task_arena::isolate( ContinuationTestIsolated() );
+            --e;
+        }
+    };
+    void ContinuationTest() {
+        for ( int i = 0; i < 5; ++i ) {
+            tbb::enumerable_thread_specific<int> myEts;
+            tbb::parallel_for( 0, 100, ContinuationTestParForBody( myEts ), tbb::simple_partitioner() );
+        }
+    }
+    //--------------------------------------------------//
+#if TBB_USE_EXCEPTIONS
+    struct MyException {};
+    struct IsolatedBodyThrowsException {
+        void operator()() const {
+            __TBB_THROW( MyException() );
+        }
+    };
+    struct ExceptionTestBody : NoAssign {
+        tbb::enumerable_thread_specific<int>& myEts;
+        tbb::atomic<bool>& myIsStolen;
+        ExceptionTestBody( tbb::enumerable_thread_specific<int>& ets, tbb::atomic<bool>& is_stolen )
+            : myEts( ets ), myIsStolen( is_stolen ) {}
+        void operator()( int i ) const {
+            try {
+                tbb::this_task_arena::isolate( IsolatedBodyThrowsException() );
+                ASSERT( false, "The exception has been lost" );
+            }
+            catch ( MyException ) {}
+            catch ( ... ) {
+                ASSERT( false, "Unexpected exception" );
+            }
+            // Check that nested algorithms can steal outer-level tasks
+            int &e = myEts.local();
+            if ( e++ > 0 ) myIsStolen = true;
+            // work imbalance increases chances for stealing
+            tbb::parallel_for( 0, 10+i, Harness::DummyBody( 10 ) );
+            --e;
+        }
+    };
+
+#endif /* TBB_USE_EXCEPTIONS */
+    void ExceptionTest() {
+#if TBB_USE_EXCEPTIONS
+        tbb::enumerable_thread_specific<int> ets;
+        tbb::atomic<bool> is_stolen;
+        is_stolen = false;
+        for ( int i = 0; i<10; ++i ) {
+            tbb::parallel_for( 0, 1000, ExceptionTestBody( ets, is_stolen ) );
+            if ( is_stolen ) break;
+        }
+        ASSERT( is_stolen, "isolate should not affect non-isolated work" );
+#endif /* TBB_USE_EXCEPTIONS */
+    }
+}
+
+void TestIsolatedExecute() {
+    // At least 3 threads (owner + 2 thieves) are required to reproduce a situation when the owner steals outer
+    // level task on a nested level. If we have only one thief then it will execute outer level tasks first and
+    // the owner will not have a possibility to steal outer level tasks.
+    int num_threads = min( tbb::task_scheduler_init::default_num_threads(), 3 );
+    {
+        // Too many threads require too many work to reproduce the stealing from outer level.
+        tbb::task_scheduler_init init( max(num_threads, 7) );
+        TestIsolatedExecuteNS::TwoLoopsTest();
+        TestIsolatedExecuteNS::HeavyMixTest();
+        TestIsolatedExecuteNS::ContinuationTest();
+        TestIsolatedExecuteNS::ExceptionTest();
+    }
+    tbb::task_scheduler_init init(num_threads);
+    TestIsolatedExecuteNS::HeavyMixTest();
+    TestIsolatedExecuteNS::ContinuationTest();
+}
+#endif /* __TBB_TASK_ISOLATION */
 //--------------------------------------------------//
 int TestMain () {
+#if __TBB_TASK_ISOLATION
+    TestIsolatedExecute();
+#endif /* __TBB_TASK_ISOLATION */
     // The test uses up to MaxThread workers (in arenas with no master thread),
     // so the runtime should be initialized appropriately.
     tbb::task_scheduler_init init_market_p_plus_one(MaxThread+1);
@@ -709,5 +1002,6 @@ int TestMain () {
     TestArenaEntryConsistency();
     TestAttach(MaxThread);
     TestConstantFunctorRequirement();
+
     return Harness::Done;
 }
