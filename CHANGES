@@ -2,6 +2,81 @@
 The list of most significant changes made over time in
 Intel(R) Threading Building Blocks (Intel(R) TBB).
 
+Intel TBB 2017
+TBB_INTERFACE_VERSION == 9100
+
+Changes (w.r.t. Intel TBB 4.4 Update 5):
+
+- static_partitioner class is now a fully supported feature.
+- async_node class is now a fully supported feature.
+- Improved dynamic memory allocation replacement on Windows* OS to skip
+    DLLs for which replacement cannot be done, instead of aborting.
+- Intel TBB no longer performs dynamic memory allocation replacement
+    for Microsoft* Visual Studio* 2008.
+- For 64-bit platforms, quadrupled the worst-case limit on the amount
+    of memory the Intel TBB allocator can handle.
+- Added TBB_USE_GLIBCXX_VERSION macro to specify the version of GNU
+    libstdc++ when it cannot be properly recognized, e.g. when used
+    with Clang on Linux* OS. Inspired by a contribution from David A.
+- Added graph/stereo example to demostrate tbb::flow::async_msg.
+- Removed a few cases of excessive user data copying in the flow graph.
+- Reworked split_node to eliminate unnecessary overheads.
+- Added support for C++11 move semantics to the argument of
+    tbb::parallel_do_feeder::add() method.
+- Added C++11 move constructor and assignment operator to
+    tbb::combinable template class.
+- Added tbb::this_task_arena::max_concurrency() function and
+    max_concurrency() method of class task_arena returning the maximal
+    number of threads that can work inside an arena.
+- Deprecated tbb::task_arena::current_thread_index() static method;
+    use tbb::this_task_arena::current_thread_index() function instead.
+- All examples for commercial version of library moved online:
+    https://software.intel.com/en-us/product-code-samples. Examples are
+    available as a standalone package or as a part of Intel(R) Parallel
+    Studio XE or Intel(R) System Studio Online Samples packages.
+
+Changes affecting backward compatibility:
+
+- Renamed following methods and types in async_node class:
+    Old                   New
+    async_gateway_type => gateway_type
+    async_gateway()    => gateway()
+    async_try_put()    => try_put()
+    async_reserve()    => reserve_wait()
+    async_commit()     => release_wait()
+- Internal layout of some flow graph nodes has changed; recompilation
+    is recommended for all binaries that use the flow graph.
+
+Preview Features:
+
+- Added template class streaming_node to the flow graph API. It allows
+    a flow graph to offload computations to other devices through
+    streaming or offloading APIs.
+- Template class opencl_node reimplemented as a specialization of
+    streaming_node that works with OpenCL*.
+- Added tbb::this_task_arena::isolate() function to isolate execution
+    of a group of tasks or an algorithm from other tasks submitted
+    to the scheduler.
+
+Bugs fixed:
+
+- Added a workaround for GCC bug #62258 in std::rethrow_exception()
+    to prevent possible problems in case of exception propagation.
+- Fixed parallel_scan to provide correct result if the initial value
+    of an accumulator is not the operation identity value.
+- Fixed a memory corruption in the memory allocator when it meets
+    internal limits.
+- Fixed the memory allocator on 64-bit platforms to align memory
+    to 16 bytes by default for all allocations bigger than 8 bytes.
+- As a workaround for crashes in the Intel TBB library compiled with
+    GCC 6, added -flifetime-dse=1 to compilation options on Linux* OS.
+- Fixed a race in the flow graph implementation.
+
+Open-source contributions integrated:
+
+- Enabling use of C++11 'override' keyword by Raf Schietekat.
+
+------------------------------------------------------------------------
 Intel TBB 4.4 Update 5
 TBB_INTERFACE_VERSION == 9005
 
@@ -11,7 +86,7 @@ Changes (w.r.t. Intel TBB 4.4 Update 4):
 
 Preview Features:
 
-- Added a Python* module which is able to replace Python's thread pool 
+- Added a Python* module which is able to replace Python's thread pool
     class with the implementation based on Intel TBB task scheduler.
 
 Bugs fixed:
@@ -520,7 +595,7 @@ Bugs fixed:
 
 - Fixed data races in preview extensions of task_scheduler_observer.
 - Added noexcept(false) for destructor of task_group_base to avoid
-    crash on cancelation of structured task group in C++11.
+    crash on cancellation of structured task group in C++11.
 
 Open-source contributions integrated:
 
@@ -536,7 +611,7 @@ TBB_INTERFACE_VERSION == 7003
 Changes (w.r.t. Intel TBB 4.2 Update 2):
 
 - Added support for Microsoft* Visual Studio* 2013.
-- Improved Microsoft* PPL-compatible form of parallel_for for better 
+- Improved Microsoft* PPL-compatible form of parallel_for for better
     support of auto-vectorization.
 - Added a new example for cancellation and reset in the flow graph:
     Kohonen self-organizing map (examples/graph/som).
@@ -602,7 +677,7 @@ Preview Features:
 - Class task_arena no longer requires linking with a preview library,
     though still remains a community preview feature.
 - The method task_arena::wait_until_empty() is removed.
-- The method task_arena::current_slot() now returns -1 if 
+- The method task_arena::current_slot() now returns -1 if
     the task scheduler is not initialized in the thread.
 
 Changes affecting backward compatibility:
@@ -783,7 +858,7 @@ Changes (w.r.t. Intel TBB 4.1):
     any platform supported by compiler version 12.1 and newer.
 - Using GetNativeSystemInfo() instead of GetSystemInfo() to support
     more than 32 processors for 32-bit applications under WOW64.
-- The following form of parallel_for: 
+- The following form of parallel_for:
     parallel_for(first, last, [step,] f[, context]) now accepts an
     optional partitioner parameter after the function f.
 
@@ -854,7 +929,7 @@ Changes (w.r.t. Intel TBB 4.0 Update 4):
 
 Bugs fixed:
 
-- Fixed a tv_nsec overflow bug in condition_variable::wait_for. 
+- Fixed a tv_nsec overflow bug in condition_variable::wait_for.
 - Fixed execution order of enqueued tasks with different priorities.
 - Fixed a bug with task priority changes causing lack of progress
     for fire-and-forget tasks when TBB was initialized to use 1 thread.
@@ -923,7 +998,7 @@ Changes (w.r.t. Intel TBB 4.0 Update 2):
 Backward-incompatible API changes:
 
 - a graph reference parameter is now required to be passed to the
-    constructors of the following flow graph nodes: overwrite_node, 
+    constructors of the following flow graph nodes: overwrite_node,
     write_once_node, broadcast_node, and the CPF or_node.
 - the following tbb::flow node methods and typedefs have been renamed:
        Old                             New
@@ -944,10 +1019,10 @@ TBB_INTERFACE_VERSION == 6002
 
 Changes (w.r.t. Intel TBB 4.0 Update 1 commercial-aligned release):
 
-- concurrent_bounded_queue now has an abort() operation that releases 
-    threads involved in pending push or pop operations. The released 
+- concurrent_bounded_queue now has an abort() operation that releases
+    threads involved in pending push or pop operations. The released
     threads will receive a tbb::user_abort exception.
-- Added Community Preview Feature:  concurrent_lru_cache container, 
+- Added Community Preview Feature:  concurrent_lru_cache container,
     a concurrent implementation of LRU (least-recently-used) cache.
 
 Bugs fixed:
@@ -1038,8 +1113,8 @@ TBB_INTERFACE_VERSION == 5006 (forgotten to increment)
 
 Changes (w.r.t. Intel TBB 3.0 Update 6 commercial-aligned release):
 
-- Added implementation of the platform isolation layer based on 
-    GCC atomic built-ins; it is supposed to work on any platform 
+- Added implementation of the platform isolation layer based on
+    GCC atomic built-ins; it is supposed to work on any platform
     where GCC has these built-ins.
 
 Community Preview Features:
@@ -1116,9 +1191,9 @@ Changes (w.r.t. Intel TBB 3.0 Update 3 commercial-aligned release):
 - Fixed library loading to avoid possibility for remote code execution,
     see http://www.microsoft.com/technet/security/advisory/2269637.mspx.
 - Added support of more than 64 cores for appropriate Microsoft*
-    Windows* versions. For more details, see 
+    Windows* versions. For more details, see
     http://msdn.microsoft.com/en-us/library/dd405503.aspx.
-- Default number of worker threads is adjusted in accordance with 
+- Default number of worker threads is adjusted in accordance with
     process affinity mask.
 
 Bugs fixed:
@@ -1203,7 +1278,7 @@ Bugs fixed:
     was a temporary object.
 - Incorrect usage of memory fences on PowerPC and XBOX360 platforms.
 - A subtle issue in task group context binding that could result
-    in cancelation signal being missed by nested task groups.
+    in cancellation signal being missed by nested task groups.
 - Incorrect construction of concurrent_unordered_map if specified
     number of buckets is not power of two.
 - Broken count() and equal_range() of concurrent_unordered_map.

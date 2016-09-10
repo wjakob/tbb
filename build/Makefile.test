@@ -1,20 +1,20 @@
-# Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+# Copyright (c) 2005-2016 Intel Corporation
 #
-# This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-# you can redistribute it and/or modify it under the terms of the GNU General Public License
-# version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-# distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See  the GNU General Public License for more details.   You should have received a copy of
-# the  GNU General Public License along with Threading Building Blocks; if not, write to the
-# Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# As a special exception,  you may use this file  as part of a free software library without
-# restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-# functions from this file, or you compile this file and link it with other files to produce
-# an executable,  this file does not by itself cause the resulting executable to be covered
-# by the GNU General Public License. This exception does not however invalidate any other
-# reasons why the executable file might be covered by the GNU General Public License.
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+#
+#
 
 #------------------------------------------------------------------------------
 # Define rules for making the TBB tests.
@@ -69,7 +69,7 @@ SCHEDULER_DIRECTLY_INCLUDED = test_task_leaks.$(TEST_EXT) \
  test_concurrent_queue_whitebox.$(TEST_EXT)
 
 # Necessary to locate version_string.ver referenced from directly included tbb_misc.cpp
-INCLUDES += $(INCLUDE_KEY).
+INCLUDES += $(INCLUDE_KEY). $(INCLUDE_TEST_HEADERS)
 
 $(SCHEDULER_DIRECTLY_INCLUDED): WARNING_KEY += $(WARNING_SUPPRESS)
 $(SCHEDULER_DIRECTLY_INCLUDED): LIBS += $(LIBDL)
@@ -100,6 +100,15 @@ $(TWICE_LINKED_TESTS): LINK_FILES+=$(@:.$(TEST_EXT)=_secondary.$(OBJ))
 test_dynamic_link%.$(TEST_EXT): LINK_TBB.LIB =
 test_dynamic_link.$(TEST_EXT): LIBS += $(LIBDL)
 
+TEST_BIG_OBJ = test_opencl_node.$(TEST_EXT) test_join_node.$(TEST_EXT) test_atomic.$(TEST_EXT)
+
+ifeq (windows_windows,$(tbb_os)_$(target))
+ifneq (gcc,$(compiler))
+$(TEST_BIG_OBJ): override CXXFLAGS += /bigobj
+endif
+endif
+
+# TODO: remove repetition of .$(TEST_EXT) in the list bellow
 # The main list of TBB tests
 TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_global_control.$(TEST_EXT)              \
@@ -125,7 +134,7 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_mutex_native_threads.$(TEST_EXT)        \
 	test_rwm_upgrade_downgrade.$(TEST_EXT)       \
 	test_cache_aligned_allocator.$(TEST_EXT)     \
-        test_cache_aligned_allocator_STL.$(TEST_EXT) \
+	test_cache_aligned_allocator_STL.$(TEST_EXT) \
 	test_parallel_for.$(TEST_EXT)                \
 	test_parallel_reduce.$(TEST_EXT)             \
 	test_parallel_sort.$(TEST_EXT)               \
@@ -135,7 +144,7 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_pipeline.$(TEST_EXT)                    \
 	test_pipeline_with_tbf.$(TEST_EXT)           \
 	test_parallel_pipeline.$(TEST_EXT)           \
-        test_lambda.$(TEST_EXT)                      \
+	test_lambda.$(TEST_EXT)                      \
 	test_task_scheduler_init.$(TEST_EXT)         \
 	test_task_scheduler_observer.$(TEST_EXT)     \
 	test_task.$(TEST_EXT)                        \
@@ -226,13 +235,6 @@ endif
 
 test_opencl_node.$(TEST_EXT): LIBS += $(OPENCL.LIB)
 
-ifeq (windows,$(tbb_os))
-ifneq (gcc,$(compiler))
-test_opencl_node.$(TEST_EXT): override CXXFLAGS += /bigobj
-test_join_node.$(TEST_EXT): override CXXFLAGS += /bigobj
-endif
-endif
-
 $(TEST_TBB_PLAIN.EXE): WARNING_KEY += $(TEST_WARNING_KEY)
 
 # Run tests that are in SCHEDULER_DIRECTLY_INCLUDED and TEST_TBB_PLAIN.EXE but not in skip_tests (which is specified by user)
@@ -295,5 +297,5 @@ clean_%:
 clean:
 	$(RM) *.$(OBJ) *.exe *.$(DLL) *.$(LIBEXT) *.res *.map *.ilk *.pdb *.exp *.manifest *.tmp *.d pgopti.* *.dyn core core.*[0-9][0-9] *.ver
 
-# Include automatically generated dependences
+# Include automatically generated dependencies
 -include *.d

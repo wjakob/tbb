@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::spin_mutex Class Reference</title>
+<title>tbb::task_scheduler_init Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,84 +33,96 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><a class="el" href="a00145.html">spin_mutex</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00228.html">tbb</a></li><li class="navelem"><a class="el" href="a00145.html">task_scheduler_init</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
-<a href="#friends">Friends</a> &#124;
 <a href="a00298.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::spin_mutex Class Reference<div class="ingroups"><a class="el" href="a00255.html">Synchronization</a></div></div>  </div>
+<div class="title">tbb::task_scheduler_init Class Reference<div class="ingroups"><a class="el" href="a00251.html">Task Scheduling</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>A lock that occupies a single byte.  
+<p>Class delimiting the scope of task scheduler activity.  
  <a href="a00145.html#details">More...</a></p>
 
-<p><code>#include &lt;spin_mutex.h&gt;</code></p>
+<p><code>#include &lt;task_scheduler_init.h&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for tbb::spin_mutex:</div>
+Inheritance diagram for tbb::task_scheduler_init:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="a00145.png" usemap="#tbb::spin_mutex_map" alt=""/>
-  <map id="tbb::spin_mutex_map" name="tbb::spin_mutex_map">
+  <img src="a00145.png" usemap="#tbb::task_scheduler_init_map" alt=""/>
+  <map id="tbb::task_scheduler_init_map" name="tbb::task_scheduler_init_map">
 </map>
  </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00134.html">scoped_lock</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents acquisition of a mutex.  <a href="a00134.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6c96196965bf7df426311d282ad3c378"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a6c96196965bf7df426311d282ad3c378">spin_mutex</a> ()</td></tr>
-<tr class="memdesc:a6c96196965bf7df426311d282ad3c378"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct unacquired lock.  <a href="#a6c96196965bf7df426311d282ad3c378">More...</a><br/></td></tr>
-<tr class="separator:a6c96196965bf7df426311d282ad3c378"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ec484f4df6ec5595ec821ef20bd6cd7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ec484f4df6ec5595ec821ef20bd6cd7"></a>
-void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a4ec484f4df6ec5595ec821ef20bd6cd7">internal_construct</a> ()</td></tr>
-<tr class="memdesc:a4ec484f4df6ec5595ec821ef20bd6cd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Internal constructor with ITT instrumentation. <br/></td></tr>
-<tr class="separator:a4ec484f4df6ec5595ec821ef20bd6cd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8957e40b0781192419d01d28e5205ec4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8957e40b0781192419d01d28e5205ec4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a8957e40b0781192419d01d28e5205ec4">lock</a> ()</td></tr>
-<tr class="memdesc:a8957e40b0781192419d01d28e5205ec4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Acquire lock. <br/></td></tr>
-<tr class="separator:a8957e40b0781192419d01d28e5205ec4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a003ffb196d22bf22ca22142338b7eeab"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a003ffb196d22bf22ca22142338b7eeab">try_lock</a> ()</td></tr>
-<tr class="memdesc:a003ffb196d22bf22ca22142338b7eeab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try acquiring lock (non-blocking)  <a href="#a003ffb196d22bf22ca22142338b7eeab">More...</a><br/></td></tr>
-<tr class="separator:a003ffb196d22bf22ca22142338b7eeab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adfcf8fe840aa73c08c2cadd570fd48fd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adfcf8fe840aa73c08c2cadd570fd48fd"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#adfcf8fe840aa73c08c2cadd570fd48fd">unlock</a> ()</td></tr>
-<tr class="memdesc:adfcf8fe840aa73c08c2cadd570fd48fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Release lock. <br/></td></tr>
-<tr class="separator:adfcf8fe840aa73c08c2cadd570fd48fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a485028b867bffef5829209330e79e64c"><td class="memItemLeft" align="right" valign="top">void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a485028b867bffef5829209330e79e64c">initialize</a> (int number_of_threads=<a class="el" href="a00145.html#a945886f5ef48300a8ebff2d077c166b1">automatic</a>)</td></tr>
+<tr class="memdesc:a485028b867bffef5829209330e79e64c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ensure that scheduler exists for this thread.  <a href="#a485028b867bffef5829209330e79e64c">More...</a><br/></td></tr>
+<tr class="separator:a485028b867bffef5829209330e79e64c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f5294f74b123a646a1762c68d11e39a"><td class="memItemLeft" align="right" valign="top">void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a0f5294f74b123a646a1762c68d11e39a">initialize</a> (int number_of_threads, stack_size_type <a class="el" href="a00145.html#a8310e807e1199d0f23b3a57aeb4fde51">thread_stack_size</a>)</td></tr>
+<tr class="memdesc:a0f5294f74b123a646a1762c68d11e39a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The overloaded method with stack size parameter.  <a href="#a0f5294f74b123a646a1762c68d11e39a">More...</a><br/></td></tr>
+<tr class="separator:a0f5294f74b123a646a1762c68d11e39a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15d5dca7f79c5769bb96f674e4da0c04"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15d5dca7f79c5769bb96f674e4da0c04"></a>
+void __TBB_EXPORTED_METHOD&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a15d5dca7f79c5769bb96f674e4da0c04">terminate</a> ()</td></tr>
+<tr class="memdesc:a15d5dca7f79c5769bb96f674e4da0c04"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inverse of method initialize. <br/></td></tr>
+<tr class="separator:a15d5dca7f79c5769bb96f674e4da0c04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa772e5a1bd18b171d335f41b58acd2b9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa772e5a1bd18b171d335f41b58acd2b9"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>if</b> (wait_workers_in_terminate) my_scheduler</td></tr>
+<tr class="separator:aa772e5a1bd18b171d335f41b58acd2b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d748f4a1f99884f081919feb3bca275"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d748f4a1f99884f081919feb3bca275"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>initialize</b> (number_of_threads, <a class="el" href="a00145.html#a8310e807e1199d0f23b3a57aeb4fde51">thread_stack_size</a>)</td></tr>
+<tr class="separator:a7d748f4a1f99884f081919feb3bca275"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a20b121334ec39c1d91bd4fe9a51892b0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a20b121334ec39c1d91bd4fe9a51892b0"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a20b121334ec39c1d91bd4fe9a51892b0">~task_scheduler_init</a> ()</td></tr>
+<tr class="memdesc:a20b121334ec39c1d91bd4fe9a51892b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy scheduler for this thread if thread has no other live task_scheduler_inits. <br/></td></tr>
+<tr class="separator:a20b121334ec39c1d91bd4fe9a51892b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed5505d7fed9d5493676aa15c176512c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed5505d7fed9d5493676aa15c176512c"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#aed5505d7fed9d5493676aa15c176512c">is_active</a> () const </td></tr>
+<tr class="memdesc:aed5505d7fed9d5493676aa15c176512c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if scheduler is active (initialized); false otherwise. <br/></td></tr>
+<tr class="separator:aed5505d7fed9d5493676aa15c176512c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:aa0c0d46ec09bedc1ee876aa8aa87c3d1"><td class="memItemLeft" align="right" valign="top">static int __TBB_EXPORTED_FUNC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#aa0c0d46ec09bedc1ee876aa8aa87c3d1">default_num_threads</a> ()</td></tr>
+<tr class="memdesc:aa0c0d46ec09bedc1ee876aa8aa87c3d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the number of threads TBB scheduler would create if initialized by default.  <a href="#aa0c0d46ec09bedc1ee876aa8aa87c3d1">More...</a><br/></td></tr>
+<tr class="separator:aa0c0d46ec09bedc1ee876aa8aa87c3d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a8310e807e1199d0f23b3a57aeb4fde51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8310e807e1199d0f23b3a57aeb4fde51"></a>
+<a class="el" href="a00145.html">task_scheduler_init</a>(int <br class="typebreak"/>
+number_of_threads=<a class="el" href="a00145.html#a945886f5ef48300a8ebff2d077c166b1">automatic</a>, <br class="typebreak"/>
+stack_size_type <br class="typebreak"/>
+thread_stack_size=0, bool <br class="typebreak"/>
+wait_workers_in_terminate=false)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a8310e807e1199d0f23b3a57aeb4fde51">thread_stack_size</a> = TBB_USE_CAPTURED_EXCEPTION ? propagation_mode_captured : propagation_mode_exact</td></tr>
+<tr class="memdesc:a8310e807e1199d0f23b3a57aeb4fde51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shorthand for default constructor followed by call to initialize(number_of_threads). <br/></td></tr>
+<tr class="separator:a8310e807e1199d0f23b3a57aeb4fde51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:a7c3354db4bd5cc81bccee9f249abb9e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c3354db4bd5cc81bccee9f249abb9e8"></a>
-static const bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_rw_mutex</b> = false</td></tr>
-<tr class="separator:a7c3354db4bd5cc81bccee9f249abb9e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0cae048c5dc5deffe75464e4a3a2b752"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0cae048c5dc5deffe75464e4a3a2b752"></a>
-static const bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_recursive_mutex</b> = false</td></tr>
-<tr class="separator:a0cae048c5dc5deffe75464e4a3a2b752"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad00ec9a97f34c9160300950b36deac3e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad00ec9a97f34c9160300950b36deac3e"></a>
-static const bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_fair_mutex</b> = false</td></tr>
-<tr class="separator:ad00ec9a97f34c9160300950b36deac3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
-Friends</h2></td></tr>
-<tr class="memitem:afcf922650b2fd9d76b7b939d8511bbd8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afcf922650b2fd9d76b7b939d8511bbd8"></a>
-class&#160;</td><td class="memItemRight" valign="bottom"><b>scoped_lock</b></td></tr>
-<tr class="separator:afcf922650b2fd9d76b7b939d8511bbd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a945886f5ef48300a8ebff2d077c166b1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a945886f5ef48300a8ebff2d077c166b1"></a>
+static const int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#a945886f5ef48300a8ebff2d077c166b1">automatic</a> = -1</td></tr>
+<tr class="memdesc:a945886f5ef48300a8ebff2d077c166b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Typedef for number of threads that is automatic. <br/></td></tr>
+<tr class="separator:a945886f5ef48300a8ebff2d077c166b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0e49ff2f59a4e53c9c07897b57f084d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af0e49ff2f59a4e53c9c07897b57f084d"></a>
+static const int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00145.html#af0e49ff2f59a4e53c9c07897b57f084d">deferred</a> = -2</td></tr>
+<tr class="memdesc:af0e49ff2f59a4e53c9c07897b57f084d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Argument to <a class="el" href="a00145.html#a485028b867bffef5829209330e79e64c" title="Ensure that scheduler exists for this thread. ">initialize()</a> or constructor that causes initialization to be deferred. <br/></td></tr>
+<tr class="separator:af0e49ff2f59a4e53c9c07897b57f084d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A lock that occupies a single byte. </p>
-<p>A <a class="el" href="a00145.html" title="A lock that occupies a single byte. ">spin_mutex</a> is a spin mutex that fits in a single byte. It should be used only for locking short critical sections (typically less than 20 instructions) when fairness is not an issue. If zero-initialized, the mutex is considered unheld. </p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a class="anchor" id="a6c96196965bf7df426311d282ad3c378"></a>
+<div class="textblock"><p>Class delimiting the scope of task scheduler activity. </p>
+<p>A thread can construct a <a class="el" href="a00145.html" title="Class delimiting the scope of task scheduler activity. ">task_scheduler_init</a> object and keep it alive while it uses TBB's tasking subsystem (including parallel algorithms).</p>
+<p>This class allows to customize properties of the TBB task pool to some extent. For example it can limit concurrency level of parallel work initiated by the given thread. It also can be used to specify stack size of the TBB worker threads, though this setting is not effective if the thread pool has already been created.</p>
+<p>If a parallel construct is used without <a class="el" href="a00145.html" title="Class delimiting the scope of task scheduler activity. ">task_scheduler_init</a> object previously created, the scheduler will be initialized automatically with default settings, and will persist until this thread exits. Default concurrency level is defined as described in <a class="el" href="a00145.html#a485028b867bffef5829209330e79e64c" title="Ensure that scheduler exists for this thread. ">task_scheduler_init::initialize()</a>. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="aa0c0d46ec09bedc1ee876aa8aa87c3d1"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -118,7 +130,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>scoped_lock</b></td>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">tbb::spin_mutex::spin_mutex </td>
+          <td class="memname">static int __TBB_EXPORTED_FUNC tbb::task_scheduler_init::default_num_threads </td>
           <td>(</td>
           <td class="paramname">)</td><td></td>
           <td></td>
@@ -126,49 +138,70 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>scoped_lock</b></td>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Construct unacquired lock. </p>
-<p>Equivalent to zero-initialization of *this. </p>
-
-<p>References <a class="el" href="a00145.html#a4ec484f4df6ec5595ec821ef20bd6cd7">internal_construct()</a>.</p>
+<p>Returns the number of threads TBB scheduler would create if initialized by default. </p>
+<p>Result returned by this method does not depend on whether the scheduler has already been initialized.</p>
+<p>Because tbb 2.0 does not support blocking tasks yet, you may use this method to boost the number of threads in the tbb's internal pool, if your tasks are doing I/O operations. The optimal number of additional threads depends on how much time your tasks spend in the blocked state.</p>
+<p>Before TBB 3.0 U4 this method returned the number of logical CPU in the system. Currently on Windows, Linux and FreeBSD it returns the number of logical CPUs available to the current process in accordance with its affinity mask.</p>
+<p>NOTE: The return value of this method never changes after its first invocation. This means that changes in the process affinity mask that took place after this method was first invoked will not affect the number of worker threads in the TBB worker threads pool. </p>
 
 </div>
 </div>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a003ffb196d22bf22ca22142338b7eeab"></a>
+<a class="anchor" id="a485028b867bffef5829209330e79e64c"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool tbb::spin_mutex::try_lock </td>
+          <td class="memname">void __TBB_EXPORTED_METHOD tbb::task_scheduler_init::initialize </td>
           <td>(</td>
-          <td class="paramname">)</td><td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_threads</em> = <code><a class="el" href="a00145.html#a945886f5ef48300a8ebff2d077c166b1">automatic</a></code>)</td><td></td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
-<p>Try acquiring lock (non-blocking) </p>
-<p>Return true if lock acquired; false otherwise. </p>
+<p>Ensure that scheduler exists for this thread. </p>
+<p>A value of -1 lets TBB decide on the number of threads, which is usually maximal hardware concurrency for this process, that is the number of logical CPUs on the machine (possibly limited by the processor affinity mask of this process (Windows) or of this thread (Linux, FreeBSD). It is preferable option for production code because it helps to avoid nasty surprises when several TBB based components run side-by-side or in a nested fashion inside the same process.</p>
+<p>The number_of_threads is ignored if any other task_scheduler_inits currently exist. A thread may construct multiple task_scheduler_inits. Doing so does no harm because the underlying scheduler is reference counted. </p>
 
-<p>References <a class="el" href="a00015.html#a3525dbbac0d4eaedfe18bc57b7760857">tbb::aligned_space&lt; T, N &gt;::begin()</a>.</p>
+</div>
+</div>
+<a class="anchor" id="a0f5294f74b123a646a1762c68d11e39a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void __TBB_EXPORTED_METHOD tbb::task_scheduler_init::initialize </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>number_of_threads</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">stack_size_type&#160;</td>
+          <td class="paramname"><em>thread_stack_size</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The overloaded method with stack size parameter. </p>
+<p>Overloading is necessary to preserve ABI compatibility </p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>spin_mutex.h</li>
+<li>task_scheduler_init.h</li>
 </ul>
 </div><!-- contents -->
 <hr>

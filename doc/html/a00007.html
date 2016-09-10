@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>Requirements on iterators for parallel_sort</title>
+<title>TBB concepts</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -26,20 +26,24 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="index.html">Main Page</a></li><li class="navelem"><a class="el" href="a00008.html">TBB concepts</a></li>  </ul>
+<li class="navelem"><a class="el" href="index.html">Main Page</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">Requirements on iterators for parallel_sort </div>  </div>
+<div class="title">TBB concepts </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Requirements on the iterator type <code>It</code> and its value type <code>T</code> for <code>parallel_sort:</code> </p>
+<div class="textblock"><p>A concept is a set of requirements to a type, which are necessary and sufficient for the type to model a particular behavior or a set of behaviors. Some concepts are specific to a particular algorithm (e.g. algorithm body), while other ones are common to several algorithms (e.g. range concept).</p>
+<p>All TBB algorithms make use of different classes implementing various concepts. Implementation classes are supplied by the user as type arguments of template parameters and/or as objects passed as function call arguments. The library provides predefined implementations of some concepts (e.g. several kinds of <a class="el" href="a00001.html">ranges</a>), while other ones must always be implemented by the user.</p>
+<p>TBB defines a set of minimal requirements each concept must conform to. Here is the list of different concepts hyperlinked to the corresponding requirements specifications:</p>
 <ul>
-<li><div class="fragment"><div class="line"><span class="keywordtype">void</span> iter_swap( It a, It b ) </div>
-</div><!-- fragment --> Swaps the values of the elements the given iterators <code>a</code> and <code>b</code> are pointing to. <code>It</code> should be a random access iterator.</li>
-<li><div class="fragment"><div class="line"><span class="keywordtype">bool</span> Compare::operator()( <span class="keyword">const</span> T&amp; x, <span class="keyword">const</span> T&amp; y ) </div>
-</div><!-- fragment --> True if x comes before y; </li>
+<li><a class="el" href="a00001.html">Requirements on range concept</a></li>
+<li>parallel_do_body_req</li>
+<li><a class="el" href="a00002.html">Requirements on parallel_for body</a></li>
+<li><a class="el" href="a00003.html">Requirements on parallel_reduce body</a></li>
+<li><a class="el" href="a00005.html">Requirements on parallel_scan body</a></li>
+<li><a class="el" href="a00006.html">Requirements on iterators for parallel_sort</a> </li>
 </ul>
 </div></div><!-- contents -->
 <hr>

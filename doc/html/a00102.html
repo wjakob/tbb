@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::parallel_do_feeder&lt; Item &gt; Class Template Reference</title>
+<title>tbb::flow::interface9::opencl_factory&lt; DeviceFilter &gt;::range Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,59 +33,44 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><a class="el" href="a00102.html">parallel_do_feeder</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00228.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface9</b></li><li class="navelem"><a class="el" href="a00086.html">opencl_factory</a></li><li class="navelem"><a class="el" href="a00102.html">range</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#friends">Friends</a> &#124;
-<a href="a00281.html">List of all members</a>  </div>
+<a href="a00327.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::parallel_do_feeder&lt; Item &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
+<div class="title">tbb::flow::interface9::opencl_factory&lt; DeviceFilter &gt;::range Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Class the user supplied algorithm body uses to add new tasks.  
- <a href="a00102.html#details">More...</a></p>
-
-<p><code>#include &lt;parallel_do.h&gt;</code></p>
-<div class="dynheader">
-Inheritance diagram for tbb::parallel_do_feeder&lt; Item &gt;:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="a00102.png" usemap="#tbb::parallel_do_feeder&lt; Item &gt;_map" alt=""/>
-  <map id="tbb::parallel_do_feeder&lt; Item &gt;_map" name="tbb::parallel_do_feeder&lt; Item &gt;_map">
-</map>
- </div></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a7ca272edc033f30172c62bc6f33943ef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ca272edc033f30172c62bc6f33943ef"></a>
+typedef size_t&#160;</td><td class="memItemRight" valign="bottom"><b>range_index_type</b></td></tr>
+<tr class="separator:a7ca272edc033f30172c62bc6f33943ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2558869e5b137883381a6bc718452dd7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2558869e5b137883381a6bc718452dd7"></a>
+typedef std::array<br class="typebreak"/>
+&lt; range_index_type, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>nd_range_type</b></td></tr>
+<tr class="separator:a2558869e5b137883381a6bc718452dd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac095c6b1a32e9c0be010aa32875d7a63"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac095c6b1a32e9c0be010aa32875d7a63"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00102.html#ac095c6b1a32e9c0be010aa32875d7a63">add</a> (const Item &amp;item)</td></tr>
-<tr class="memdesc:ac095c6b1a32e9c0be010aa32875d7a63"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a work item to a running parallel_do. <br/></td></tr>
-<tr class="separator:ac095c6b1a32e9c0be010aa32875d7a63"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
-Friends</h2></td></tr>
-<tr class="memitem:ae5c8cc31bc27b79377687e3de76f480e"><td class="memTemplParams" colspan="2"><a class="anchor" id="ae5c8cc31bc27b79377687e3de76f480e"></a>
-template&lt;typename Body_ , typename Item_ &gt; </td></tr>
-<tr class="memitem:ae5c8cc31bc27b79377687e3de76f480e"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>internal::parallel_do_feeder_impl</b></td></tr>
-<tr class="separator:ae5c8cc31bc27b79377687e3de76f480e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b979fc73029fdd410a1986be5472799"><td class="memTemplParams" colspan="2"><a class="anchor" id="a7b979fc73029fdd410a1986be5472799"></a>
+template&lt;typename G  = std::initializer_list&lt;int&gt;, typename L  = std::initializer_list&lt;int&gt;, typename  = typename std::enable_if&lt;!std::is_same&lt;typename std::decay&lt;G&gt;::type, range&gt;::value&gt;::type&gt; </td></tr>
+<tr class="memitem:a7b979fc73029fdd410a1986be5472799"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>range</b> (G &amp;&amp;global_work=std::initializer_list&lt; int &gt;({0}), L &amp;&amp;local_work=std::initializer_list&lt; int &gt;({0, 0, 0}))</td></tr>
+<tr class="separator:a7b979fc73029fdd410a1986be5472799"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95a42e373353c65f9a2ce7fd3bc2b202"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a95a42e373353c65f9a2ce7fd3bc2b202"></a>
+const nd_range_type &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>global_range</b> () const </td></tr>
+<tr class="separator:a95a42e373353c65f9a2ce7fd3bc2b202"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a466676fea8f465ff737ad62cc9ceee42"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a466676fea8f465ff737ad62cc9ceee42"></a>
+const nd_range_type &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>local_range</b> () const </td></tr>
+<tr class="separator:a466676fea8f465ff737ad62cc9ceee42"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename Item&gt;<br/>
-class tbb::parallel_do_feeder&lt; Item &gt;</h3>
-
-<p>Class the user supplied algorithm body uses to add new tasks. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Item</td><td>Work item type </td></tr>
-  </table>
-  </dd>
-</dl>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>parallel_do.h</li>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>flow_graph_opencl_node.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
