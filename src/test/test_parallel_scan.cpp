@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "tbb/parallel_scan.h"
@@ -31,9 +31,9 @@ inline int TriangularSum( int i ) {
     return i&1 ? ((i>>1)+1)*i : (i>>1)*(i+1);
 }
 
-//! Verify that sum is sum of integers in closed interval [start_index..finish_index].
+//! Verify that sum is init plus sum of integers in closed interval [0..finish_index].
 /** line should be the source line of the caller */
-static void VerifySum( long start_index, long finish_index, int sum, int line );
+static void VerifySum( int init, long finish_index, int sum, int line );
 
 const int MAXN = 2000;
 
@@ -75,11 +75,32 @@ class Accumulator: BodyId {
     const T* my_array;
     T* my_sum;
     Range my_range;
+    enum state_type {
+        full,       // Accumulator has sufficient information for final scan,
+                    // i.e. has seen all iterations to its left.
+                    // It's either the original Accumulator provided by the user
+                    // or a Accumulator constructed by a splitting constructor *and* subsequently
+                    // subjected to a reverse_join with a full accumulator.
+
+        partial,    // Accumulator has only enough information for pre_scan.
+                    // i.e. has not seen all iterations to its left.
+                    // It's an Accumulator created by a splitting constructor that
+                    // has not yet been subjected to a reverse_join with a full accumulator.
+
+        summary,    // Accumulator has summary of iterations processed, but not necessarily
+                    // the information required for a final_scan or pre_scan.
+                    // It's the result of "assign".
+
+        trash       // Accumulator with possibly no useful information.
+                    // It was the source for "assign".
+    };
+    //! True if *this was assigned from.
+    mutable state_type my_state;
     //! Equals this while object is fully constructed, NULL otherwise.
     /** Used to detect premature destruction and accidental bitwise copy. */
     Accumulator* self;
-    Accumulator( const T array[], T sum[] ) :
-        my_total(), my_array(array), my_sum(sum), my_range(-1,-1,1)
+    Accumulator( T init, const T array[], T sum[] ) :
+        my_total(init), my_array(array), my_sum(sum), my_range(-1,-1,1), my_state(full)
     {
         ++NumberOfLiveAccumulator;
         // Set self as last action of constructor, to indicate that object is fully constructed.
@@ -101,8 +122,9 @@ public:
         --NumberOfLiveAccumulator;
     }
     Accumulator( Accumulator& a, tbb::split ) :
-        my_total(0), my_array(a.my_array), my_sum(a.my_sum), my_range(-1,-1,1)
+        my_total(0), my_array(a.my_array), my_sum(a.my_sum), my_range(-1,-1,1), my_state(partial)
     {
+        ASSERT(a.my_state==full || a.my_state==partial, NULL);
         ++NumberOfLiveAccumulator;
 #if PRINT_DEBUG
         REPORT("%d forked from %d\n",id,a.id);
@@ -114,6 +136,7 @@ public:
     template<typename Tag>
     void operator()( const Range& r, Tag /*tag*/ ) {
         Snooze(true);
+        ASSERT( Tag::is_final_scan() ? my_state==full : my_state==partial, NULL );
 #if PRINT_DEBUG
         if( my_range.empty() )
             REPORT("%d computing %s [%ld..%ld)\n",id,Tag::is_final_scan()?"final":"lookahead",r.begin(),r.end() );
@@ -127,7 +150,7 @@ public:
                 ASSERT( AddendHistory[i]<USED_FINAL, "addend used 'finally' twice?" );
                 AddendHistory[i] |= USED_FINAL;
                 my_sum[i] = my_total;
-                VerifySum( 0L, i, int(my_sum[i]), __LINE__ );
+                VerifySum( 42, i, int(my_sum[i]), __LINE__ );
             } else {
                 ASSERT( AddendHistory[i]==UNUSED, "addend used too many times" );
                 AddendHistory[i] |= USED_NONFINAL;
@@ -147,6 +170,8 @@ public:
                id,my_range.begin(),my_range.end());
 #endif /* PRINT_DEBUG */
         Snooze(true);
+        ASSERT( my_state==partial, NULL );
+        ASSERT( left.my_state==full || left.my_state==partial, NULL );
         ASSERT( ScanIsRunning, NULL );
         ASSERT( left.my_range.end()==my_range.begin(), NULL );
         my_total += left.my_total;
@@ -156,23 +181,28 @@ public:
         ASSERT( ScanIsRunning, NULL );
         ASSERT( self==this, NULL );
         ASSERT( left.self==&left, NULL );
+        my_state = left.my_state;
     }
     void assign( const Accumulator& other ) {
+        ASSERT(other.my_state==full, NULL);
+        ASSERT(my_state==full, NULL);
         my_total = other.my_total;
         my_range = other.my_range;
         ASSERT( self==this, NULL );
         ASSERT( other.self==&other, "other Accumulator corrupted or prematurely destroyed" );
+        my_state = summary;
+        other.my_state = trash;
     }
 };
 
 #include "tbb/tick_count.h"
 #include "harness.h"
 
-static void VerifySum( long start_index, long finish_index, int sum, int line ) {
-    int expected = TriangularSum( finish_index ) - TriangularSum( start_index );
+static void VerifySum( int init, long finish_index, int sum, int line ) {
+    int expected = init + TriangularSum( finish_index );
     if( expected!=sum ) {
-        REPORT( "line %d: sum[%ld..%ld] should be = %d, but was computed as %d\n",
-                line, start_index, finish_index, expected, sum );
+        REPORT( "line %d: sum[0..%ld] should be = %d, but was computed as %d\n",
+                line, finish_index, expected, sum );
         abort();
     }
 }
@@ -189,7 +219,7 @@ void TestAccumulator( int mode, int nthread ) {
         }
         for( long i=0; i<n; ++i )
             addend[i] = i;
-        Accumulator<T> acc( addend, sum );
+        Accumulator<T> acc( 42, addend, sum );
         tbb::tick_count t0 = tbb::tick_count::now();
 #if PRINT_DEBUG
         REPORT("--------- mode=%d range=[0..%ld)\n",mode,n);
@@ -220,13 +250,13 @@ void TestAccumulator( int mode, int nthread ) {
                 REPORT("failed to use addend[%ld] %s\n",i,AddendHistory[i]&USED_NONFINAL?"(but used nonfinal)":"");
             }
         for( long i=0; i<n; ++i ) {
-            VerifySum( 0, i, sum[i], __LINE__ );
+            VerifySum( 42, i, sum[i], __LINE__ );
             used_once_count += AddendHistory[i]==USED_FINAL;
         }
         if( n )
             ASSERT( acc.my_total==sum[n-1], NULL );
         else
-            ASSERT( acc.my_total==0, NULL );
+            ASSERT( acc.my_total==42, NULL );
         REMARK("time [n=%ld] = %g\tused_once%% = %g\tnthread=%d\n",n,(t1-t0).seconds(), n==0 ? 0 : 100.0*used_once_count/n,nthread);
     }
     delete[] addend;

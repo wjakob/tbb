@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef __TBB_tbbmalloc_internal_H
@@ -455,16 +455,31 @@ public:
     void registerRealloc(size_t oldSize, size_t newSize);
 };
 
+// select index size for BackRefMaster based on word size: default is uint32_t,
+// uint16_t for 32-bit platforms
+template<bool>
+struct MasterIndexSelect {
+    typedef uint32_t master_type;
+};
+
+template<>
+struct MasterIndexSelect<false> {
+    typedef uint16_t master_type;
+};
+
 class BackRefIdx { // composite index to backreference array
+public:
+    typedef MasterIndexSelect<4 < sizeof(uintptr_t)>::master_type master_t;
 private:
-    uint16_t master;      // index in BackRefMaster
+    static const master_t invalid = ~master_t(0);
+    master_t master;      // index in BackRefMaster
     uint16_t largeObj:1;  // is this object "large"?
     uint16_t offset  :15; // offset from beginning of BackRefBlock
 public:
-    BackRefIdx() : master((uint16_t)-1) {}
-    bool isInvalid() const { return master == (uint16_t)-1; }
+    BackRefIdx() : master(invalid) {}
+    bool isInvalid() const { return master == invalid; }
     bool isLargeObject() const { return largeObj; }
-    uint16_t getMaster() const { return master; }
+    master_t getMaster() const { return master; }
     uint16_t getOffset() const { return offset; }
 
     // only newBackRef can modify BackRefIdx
@@ -603,6 +618,10 @@ public:
 
     enum {
         NO_BIN = -1,
+        // special bin for blocks >= maxBinned_HugePage, blocks go to this bin
+        // when pool is created with keepAllMemory policy
+        // TODO: currently this bin is scanned using "1st fit", as it accumulates
+        // blocks of different sizes, "best fit" is preferred in terms of fragmentation
         HUGE_BIN = freeBinsNum-1
     };
 
@@ -933,6 +952,8 @@ public:
 // to get huge page is registered only 1st time), that is negligible.
 // setMode is also can be called concurrently.
 // Object must reside in zero-initialized memory
+// TODO: can we check for huge page presence during every 10th mmap() call
+// in case huge page is released by another process?
 class HugePagesStatus {
 private:
     AllocControlledMode requestedMode; // changed only by user

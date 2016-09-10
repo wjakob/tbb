@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "tbb/tbb_config.h"
@@ -106,7 +106,7 @@ class LeafTask : public tbb::task {
     int m_tid;
     uintptr_t m_opts;
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         volatile int anchor = 0;
         for ( int i = 0; i < NumIterations; ++i )
             anchor += i;
@@ -164,7 +164,7 @@ public:
 };
 
 class NestedGroupNodeTask : public NodeTask<NestedGroupNodeTask> {
-    task* execute () {
+    task* execute () __TBB_override {
         tbb::task_group_context ctx; // Use bound context
         tbb::empty_task &r = *new( task::allocate_root(ctx) ) tbb::empty_task;
         SpawnChildren(&r);
@@ -179,7 +179,7 @@ public:
 };
 
 class BlockingNodeTask : public NodeTask<BlockingNodeTask> {
-    task* execute () {
+    task* execute () __TBB_override {
         SpawnChildren(this);
         wait_for_all();
         return NULL;
@@ -190,7 +190,7 @@ public:
 };
 
 class NonblockingNodeTask : public NodeTask<NonblockingNodeTask> {
-    task* execute () {
+    task* execute () __TBB_override {
         if ( m_depth < 0 )
             return NULL; // I'm just a continuation now
         recycle_as_safe_continuation();
@@ -332,7 +332,7 @@ void TestPrioritySwitchBetweenTwoMasters () {
 }
 
 class SingleChildRootTask : public tbb::task {
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         set_ref_count(2);
         spawn ( *new(allocate_child()) tbb::empty_task );
         wait_for_all();
@@ -420,11 +420,16 @@ void TestPriorityAssertions () {
 
 tbb::atomic<tbb::priority_t> g_order;
 tbb::atomic<bool> g_order_established;
+tbb::atomic<int> g_num_tasks;
+tbb::atomic<bool> g_all_tasks_enqueued;
+int g_failures;
 class OrderedTask : public tbb::task {
     tbb::priority_t my_priority;
 public:
-    OrderedTask(tbb::priority_t p) : my_priority(p) {}
-    tbb::task* execute() {
+    OrderedTask(tbb::priority_t p) : my_priority(p) {
+        ++g_num_tasks;
+    }
+    tbb::task* execute() __TBB_override {
         tbb::priority_t prev = g_order.fetch_and_store(my_priority);
         if( my_priority != prev) {
             REMARK("prev:%s --> new:%s\n", PriorityName(prev), PriorityName(my_priority));
@@ -435,12 +440,18 @@ public:
                     g_order_established = true;
                 else ASSERT(my_priority == tbb::priority_normal && prev == tbb::priority_low, NULL);
             } else { //transition path allowed high->normal->low
-                if(prev == tbb::priority_high) ASSERT( my_priority == tbb::priority_normal, "previous priority is high - bad order");
-                else if(prev == tbb::priority_normal) ASSERT( my_priority == tbb::priority_low, "previous priority is normal - bad order");
-                else ASSERT(!g_order_established, "transition from low priority but not during initialization");
+                bool fail = prev==tbb::priority_high && my_priority!=tbb::priority_normal; // previous priority is high - bad order
+                fail |= prev==tbb::priority_normal && my_priority!=tbb::priority_low; // previous priority is normal - bad order
+                fail |= prev==tbb::priority_low; // transition from low priority but not during initialization
+                if ( fail ) {
+                    if ( g_all_tasks_enqueued )
+                        REPORT_ONCE( "ERROR: Bad order: prev = %s, my_priority = %s\n", PriorityName( prev ), PriorityName( my_priority ) );
+                    ++g_failures;
+                }
             }
         }
         EmulateWork(0);
+        --g_num_tasks;
         return NULL;
     }
     static void start(int i) {
@@ -456,10 +467,21 @@ void TestEnqueueOrder () {
     tbb::task_scheduler_init init(1); // to simplify transition checks only one extra worker for enqueue
     g_order = tbb::priority_low;
     g_order_established = false;
+    g_all_tasks_enqueued = false;
+    g_failures = 0;
     for( int i = 0; i < 1000; i++)
         OrderedTask::start(i);
-    while( g_order == tbb::priority_low ) __TBB_Yield();
-    while( g_order != tbb::priority_low ) __TBB_Yield();
+    if ( int curr_num_tasks = g_num_tasks ) {
+        // Sync with worker not to set g_all_tasks_enqueued too early.
+        while ( curr_num_tasks == g_num_tasks ) __TBB_Yield();
+    }
+    g_all_tasks_enqueued = true;
+    while( g_order == tbb::priority_low && g_num_tasks>0 ) __TBB_Yield();
+    while( g_order != tbb::priority_low && g_num_tasks>0 ) __TBB_Yield();
+    // We cannot differentiate if this misbehavior is caused by the test or by the implementation.
+    // Howerever, we do not promise mandatory priorities so we can state that the misbehavior in less
+    // than 1% cases is our best effort.
+    ASSERT( g_failures < 5, "Too many failures" );
 }
 
 namespace test_propagation {
@@ -478,7 +500,7 @@ class TestSetPriorityTask : public tbb::task {
     const int m_tree, m_i;
 public:
     TestSetPriorityTask(int t, int i) : m_tree(t), m_i(i) {}
-    tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         if( !m_i ) { // the first task creates two trees
             g_default_ctx = group();
             for( int i = 0; i <= 1; ++i ) {
@@ -506,6 +528,11 @@ public:
 void TestSetPriority() {
     REMARK("Testing set_priority() with existing forest\n");
     const int workers = last*2+1; // +1 is worker thread executing the first task
+    const int max_workers = 4*tbb::task_scheduler_init::default_num_threads();
+    if ( workers+1 > max_workers ) {
+        REPORT( "Known issue: TestSetPriority requires %d threads but due to 4P hard limit the maximum number of threads is %d\n", workers+1, max_workers );
+        return;
+    }
     tbb::task_scheduler_init init(workers+1); // +1 is master thread
     g_barrier = workers;
     is_finished = false;
@@ -548,19 +575,12 @@ void TestSetPriority() {
 }
 }//namespace test_propagation
 
-// TODO: consider common helper for empty bodies, e.g. Harness::DummyBody.
-struct NestedParFor {
-    void operator()(int) const {
-        for (volatile int i = 0; i < 1000; ++i);
-    }
-};
-
 struct OuterParFor {
     void operator()(int) const {
         tbb::affinity_partitioner ap;
         tbb::task_group_context ctx;
         ctx.set_priority(tbb::priority_high);
-        tbb::parallel_for(0, 100, NestedParFor(), ap, ctx);
+        tbb::parallel_for(0, 100, Harness::DummyBody(1000), ap, ctx);
     }
 };
 
