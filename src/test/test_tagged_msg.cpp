@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #define _VARIADIC_MAX 10   // Visual Studio 2012
@@ -52,30 +52,31 @@ typedef tbb::flow::tagged_msg<size_t, int, char, double, odd_array_type, odder_a
 
 // test base of tagged_msg
 void TestWrapper() {
-    tbb::flow::interface8::internal::Wrapper<int> wi(42);
-    const tbb::flow::interface8::internal::Wrapper<int> wic(23);
+    using tbb::flow::interface9::internal::Wrapper;
+    Wrapper<int> wi(42);
+    Wrapper<int> wic(23);
 
     REMARK("Value of wic is %d\n", wic.value());
 
     // pointer-type creation
     int point_to_me = 23;
-    tbb::flow::interface8::internal::Wrapper<int_ptr> wip(&point_to_me);
+    Wrapper<int_ptr> wip(&point_to_me);
     ASSERT(*(wip.value()) == 23, "Error in wip value");
 
     odd_array_type ww;
     for(int ii = 0; ii < 15; ++ii) { ww[ii] = char('0' + ii); } ww[14] = 0;
 
-    tbb::flow::interface8::internal::Wrapper<odd_array_type> ci(ww);
+    Wrapper<odd_array_type> ci(ww);
     ASSERT(!strncmp(ci.value(), ww, 14), "odd_array_type ci not properly-constructed" );
 
-    tbb::flow::interface8::internal::Wrapper<odd_array_type> ci2(ci);
+    Wrapper<odd_array_type> ci2(ci);
 
     ASSERT(!strncmp(ci2.value(), ww, 14), "odd_array_type ci2 not properly-constructed" );
 
     d_vector di;
     di.clear();
     di.push_back(2.0);
-    tbb::flow::interface8::internal::Wrapper<d_vector> dvec(di);
+    Wrapper<d_vector> dvec(di);
     ASSERT(dvec.value()[0] == 2.0, "incorrect value in vector");
 
     // test array of non-PODs.
@@ -84,17 +85,17 @@ void TestWrapper() {
     oia[1].clear();
     oia[0].push_back(3);
     oia[1].push_back(2);
-    tbb::flow::interface8::internal::Wrapper<i_vector_array> ia(oia);
+    Wrapper<i_vector_array> ia(oia);
     ASSERT((ia.value()[1])[0] == 2, "integer vector array element[1] misbehaved");
     ASSERT((ia.value()[0])[0] == 3, "integer vector array element[0] misbehaved");
-    tbb::flow::interface8::internal::Wrapper<i_vector_array> iac(ia);
+    Wrapper<i_vector_array> iac(ia);
     ASSERT((iac.value()[1])[0] == 2, "integer vector array element[1] misbehaved");
     ASSERT((iac.value()[0])[0] == 3, "integer vector array element[0] misbehaved");
 
     // counted_array
     counted_array_type cat_orig;
     for(int i = 0; i < 12; ++i) cat_orig[i] = i + 1;
-    tbb::flow::interface8::internal::Wrapper<counted_array_type> cat(cat_orig);
+    Wrapper<counted_array_type> cat(cat_orig);
     for(int j = 0; j < 12; ++j)
         ASSERT(1 + j == cat.value()[j], "Error in cat array");
 

@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "tbbmalloc_internal.h"
@@ -36,19 +36,20 @@ struct BackRefBlock : public BlockI {
     // list of all blocks that were allocated from raw mem (i.e., not from backend)
     BackRefBlock *nextRawMemBlock;
     int           allocatedCount; // the number of objects allocated
-    int           myNum;          // the index in the master
+    BackRefIdx::master_t myNum;   // the index in the master
     MallocMutex   blockMutex;
     // true if this block has been added to the listForUse chain,
     // modifications protected by masterMutex
     bool          addedToForUse;
 
-    BackRefBlock(const BackRefBlock *blockToUse, int num) :
+    BackRefBlock(const BackRefBlock *blockToUse, intptr_t num) :
         nextForUse(NULL), bumpPtr((FreeObject*)((uintptr_t)blockToUse + slabSize - sizeof(void*))),
         freeList(NULL), nextRawMemBlock(NULL), allocatedCount(0), myNum(num),
         addedToForUse(false) {
         memset(&blockMutex, 0, sizeof(MallocMutex));
-        // index in BackRefMaster must fit to uint16_t
-        MALLOC_ASSERT(!(myNum >> 16), ASSERT_TEXT);
+
+        MALLOC_ASSERT(!(num >> CHAR_BIT*sizeof(BackRefIdx::master_t)),
+                      "index in BackRefMaster must fit to BackRefIdx::master");
     }
     // clean all but header
     void zeroSet() { memset(this+1, 0, BackRefBlock::bytes-sizeof(BackRefBlock)); }
@@ -59,17 +60,20 @@ struct BackRefBlock : public BlockI {
 static const int BR_MAX_CNT = (BackRefBlock::bytes-sizeof(BackRefBlock))/sizeof(void*);
 
 struct BackRefMaster {
-/* A slab block can hold up to ~2K back pointers to slab blocks or large objects,
- * so it can address at least 32MB. The array of 64KB holds 8K pointers
- * to such blocks, addressing ~256 GB.
+/* On 64-bit systems a slab block can hold up to ~2K back pointers to slab blocks
+ * or large objects, so it can address at least 32MB. The master array of 256KB
+ * holds 32K pointers to such blocks, addressing ~1 TB.
+ * On 32-bit systems there is ~4K back pointers in a slab block, so ~64MB can be addressed.
+ * The master array of 8KB holds 2K pointers to leaves, so ~128 GB can addressed.
  */
-    static const size_t bytes = 64*1024;
+    static const size_t bytes = sizeof(uintptr_t)>4? 256*1024 : 8*1024;
     static const int dataSz;
 /* space is reserved for master table and 4 leaves
    taking into account VirtualAlloc allocation granularity */
     static const int leaves = 4;
     static const size_t masterSize = BackRefMaster::bytes+leaves*BackRefBlock::bytes;
-    // take into account VirtualAlloc 64KB granularity
+    // The size of memory request for a few more leaf blocks;
+    // selected to match VirtualAlloc granularity
     static const size_t blockSpaceSize = 64*1024;
 
     Backend       *backend;
@@ -146,6 +150,7 @@ void BackRefMaster::initEmptyBackRefBlock(BackRefBlock *newBl)
 {
     intptr_t nextLU = lastUsed+1;
     new (newBl) BackRefBlock(newBl, nextLU);
+    MALLOC_ASSERT(nextLU < dataSz, NULL);
     backRefBl[nextLU] = newBl;
     // lastUsed is read in getBackRef, and access to backRefBl[lastUsed]
     // is possible only after checking backref against current lastUsed
@@ -157,6 +162,9 @@ bool BackRefMaster::requestNewSpace()
     bool rawMemUsed;
     MALLOC_STATIC_ASSERT(!(blockSpaceSize % BackRefBlock::bytes),
                          "Must request space for whole number of blocks.");
+
+    if (backRefMaster->dataSz <= lastUsed + 1) // no space in master
+        return false;
 
     // only one thread at a time may add blocks
     MallocMutex::scoped_lock newSpaceLock(requestNewSpaceMutex);
@@ -173,14 +181,24 @@ bool BackRefMaster::requestNewSpace()
         bl->zeroSet();
 
     MallocMutex::scoped_lock lock(masterMutex); // ... and share under lock
+
+    const size_t numOfUnusedIdxs = backRefMaster->dataSz - lastUsed - 1;
+    if (numOfUnusedIdxs <= 0) { // no space in master under lock, roll back
+        backend->putBackRefSpace(newBl, blockSpaceSize, rawMemUsed);
+        return false;
+    }
+    // It's possible that only part of newBl is used, due to lack of indices in master.
+    // This is OK as such underutilization is possible only once for backreferneces table.
+    int blocksToUse = min(numOfUnusedIdxs, blockSpaceSize / BackRefBlock::bytes);
+
     // use the first block in the batch to maintain the list of "raw" memory
     // to be released at shutdown
     if (rawMemUsed) {
         newBl->nextRawMemBlock = backRefMaster->allRawMemBlocks;
         backRefMaster->allRawMemBlocks = newBl;
     }
-    for (BackRefBlock *bl = newBl; (uintptr_t)bl < (uintptr_t)newBl + blockSpaceSize;
-         bl = (BackRefBlock*)((uintptr_t)bl + BackRefBlock::bytes)) {
+    for (BackRefBlock *bl = newBl; blocksToUse>0;
+         bl = (BackRefBlock*)((uintptr_t)bl + BackRefBlock::bytes), blocksToUse--) {
         initEmptyBackRefBlock(bl);
         if (active->allocatedCount == BR_MAX_CNT)
             active = bl; // active leaf is not needed in listForUse
@@ -204,10 +222,9 @@ BackRefBlock *BackRefMaster::findFreeBlock()
             MALLOC_ASSERT(active->addedToForUse, ASSERT_TEXT);
             active->addedToForUse = false;
         }
-    } else if (lastUsed-1 < backRefMaster->dataSz) {    // allocate new data node
-        if (!requestNewSpace()) return NULL;
-    } else // no free space in BackRefMaster, give up
-        return NULL;
+    } else // allocate new data node
+        if (!requestNewSpace())
+            return NULL;
     return active;
 }
 

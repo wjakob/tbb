@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "harness_task.h"
@@ -45,8 +45,7 @@ public:
         , m_GoAhead(true)
     {}
 
-    /*override*/
-    tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         // Using large padding array speeds up reaching stealing limit
         const int paddingSize = 16 * 1024;
         volatile char padding[paddingSize];
@@ -92,7 +91,7 @@ class RecursiveTask: public tbb::task {
     }
 public:
     RecursiveTask( int child_count, int depth_ ) : m_ChildCount(child_count), m_Depth(depth_) {}
-    /*override*/ tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         ++Count;
         if( m_Depth>0 ) {
             tbb::task_list list;
@@ -188,11 +187,11 @@ struct AffinityTask: public tbb::task {
         ASSERT( 0u-expected_affinity_id>0u, "affinity_id not an unsigned integral type?" );
         ASSERT( affinity()==expected_affinity_id, NULL );
     }
-    /*override*/ tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         ++TotalCount;
         return NULL;
     }
-    /*override*/ void note_affinity( affinity_id id ) {
+    void note_affinity( affinity_id id ) __TBB_override {
         // There is no guarantee in TBB that a task runs on its affinity thread.
         // However, the current implementation does accidentally guarantee it
         // under certain conditions, such as the conditions here.
@@ -241,10 +240,10 @@ struct NoteAffinityTask: public tbb::task {
     ~NoteAffinityTask () {
         ASSERT (noted, "note_affinity has not been called");
     }
-    /*override*/ tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         return NULL;
     }
-    /*override*/ void note_affinity( affinity_id /*id*/ ) {
+    void note_affinity( affinity_id /*id*/ ) __TBB_override {
         noted = true;
         ASSERT ( &self() == (tbb::task*)this, "Wrong innermost running task" );
     }
@@ -309,7 +308,7 @@ struct UnconstructibleTask: public tbb::empty_task {
 
 template<size_t N>
 struct RootTaskForTestUnconstructibleTask: public tbb::task {
-    tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         tbb::task* original_parent = parent();
         ASSERT( original_parent!=NULL, NULL );
         int original_ref_count = ref_count();
@@ -348,7 +347,7 @@ class TaskWithMember: public tbb::task {
     T x;
     T y;
     unsigned char count;
-    /*override*/ tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         x = y;
         if( count>0 ) {
             set_ref_count(2);
@@ -403,7 +402,7 @@ struct RightFibTask: public tbb::task {
     int* y;
     const int n;
     RightFibTask( int* y_, int n_ ) : y(y_), n(n_) {}
-    task* execute() {
+    task* execute() __TBB_override {
         *y = Fib(n-1);
         return 0;
     }
@@ -454,7 +453,7 @@ class DagTask: public tbb::task {
 public:
     DagTask *successor_to_below, *successor_to_right;
     DagTask( int i_, int j_ ) : i(i_), j(j_), sum_from_left(0), sum_from_above(0) {}
-    task* execute() {
+    task* execute() __TBB_override {
         ASSERT( ref_count()==0, NULL );
         number_t sum = i==0 && j==0 ? 1 : sum_from_left+sum_from_above;
         check_sum(sum);
@@ -514,7 +513,7 @@ class RelaxedOwnershipTask: public tbb::task {
               &m_taskToExecute;
     static Harness::SpinBarrier m_barrier;
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         tbb::task &p = *parent();
         tbb::task &r = *new( allocate_root() ) tbb::empty_task;
         r.set_ref_count( 1 );
@@ -596,8 +595,7 @@ public:
         , m_GoAhead(false)
     {}
 
-    /*override*/
-    tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         m_GoAhead = true;
         if ( m_Depth > 0 ) {
             TaskWithChildToSteal &t = *new( allocate_child() ) TaskWithChildToSteal(m_Depth - 1);
@@ -664,7 +662,7 @@ using tbb::internal::spin_wait_until_eq;
 class LongRunningTask : public tbb::task {
     volatile bool& m_CanProceed;
 
-    tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         spin_wait_until_eq( m_CanProceed, true );
         return NULL;
     }
@@ -703,7 +701,7 @@ struct MasterBody : NoAssign, Harness::NoAfterlife {
         volatile bool& m_Started;
         volatile bool& m_CanProceed;
 
-        tbb::task* execute() {
+        tbb::task* execute() __TBB_override {
             m_Started = true;
             spin_wait_until_eq( m_CanProceed, true );
             volatile int k = 0;
@@ -719,7 +717,7 @@ struct MasterBody : NoAssign, Harness::NoAfterlife {
     class BinaryRecursiveTask : public tbb::task {
         int m_Depth;
 
-        tbb::task* execute() {
+        tbb::task* execute() __TBB_override {
             if( !m_Depth )
                 return NULL;
             set_ref_count(3);
@@ -729,7 +727,7 @@ struct MasterBody : NoAssign, Harness::NoAfterlife {
             return NULL;
         }
 
-        void note_affinity( affinity_id ) {
+        void note_affinity( affinity_id ) __TBB_override {
             ASSERT( false, "These tasks cannot be stolen" );
         }
     public:
@@ -776,7 +774,7 @@ void TestMastersIsolation ( int p ) {
 }
 
 struct waitable_task : tbb::task {
-    tbb::task* execute() {
+    tbb::task* execute() __TBB_override {
         recycle_as_safe_continuation(); // do not destroy the task after execution
         set_parent(this);               // decrement its own ref_count after completion
         __TBB_Yield();

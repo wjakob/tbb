@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef __TBB_partitioner_H
@@ -64,9 +64,7 @@ namespace tbb {
 
 class auto_partitioner;
 class simple_partitioner;
-#if TBB_PREVIEW_STATIC_PARTITIONER
 class static_partitioner;
-#endif
 class affinity_partitioner;
 
 namespace interface9 {
@@ -130,7 +128,7 @@ class flag_task: public task {
 public:
     tbb::atomic<bool> my_child_stolen;
     flag_task() { my_child_stolen = false; }
-    task* execute() { return NULL; }
+    task* execute() __TBB_override { return NULL; }
     static void mark_task_stolen(task &t) {
         tbb::atomic<bool> &flag = static_cast<flag_task*>(t.parent())->my_child_stolen;
 #if TBB_USE_THREADING_TOOLS
@@ -519,22 +517,16 @@ public:
     }
 };
 
-#if TBB_PREVIEW_STATIC_PARTITIONER
-#ifndef __TBB_STATIC_PARTITIONER_BASE_TYPE
-#define __TBB_STATIC_PARTITIONER_BASE_TYPE unbalancing_partition_type
-#endif
-class static_partition_type : public __TBB_STATIC_PARTITIONER_BASE_TYPE<linear_affinity_mode<static_partition_type> > {
+class static_partition_type : public unbalancing_partition_type<linear_affinity_mode<static_partition_type> > {
 public:
     typedef proportional_split split_type;
     static_partition_type( const static_partitioner& )
-        : __TBB_STATIC_PARTITIONER_BASE_TYPE<linear_affinity_mode<static_partition_type> >() {}
+        : unbalancing_partition_type<linear_affinity_mode<static_partition_type> >() {}
     static_partition_type( static_partition_type& p, split )
-        : __TBB_STATIC_PARTITIONER_BASE_TYPE<linear_affinity_mode<static_partition_type> >(p, split()) {}
+        : unbalancing_partition_type<linear_affinity_mode<static_partition_type> >(p, split()) {}
     static_partition_type( static_partition_type& p, const proportional_split& split_obj )
-        : __TBB_STATIC_PARTITIONER_BASE_TYPE<linear_affinity_mode<static_partition_type> >(p, split_obj) {}
+        : unbalancing_partition_type<linear_affinity_mode<static_partition_type> >(p, split_obj) {}
 };
-#undef __TBB_STATIC_PARTITIONER_BASE_TYPE
-#endif
 
 class affinity_partition_type : public balancing_partition_type<linear_affinity_mode<affinity_partition_type> > {
     static const unsigned factor_power = 4; // TODO: get a unified formula based on number of computing units
@@ -641,7 +633,6 @@ private:
     typedef interface9::internal::auto_partition_type::split_type split_type;
 };
 
-#if TBB_PREVIEW_STATIC_PARTITIONER
 //! A static partitioner
 class static_partitioner {
 public:
@@ -659,7 +650,6 @@ private:
     // TODO: consider to make split_type public
     typedef interface9::internal::static_partition_type::split_type split_type;
 };
-#endif
 
 //! An affinity partitioner
 class affinity_partitioner: internal::affinity_partitioner_base_v3 {

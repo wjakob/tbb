@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #define HARNESS_DEFAULT_MIN_THREADS 2
@@ -112,7 +112,7 @@ inline void WaitForException () {
 }
 
 class TaskBase : public tbb::task {
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         tbb::task* t = NULL;
         __TBB_TRY {
             t = do_execute();
@@ -133,7 +133,7 @@ protected:
 }; // class TaskBase
 
 class LeafTask : public TaskBase {
-    tbb::task* do_execute () {
+    tbb::task* do_execute () __TBB_override {
         Harness::ConcurrencyTracker ct;
         WaitUntilConcurrencyPeaks();
         if ( g_BoostExecutedCount )
@@ -149,7 +149,7 @@ public:
 };
 
 class SimpleRootTask : public TaskBase {
-    tbb::task* do_execute () {
+    tbb::task* do_execute () __TBB_override {
         set_ref_count(NUM_CHILD_TASKS + 1);
         for ( size_t i = 0; i < NUM_CHILD_TASKS; ++i )
             spawn( *new( allocate_child() ) LeafTask(m_Throw) );
@@ -164,7 +164,7 @@ public:
 
 class SimpleThrowingTask : public tbb::task {
 public:
-    tbb::task* execute () { throw 0; }
+    tbb::task* execute () __TBB_override { throw 0; }
     ~SimpleThrowingTask() {}
 };
 
@@ -237,7 +237,7 @@ void Test3 () {
 class RootLauncherTask : public TaskBase {
     tbb::task_group_context::kind_type m_CtxKind;
 
-    tbb::task* do_execute () {
+    tbb::task* do_execute () __TBB_override {
         tbb::task_group_context  ctx(m_CtxKind);
         SimpleRootTask &r = *new( allocate_root() ) SimpleRootTask;
         r.change_group(ctx);
@@ -291,7 +291,7 @@ void Test4_1 () {
 
 
 class RootsGroupLauncherTask : public TaskBase {
-    tbb::task* do_execute () {
+    tbb::task* do_execute () __TBB_override {
         tbb::task_group_context  ctx (tbb::task_group_context::isolated);
         tbb::task_list  tl;
         for ( size_t i = 0; i < NUM_ROOT_TASKS; ++i )
@@ -326,7 +326,7 @@ void Test5 () {
 } // void Test5 ()
 
 class ThrowingRootLauncherTask : public TaskBase {
-    tbb::task* do_execute () {
+    tbb::task* do_execute () __TBB_override {
         tbb::task_group_context  ctx (tbb::task_group_context::bound);
         SimpleRootTask &r = *new( allocate_root(ctx) ) SimpleRootTask(false);
         TRY();
@@ -347,7 +347,7 @@ class BoundHierarchyLauncherTask : public TaskBase {
             tl.push_back( *new( allocate_root(ctx) ) ThrowingRootLauncherTask );
     }
 
-    tbb::task* do_execute () {
+    tbb::task* do_execute () __TBB_override {
         tbb::task_group_context  ctx (tbb::task_group_context::isolated);
         tbb::task_list tl;
         alloc_roots(ctx, tl);
@@ -425,7 +425,7 @@ void Test7 () {
 } // void Test6 ()
 
 class BoundHierarchyLauncherTask2 : public TaskBase {
-    tbb::task* do_execute () {
+    tbb::task* do_execute () __TBB_override {
         tbb::task_group_context  ctx;
         tbb::task_list  tl;
         for ( size_t i = 0; i < NUM_ROOT_TASKS; ++i )
@@ -505,7 +505,7 @@ typedef tbb::movable_exception<int> SolitaryMovableException;
 typedef tbb::movable_exception<ExceptionData> MultipleMovableException;
 
 class LeafTaskWithMovableExceptions : public TaskBase {
-    tbb::task* do_execute () {
+    tbb::task* do_execute () __TBB_override {
         Harness::ConcurrencyTracker ct;
         WaitUntilConcurrencyPeaks();
         if ( g_SolitaryException )
@@ -608,7 +608,7 @@ template<class T>
 class CtxLauncherTask : public tbb::task {
     tbb::task_group_context &m_Ctx;
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         spawn_root_and_wait( *new( allocate_root(m_Ctx) ) T );
         return NULL;
     }
@@ -634,7 +634,7 @@ void TestCancelation () {
 class CtxDestroyerTask : public tbb::task {
     int m_nestingLevel;
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         ASSERT ( m_nestingLevel >= 0 && m_nestingLevel < MaxNestingDepth, "Wrong nesting level. The test is broken" );
         tbb::task_group_context  ctx;
         tbb::task *t = new( allocate_root(ctx) ) tbb::empty_task;
