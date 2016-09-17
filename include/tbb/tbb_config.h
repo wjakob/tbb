@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef __TBB_tbb_config_H
@@ -36,12 +36,24 @@
 
 /*Check which standard library we use on OS X.*/
 /*__TBB_SYMBOL is defined only while processing exported symbols list where C++ is not allowed.*/
-#if !defined(__TBB_SYMBOL) && __APPLE__
+#if !defined(__TBB_SYMBOL) && (__APPLE__ || __ANDROID__)
     #include <cstddef>
 #endif
 
-// note that when ICC is in use __TBB_GCC_VERSION might not closely match GCC version on the machine
+// note that when ICC or Clang is in use, __TBB_GCC_VERSION might not fully match
+// the actual GCC version on the system.
 #define __TBB_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+
+// Since GNU libstdc++ does not have a convenient macro for its version,
+// we rely on the version of GCC or the user-specified macro below.
+// The format of TBB_USE_GLIBCXX_VERSION should match the __TBB_GCC_VERSION above,
+// e.g. it should be set to 40902 for libstdc++ coming with GCC 4.9.2.
+#ifdef TBB_USE_GLIBCXX_VERSION
+#define __TBB_GLIBCXX_VERSION TBB_USE_GLIBCXX_VERSION
+#else
+#define __TBB_GLIBCXX_VERSION __TBB_GCC_VERSION
+//TODO: analyze __GLIBCXX__ instead of __TBB_GCC_VERSION ?
+#endif
 
 #if __clang__
     /**according to clang documentation version can be vendor specific **/
@@ -86,7 +98,7 @@
 #define __TBB_DEFINE_MIC 1
 #endif
 
-#define __TBB_TSX_AVAILABLE  (__TBB_x86_32 || __TBB_x86_64) && !__TBB_DEFINE_MIC
+#define __TBB_TSX_AVAILABLE  ((__TBB_x86_32 || __TBB_x86_64) && !__TBB_DEFINE_MIC)
 
 /** Presence of compiler features **/
 
@@ -102,7 +114,7 @@
 #endif
 
 /* Select particular features of C++11 based on compiler version.
-   ICC 12.1 (Linux), GCC 4.3 and higher, clang 2.9 and higher
+   ICC 12.1 (Linux*), GCC 4.3 and higher, clang 2.9 and higher
    set __GXX_EXPERIMENTAL_CXX0X__ in c++11 mode.
 
    Compilers that mimics other compilers (ICC, clang) must be processed before
@@ -123,24 +135,24 @@
 
 #if __INTEL_COMPILER && (!_MSC_VER || __INTEL_CXX11_MODE__)
     //  On Windows, C++11 features supported by Visual Studio 2010 and higher are enabled by default,
-    //  so in absense of /Qstd= use MSVC branch for __TBB_CPP11_* detection.
+    //  so in absence of /Qstd= use MSVC branch for __TBB_CPP11_* detection.
     //  On other platforms, no -std= means C++03.
 
     #define __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT          (__INTEL_CXX11_MODE__ && __VARIADIC_TEMPLATES)
     // Both r-value reference support in compiler and std::move/std::forward
     // presence in C++ standard library is checked.
-    #define __TBB_CPP11_RVALUE_REF_PRESENT                  ((__GXX_EXPERIMENTAL_CXX0X__ && (__TBB_GCC_VERSION >= 40300 || _LIBCPP_VERSION) || _MSC_VER >= 1600) && __INTEL_COMPILER >= 1200)
+    #define __TBB_CPP11_RVALUE_REF_PRESENT                  ((_MSC_VER >= 1600 || __GXX_EXPERIMENTAL_CXX0X__ && (__TBB_GLIBCXX_VERSION >= 40300 || _LIBCPP_VERSION)) && __INTEL_COMPILER >= 1200)
     #if  _MSC_VER >= 1600
         #define __TBB_EXCEPTION_PTR_PRESENT                 ( __INTEL_COMPILER > 1300                                                \
                                                             /*ICC 12.1 Upd 10 and 13 beta Upd 2 fixed exception_ptr linking  issue*/ \
                                                             || (__INTEL_COMPILER == 1300 && __INTEL_COMPILER_BUILD_DATE >= 20120530) \
                                                             || (__INTEL_COMPILER == 1210 && __INTEL_COMPILER_BUILD_DATE >= 20120410) )
     /** libstdc++ that comes with GCC 4.6 use C++11 features not supported by ICC 12.1.
-     *  Because of that ICC 12.1 does not support C++11 mode with with gcc 4.6 (or higher),
-     *  and therefore does not  define __GXX_EXPERIMENTAL_CXX0X__ macro **/
-    #elif __TBB_GCC_VERSION >= 40404 && __TBB_GCC_VERSION < 40600
+     *  Because of that ICC 12.1 does not support C++11 mode with gcc 4.6 (or higher),
+     *  and therefore does not define __GXX_EXPERIMENTAL_CXX0X__ macro **/
+    #elif __TBB_GLIBCXX_VERSION >= 40404 && __TBB_GLIBCXX_VERSION < 40600
         #define __TBB_EXCEPTION_PTR_PRESENT                 (__GXX_EXPERIMENTAL_CXX0X__ && __INTEL_COMPILER >= 1200)
-    #elif __TBB_GCC_VERSION >= 40600
+    #elif __TBB_GLIBCXX_VERSION >= 40600
         #define __TBB_EXCEPTION_PTR_PRESENT                 (__GXX_EXPERIMENTAL_CXX0X__ && __INTEL_COMPILER >= 1300)
     #elif _LIBCPP_VERSION
         #define __TBB_EXCEPTION_PTR_PRESENT                 __GXX_EXPERIMENTAL_CXX0X__
@@ -148,33 +160,35 @@
         #define __TBB_EXCEPTION_PTR_PRESENT                 0
     #endif
     #define __TBB_STATIC_ASSERT_PRESENT                     (__INTEL_CXX11_MODE__ || _MSC_VER >= 1600)
-    #define __TBB_CPP11_TUPLE_PRESENT                       (_MSC_VER >= 1600 || (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40300))
+    #define __TBB_CPP11_TUPLE_PRESENT                       (_MSC_VER >= 1600 || __GXX_EXPERIMENTAL_CXX0X__ && (__TBB_GLIBCXX_VERSION >= 40300 || _LIBCPP_VERSION))
     #if (__clang__ && __INTEL_COMPILER > 1400)
         /* Older versions of Intel Compiler do not have __has_include */
         #if (__has_feature(__cxx_generalized_initializers__) && __has_include(<initializer_list>))
             #define __TBB_INITIALIZER_LISTS_PRESENT         1
         #endif
     #else
-        #define __TBB_INITIALIZER_LISTS_PRESENT             __INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1400 && (_MSC_VER >= 1800 || __TBB_GCC_VERSION >= 40400 || _LIBCPP_VERSION)
+        #define __TBB_INITIALIZER_LISTS_PRESENT             (__INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1400 && (_MSC_VER >= 1800 || __TBB_GLIBCXX_VERSION >= 40400 || _LIBCPP_VERSION))
     #endif
 
-    #define __TBB_CONSTEXPR_PRESENT                         __INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1400
-    #define __TBB_DEFAULTED_AND_DELETED_FUNC_PRESENT        __INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1200
+    #define __TBB_CONSTEXPR_PRESENT                         (__INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1400)
+    #define __TBB_DEFAULTED_AND_DELETED_FUNC_PRESENT        (__INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1200)
     /** ICC seems to disable support of noexcept event in c++11 when compiling in compatibility mode for gcc <4.6 **/
-    #define __TBB_NOEXCEPT_PRESENT                          __INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1300 && (__TBB_GCC_VERSION >= 40600 || _LIBCPP_VERSION || _MSC_VER)
-    #define __TBB_CPP11_STD_BEGIN_END_PRESENT               (_MSC_VER >= 1700 || __GXX_EXPERIMENTAL_CXX0X__ && __INTEL_COMPILER >= 1310 && (__TBB_GCC_VERSION >= 40600 || _LIBCPP_VERSION))
+    #define __TBB_NOEXCEPT_PRESENT                          (__INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1300 && (__TBB_GLIBCXX_VERSION >= 40600 || _LIBCPP_VERSION || _MSC_VER))
+    #define __TBB_CPP11_STD_BEGIN_END_PRESENT               (_MSC_VER >= 1700 || __GXX_EXPERIMENTAL_CXX0X__ && __INTEL_COMPILER >= 1310 && (__TBB_GLIBCXX_VERSION >= 40600 || _LIBCPP_VERSION))
     #define __TBB_CPP11_AUTO_PRESENT                        (_MSC_VER >= 1600 || __GXX_EXPERIMENTAL_CXX0X__ && __INTEL_COMPILER >= 1210)
     #define __TBB_CPP11_DECLTYPE_PRESENT                    (_MSC_VER >= 1600 || __GXX_EXPERIMENTAL_CXX0X__ && __INTEL_COMPILER >= 1210)
     #define __TBB_CPP11_LAMBDAS_PRESENT                     (__INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1200)
     #define __TBB_CPP11_DEFAULT_FUNC_TEMPLATE_ARGS_PRESENT  (_MSC_VER >= 1800 || __GXX_EXPERIMENTAL_CXX0X__ && __INTEL_COMPILER >= 1210)
+    #define __TBB_OVERRIDE_PRESENT                          (__INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1400)
+    #define __TBB_ALIGNAS_PRESENT                           (__INTEL_CXX11_MODE__ && __INTEL_COMPILER >= 1500)
 #elif __clang__
-//TODO: these options need to be rechecked
+/** TODO: these options need to be rechecked **/
 /** on OS X* the only way to get C++11 is to use clang. For library features (e.g. exception_ptr) libc++ is also
  *  required. So there is no need to check GCC version for clang**/
-    #define __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT          (__has_feature(__cxx_variadic_templates__))
-    #define __TBB_CPP11_RVALUE_REF_PRESENT                  (__has_feature(__cxx_rvalue_references__) && (__TBB_GCC_VERSION >= 40300 || _LIBCPP_VERSION))
+    #define __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT          __has_feature(__cxx_variadic_templates__)
+    #define __TBB_CPP11_RVALUE_REF_PRESENT                  (__has_feature(__cxx_rvalue_references__) && (_LIBCPP_VERSION || __TBB_GLIBCXX_VERSION >= 40300))
 /** TODO: extend exception_ptr related conditions to cover libstdc++ **/
-    #define __TBB_EXCEPTION_PTR_PRESENT                     (__cplusplus >= 201103L && _LIBCPP_VERSION)
+    #define __TBB_EXCEPTION_PTR_PRESENT                     (__cplusplus >= 201103L && (_LIBCPP_VERSION || __TBB_GLIBCXX_VERSION >= 40600))
     #define __TBB_STATIC_ASSERT_PRESENT                     __has_feature(__cxx_static_assert__)
     /**Clang (preprocessor) has problems with dealing with expression having __has_include in #ifs
      * used inside C++ code. (At least version that comes with OS X 10.8 : Apple LLVM version 4.2 (clang-425.0.28) (based on LLVM 3.2svn)) **/
@@ -188,13 +202,16 @@
     #define __TBB_DEFAULTED_AND_DELETED_FUNC_PRESENT        (__has_feature(__cxx_defaulted_functions__) && __has_feature(__cxx_deleted_functions__))
     /**For some unknown reason  __has_feature(__cxx_noexcept) does not yield true for all cases. Compiler bug ? **/
     #define __TBB_NOEXCEPT_PRESENT                          (__cplusplus >= 201103L)
-    #define __TBB_CPP11_STD_BEGIN_END_PRESENT               (__has_feature(__cxx_range_for__) && _LIBCPP_VERSION)
+    #define __TBB_CPP11_STD_BEGIN_END_PRESENT               (__has_feature(__cxx_range_for__) && (_LIBCPP_VERSION || __TBB_GLIBCXX_VERSION >= 40600))
     #define __TBB_CPP11_AUTO_PRESENT                        __has_feature(__cxx_auto_type__)
     #define __TBB_CPP11_DECLTYPE_PRESENT                    __has_feature(__cxx_decltype__)
     #define __TBB_CPP11_LAMBDAS_PRESENT                     __has_feature(cxx_lambdas)
     #define __TBB_CPP11_DEFAULT_FUNC_TEMPLATE_ARGS_PRESENT  __has_feature(cxx_default_function_template_args)
+    #define __TBB_OVERRIDE_PRESENT                          __has_feature(cxx_override_control)
+    #define __TBB_ALIGNAS_PRESENT                           __has_feature(cxx_alignas)
 #elif __GNUC__
     #define __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT          __GXX_EXPERIMENTAL_CXX0X__
+    #define __TBB_CPP11_VARIADIC_FIXED_LENGTH_EXP_PRESENT   (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40700)
     #define __TBB_CPP11_RVALUE_REF_PRESENT                  __GXX_EXPERIMENTAL_CXX0X__
     /** __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4 here is a substitution for _GLIBCXX_ATOMIC_BUILTINS_4, which is a prerequisite
         for exception_ptr but cannot be used in this file because it is defined in a header, not by the compiler.
@@ -212,6 +229,8 @@
     #define __TBB_CPP11_DECLTYPE_PRESENT                    (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40400)
     #define __TBB_CPP11_LAMBDAS_PRESENT                     (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40500)
     #define __TBB_CPP11_DEFAULT_FUNC_TEMPLATE_ARGS_PRESENT  (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40300)
+    #define __TBB_OVERRIDE_PRESENT                          (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40700)
+    #define __TBB_ALIGNAS_PRESENT                           (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40800)
 #elif _MSC_VER
     #define __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT          (_MSC_VER >= 1800)
     #define __TBB_CPP11_RVALUE_REF_PRESENT                  (_MSC_VER >= 1600)
@@ -227,6 +246,8 @@
     #define __TBB_CPP11_DECLTYPE_PRESENT                    (_MSC_VER >= 1600)
     #define __TBB_CPP11_LAMBDAS_PRESENT                     (_MSC_VER >= 1600)
     #define __TBB_CPP11_DEFAULT_FUNC_TEMPLATE_ARGS_PRESENT  (_MSC_VER >= 1800)
+    #define __TBB_OVERRIDE_PRESENT                          (_MSC_VER >= 1700)
+    #define __TBB_ALIGNAS_PRESENT                           (_MSC_VER >= 1900)
 #else
     #define __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT          0
     #define __TBB_CPP11_RVALUE_REF_PRESENT                  0
@@ -242,23 +263,34 @@
     #define __TBB_CPP11_DECLTYPE_PRESENT                    0
     #define __TBB_CPP11_LAMBDAS_PRESENT                     0
     #define __TBB_CPP11_DEFAULT_FUNC_TEMPLATE_ARGS_PRESENT  0
+    #define __TBB_OVERRIDE_PRESENT                          0
+    #define __TBB_ALIGNAS_PRESENT                           0
 #endif
 
 // C++11 standard library features
 
+#ifndef __TBB_CPP11_VARIADIC_FIXED_LENGTH_EXP_PRESENT
+#define __TBB_CPP11_VARIADIC_FIXED_LENGTH_EXP_PRESENT       __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+#endif
+
 #define __TBB_CPP11_VARIADIC_TUPLE_PRESENT          (!_MSC_VER || _MSC_VER >=1800)
-#define __TBB_CPP11_TYPE_PROPERTIES_PRESENT         (_LIBCPP_VERSION || _MSC_VER >= 1700 || (__TBB_GCC_VERSION >= 50000 && __GXX_EXPERIMENTAL_CXX0X__))
-#define __TBB_TR1_TYPE_PROPERTIES_IN_STD_PRESENT    (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40300 || _MSC_VER >= 1600)
+#define __TBB_CPP11_TYPE_PROPERTIES_PRESENT         (_LIBCPP_VERSION || _MSC_VER >= 1700 || (__TBB_GLIBCXX_VERSION >= 50000 && __GXX_EXPERIMENTAL_CXX0X__))
+#define __TBB_TR1_TYPE_PROPERTIES_IN_STD_PRESENT    (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GLIBCXX_VERSION >= 40300 || _MSC_VER >= 1600)
 // GCC supported some of type properties since 4.7
-#define __TBB_CPP11_IS_COPY_CONSTRUCTIBLE_PRESENT   (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40700 || __TBB_CPP11_TYPE_PROPERTIES_PRESENT)
+#define __TBB_CPP11_IS_COPY_CONSTRUCTIBLE_PRESENT   (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GLIBCXX_VERSION >= 40700 || __TBB_CPP11_TYPE_PROPERTIES_PRESENT)
 
 // In GCC, std::move_if_noexcept appeared later than noexcept
-#define __TBB_MOVE_IF_NOEXCEPT_PRESENT           (__GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40700 || _MSC_VER >= 1900 || __clang__ && _LIBCPP_VERSION && __TBB_NOEXCEPT_PRESENT)
-//TODO: Probably more accurate way is to analyze version of stdlibc++ via__GLIBCXX__ instead of __TBB_GCC_VERSION
-#define __TBB_ALLOCATOR_TRAITS_PRESENT              (__cplusplus >= 201103L && _LIBCPP_VERSION  || _MSC_VER >= 1700 ||                                             \
-                                                     __GXX_EXPERIMENTAL_CXX0X__ && __TBB_GCC_VERSION >= 40700 && !(__TBB_GCC_VERSION == 40700 && __TBB_DEFINE_MIC) \
-                                                    )
-#define __TBB_MAKE_EXCEPTION_PTR_PRESENT         (__TBB_EXCEPTION_PTR_PRESENT && (_MSC_VER >= 1700 || __TBB_GCC_VERSION >= 40600 || _LIBCPP_VERSION))
+#define __TBB_MOVE_IF_NOEXCEPT_PRESENT     (__TBB_NOEXCEPT_PRESENT && (__TBB_GLIBCXX_VERSION >= 40700 || _MSC_VER >= 1900 || _LIBCPP_VERSION))
+#define __TBB_ALLOCATOR_TRAITS_PRESENT     (__cplusplus >= 201103L && _LIBCPP_VERSION  || _MSC_VER >= 1700 ||  \
+                                            __GXX_EXPERIMENTAL_CXX0X__ && __TBB_GLIBCXX_VERSION >= 40700 && !(__TBB_GLIBCXX_VERSION == 40700 && __TBB_DEFINE_MIC))
+#define __TBB_MAKE_EXCEPTION_PTR_PRESENT   (__TBB_EXCEPTION_PTR_PRESENT && (_MSC_VER >= 1700 || __TBB_GLIBCXX_VERSION >= 40600 || _LIBCPP_VERSION))
+
+// std::swap is in <utility> only since C++11, though MSVC had it at least since VS2005
+#if _MSC_VER>=1400 || _LIBCPP_VERSION || __GXX_EXPERIMENTAL_CXX0X__
+#define __TBB_STD_SWAP_HEADER <utility>
+#else
+#define __TBB_STD_SWAP_HEADER <algorithm>
+#endif
 
 //TODO: not clear how exactly this macro affects exception_ptr - investigate
 // On linux ICC fails to find existing std::exception_ptr in libstdc++ without this define
@@ -349,7 +381,7 @@
     #if __clang__
         /* Old versions of Intel Compiler do not have __has_include or cannot use it in #define */
         #if (__INTEL_COMPILER && (__INTEL_COMPILER < 1500 || __INTEL_COMPILER == 1500 && __INTEL_COMPILER_UPDATE <= 1))
-            #define TBB_IMPLEMENT_CPP0X !(_LIBCPP_VERSION && (__cplusplus >= 201103L))
+            #define TBB_IMPLEMENT_CPP0X (__cplusplus < 201103L || !_LIBCPP_VERSION)
         #else
             #define TBB_IMPLEMENT_CPP0X (__cplusplus < 201103L || (!__has_include(<thread>) && !__has_include(<condition_variable>)))
         #endif
@@ -432,6 +464,10 @@
     #define __TBB_SLEEP_PERMISSION ((__TBB_CPF_BUILD||TBB_PREVIEW_LOCAL_OBSERVER)&& __TBB_SCHEDULER_OBSERVER)
 #endif /* __TBB_SLEEP_PERMISSION */
 
+#ifndef __TBB_TASK_ISOLATION
+    #define __TBB_TASK_ISOLATION (__TBB_CPF_BUILD||TBB_PREVIEW_TASK_ISOLATION)
+#endif /* __TBB_TASK_ISOLATION */
+
 #if TBB_PREVIEW_FLOW_GRAPH_TRACE
 // Users of flow-graph trace need to explicitly link against the preview library.  This
 // prevents the linker from implicitly linking an application with a preview version of
@@ -513,7 +549,7 @@
     versions go out of the support list.
 **/
 
-#if __ANDROID__ && __TBB_GCC_VERSION <= 40403 && !__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8
+#if __SIZEOF_POINTER__ < 8 && __ANDROID__ && __TBB_GCC_VERSION <= 40403 && !__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8
     /** Necessary because on Android 8-byte CAS and F&A are not available for some processor architectures,
         but no mandatory warning message appears from GCC 4.4.3. Instead, only a linkage error occurs when
         these atomic operations are used (such as in unit test test_atomic.exe). **/
@@ -536,13 +572,12 @@
     #define __TBB_DEFAULT_DTOR_THROW_SPEC_BROKEN 1
 #endif
 
-#if !__INTEL_COMPILER && (_MSC_VER && _MSC_VER < 1500 || __TBB_GCC_VERSION && __TBB_GCC_VERSION < 40102)
+#if !__INTEL_COMPILER && (_MSC_VER && _MSC_VER < 1500 || __GNUC__ && __TBB_GCC_VERSION < 40102)
     /** gcc 3.4.6 (and earlier) and VS2005 (and earlier) do not allow declaring template class as a friend
         of classes defined in other namespaces. **/
     #define __TBB_TEMPLATE_FRIENDS_BROKEN 1
 #endif
 
-//TODO: recheck for different clang versions 
 #if __GLIBC__==2 && __GLIBC_MINOR__==3 ||  (__APPLE__ && ( __INTEL_COMPILER==1200 && !TBB_USE_DEBUG))
     /** Macro controlling EH usages in TBB tests.
         Some older versions of glibc crash when exception handling happens concurrently. **/
@@ -603,7 +638,7 @@
 
 #if __GXX_EXPERIMENTAL_CXX0X__ && !defined(__EXCEPTIONS) && \
     ((!__INTEL_COMPILER && !__clang__ && (__TBB_GCC_VERSION>=40400 && __TBB_GCC_VERSION<40600)) || \
-     (__INTEL_COMPILER<=1400 && (__TBB_GCC_VERSION>=40400 && __TBB_GCC_VERSION<=40801)))
+     (__INTEL_COMPILER<=1400 && (__TBB_GLIBCXX_VERSION>=40400 && __TBB_GLIBCXX_VERSION<=40801)))
 /* There is an issue for specific GCC toolchain when C++11 is enabled
    and exceptions are disabled:
    exceprion_ptr.h/nested_exception.h use throw unconditionally.
@@ -614,7 +649,7 @@
     #define __TBB_LIBSTDCPP_EXCEPTION_HEADERS_BROKEN 0
 #endif
 
-#if __INTEL_COMPILER==1300 && __TBB_GCC_VERSION>=40700 && defined(__GXX_EXPERIMENTAL_CXX0X__)
+#if __INTEL_COMPILER==1300 && __TBB_GLIBCXX_VERSION>=40700 && defined(__GXX_EXPERIMENTAL_CXX0X__)
 /* Some C++11 features used inside libstdc++ are not supported by Intel compiler.
  * Checking version of gcc instead of libstdc++ because
  *  - they are directly connected,
@@ -639,7 +674,7 @@
     #define __TBB_GCC_CAS8_BUILTIN_INLINING_BROKEN 1
 #endif
 
-#if __TBB_x86_32 && ( __INTEL_COMPILER || (__GNUC__==5 && __GNUC_MINOR__==2 && __GXX_EXPERIMENTAL_CXX0X__) \
+#if __TBB_x86_32 && ( __INTEL_COMPILER || (__GNUC__==5 && __GNUC_MINOR__>=2 && __GXX_EXPERIMENTAL_CXX0X__) \
     || (__GNUC__==3 && __GNUC_MINOR__==3) || (__MINGW32__ && __GNUC__==4 && __GNUC_MINOR__==5) || __SUNPRO_CC )
     // Some compilers for IA-32 architecture fail to provide 8-byte alignment of objects on the stack,
     // even if the object specifies 8-byte alignment. On such platforms, the implementation
@@ -665,11 +700,10 @@
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
 //Some compilers added implicit generation of move constructor & assignment operator in a later version
-#if _MSC_VER
-  // Covers Intel C++ Compiler for Windows, which has compatible behavior
+#if __INTEL_COMPILER
+  #define __TBB_CPP11_IMPLICIT_MOVE_MEMBERS_GENERATION_BROKEN  (__INTEL_COMPILER < 1400 || __INTEL_COMPILER==1600 || _MSC_VER <= 1800)
+#elif _MSC_VER
   #define __TBB_CPP11_IMPLICIT_MOVE_MEMBERS_GENERATION_BROKEN  (_MSC_VER <= 1800)
-#elif __INTEL_COMPILER
-  #define __TBB_CPP11_IMPLICIT_MOVE_MEMBERS_GENERATION_BROKEN  (__INTEL_COMPILER < 1400 || __INTEL_COMPILER==1600)
 #elif __clang__
   #define __TBB_CPP11_IMPLICIT_MOVE_MEMBERS_GENERATION_BROKEN  (!__has_feature(cxx_implicit_moves))
 #endif
@@ -681,7 +715,7 @@
 #define __TBB_COPY_FROM_NON_CONST_REF_BROKEN (_MSC_VER == 1700 && __INTEL_COMPILER && __INTEL_COMPILER < 1600)
 //The implicit upcasting of the tuple of a reference of a derived class to a base class fails on icc 13.X
 //if the system's gcc environment is 4.8
-#if (__INTEL_COMPILER >=1300 && __INTEL_COMPILER <=1310) && __TBB_GCC_VERSION>=40700 && __GXX_EXPERIMENTAL_CXX0X__
+#if (__INTEL_COMPILER >=1300 && __INTEL_COMPILER <=1310) && __TBB_GLIBCXX_VERSION>=40700 && __GXX_EXPERIMENTAL_CXX0X__
     #define __TBB_UPCAST_OF_TUPLE_OF_REF_BROKEN 1
 #endif
 
@@ -708,8 +742,9 @@
                                                 && __TBB_CPP11_RVALUE_REF_PRESENT && __TBB_CPP11_AUTO_PRESENT) \
                                                 && __TBB_CPP11_VARIADIC_TUPLE_PRESENT && __TBB_CPP11_DEFAULT_FUNC_TEMPLATE_ARGS_PRESENT \
                                                 && !__TBB_UPCAST_OF_TUPLE_OF_REF_BROKEN
-#define __TBB_PREVIEW_ASYNC_NODE (__TBB_FLOW_GRAPH_CPP11_FEATURES && TBB_PREVIEW_FLOW_GRAPH_NODES)
-#define __TBB_PREVIEW_OPENCL_NODE               (__TBB_FLOW_GRAPH_CPP11_FEATURES && TBB_PREVIEW_FLOW_GRAPH_NODES && !TBB_IMPLEMENT_CPP0X)
+#define __TBB_PREVIEW_STREAMING_NODE            (__TBB_CPP11_VARIADIC_FIXED_LENGTH_EXP_PRESENT && __TBB_FLOW_GRAPH_CPP11_FEATURES \
+                                                && TBB_PREVIEW_FLOW_GRAPH_NODES && !TBB_IMPLEMENT_CPP0X)
+#define __TBB_PREVIEW_OPENCL_NODE               __TBB_PREVIEW_STREAMING_NODE
 #define __TBB_PREVIEW_MESSAGE_BASED_KEY_MATCHING (TBB_PREVIEW_FLOW_GRAPH_FEATURES || __TBB_PREVIEW_OPENCL_NODE)
 #define __TBB_PREVIEW_ASYNC_MSG                 (TBB_PREVIEW_FLOW_GRAPH_FEATURES && __TBB_FLOW_GRAPH_CPP11_FEATURES)
 #endif /* __TBB_tbb_config_H */

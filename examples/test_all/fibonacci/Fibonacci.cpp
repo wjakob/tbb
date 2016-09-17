@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 /* Example program that computes Fibonacci numbers in different ways.
@@ -71,6 +71,8 @@ struct Matrix2x2
     }
     Matrix2x2 operator * (const Matrix2x2 &to) const; //< Multiply two Matrices
 };
+//! Identity matrix
+static const Matrix2x2 MatrixIdentity(1, 0, 0, 1);
 //! Default matrix to multiply
 static const Matrix2x2 Matrix1110(1, 1, 1, 0);
 //! Raw arrays matrices multiply
@@ -191,8 +193,7 @@ public:
     //! constructor
     ConcurrentHashSerialFibTask( NumbersTable &cht, int n ) : Fib(cht), my_n(n) { }
     //! executing task
-    /*override*/ task* execute()
-    {
+    task* execute() /*override*/ {
         for( int i = 2; i <= my_n; ++i ) { // there is no difference in to recycle or to make loop
             NumbersTable::const_accessor f1, f2; // same as iterators
             if( !Fib.find(f1, i-1) || !Fib.find(f2, i-2) ) {
@@ -287,7 +288,7 @@ struct QueueInsertTask: public task {
     //! fill task arguments
     QueueInsertTask( int n, QueueStream &s ) : my_n(n), my_stream(s) { }
     //! executing task
-    /*override*/ task* execute() {
+    task* execute() /*override*/ {
         // Execute of parallel pushing of n-1 initial matrices
         parallel_for( blocked_range<int>( 1, my_n, 10 ), parallel_forFibBody(my_stream) ); 
         my_stream.producer_is_done = true; 
@@ -300,7 +301,7 @@ struct QueueProcessTask: public task {
     //! fill task argument
     QueueProcessTask( QueueStream &s ) : my_stream(s) { }
     //! executing task
-    /*override*/ task* execute() {
+    task* execute() /*override*/ {
         while( !my_stream.producer_is_done || my_stream.Queue.unsafe_size()>1 ) {
             parallel_while<parallel_whileFibBody> w; // run while loop in parallel
             w.run( my_stream, parallel_whileFibBody( w, my_stream ) );
@@ -336,8 +337,7 @@ public:
     //! fill filter arguments
     InputFilter( int n ) : filter(false /*is not serial*/) { N = n; }
     //! executing filter
-    /*override*/ void* operator()(void*)
-    {
+    void* operator()(void*) /*override*/ {
         int n = --N;
         if(n <= 0) return 0;
         Queue.push( Matrix1110 );
@@ -349,8 +349,7 @@ class MultiplyFilter: public filter {
 public:
     MultiplyFilter( ) : filter(false /*is not serial*/) { }
     //! executing filter
-    /*override*/ void* operator()(void*p)
-    {
+    void* operator()(void*p) /*override*/ {
         concurrent_queue<Matrix2x2> &Queue = *static_cast<concurrent_queue<Matrix2x2> *>(p);
         Matrix2x2 m1, m2;
         // get two elements
@@ -417,35 +416,52 @@ value parallel_reduceFib(int n)
 
 //! Functor for parallel_scan
 struct parallel_scanFibBody {
-    Matrix2x2 sum;
-    int first;  // flag to make one less operation for first range
-    //! Constructor fills sum with initial matrix
-    parallel_scanFibBody() : sum( Matrix1110 ), first(1) {}
+    /** Though parallel_scan is usually used to accumulate running sums,
+        it can be used to accumulate running products too. */
+    Matrix2x2 product;
+    /** Pointer to output sequence */
+    value* const output;
+    //! Constructor sets product to identity matrix
+    parallel_scanFibBody(value* output_) : product( MatrixIdentity ), output(output_) {}
     //! Splitting constructor
-    parallel_scanFibBody( parallel_scanFibBody &b, split) : sum( Matrix1110 ), first(1) {}
-    //! Join point
+    parallel_scanFibBody( parallel_scanFibBody &b, split) : product( MatrixIdentity ), output(b.output) {}
+    //! Method for merging summary information from a, which was split off from *this, into *this.
     void reverse_join( parallel_scanFibBody &a ) {
-        sum = sum * a.sum;
+        // When using non-commutative reduction operation, reverse_join
+        // should put argument "a" on the left side of the operation.
+        // The reversal from the argument order is why the method is
+        // called "reverse_join" instead of "join".
+        product = a.product * product;
     }
-    //! Assign point
+    //! Method for assigning final result back to original body.
     void assign( parallel_scanFibBody &b ) {
-        sum = b.sum;
+        product = b.product;
     }
-    //! Process multiplications. For two tags
-    template<typename T>
-    void operator()( const blocked_range<int> &r, T) {
-        // see tag.is_final_scan() for what tag is used
-        for( int k = r.begin() + first; k < r.end(); ++k )
-            sum = sum * Matrix1110;
-        first = 0; // reset flag, because this method can be reused for next range
+    //! Compute matrix running product.
+    /** Tag indicates whether is is the final scan over the range, or
+        just a helper "prescan" that is computing a partial reduction. */
+    template<typename Tag>
+    void operator()( const blocked_range<int> &r, Tag tag) {
+        for( int k = r.begin(); k < r.end(); ++k ) {
+            // Code performs an "exclusive" scan, which outputs a value *before* updating the product.
+            // For an "inclusive" scan, output the value after the update.
+            if( tag.is_final_scan() )
+                output[k] = product.v[0][1];
+            product = product * Matrix1110;
+        }
     }
 };
 //! Root function
 value parallel_scanFib(int n)
 {
-    parallel_scanFibBody b;
-    parallel_scan(blocked_range<int>(1/*one less, because body skip first*/, n, 3), b);
-    return b.sum.v[0][0];
+    value* output = new value[n];
+    parallel_scanFibBody b(output);
+    parallel_scan(blocked_range<int>(0, n, 3), b);
+    // output[0..n-1] now contains the Fibonacci sequence (modulo integer wrap-around).
+    // Check the last two values for correctness.
+    assert( n<2 || output[n-2]+output[n-1]==b.product.v[0][1] );
+    delete[] output;
+    return b.product.v[0][1];
 }
 
 // *** Raw tasks *** //
@@ -461,7 +477,7 @@ struct FibTask: public task {
         n(n_), sum(sum_), second_phase(false)
     {}
     //! Execute task
-    /*override*/ task* execute() {
+    task* execute() /*override*/ {
         // Using Lucas' formula here
         if( second_phase ) { // children finished
             sum = n&1 ? x*x + y*y : x*x - y*y;

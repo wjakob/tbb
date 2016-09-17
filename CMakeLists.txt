@@ -1,50 +1,21 @@
-cmake_minimum_required (VERSION 2.8)
-project (tbb CXX)
+cmake_minimum_required (VERSION 2.8.7 FATAL_ERROR)
+enable_language(CXX)
+foreach(p
+    CMP048  ##NEW project() behavior for setting VERSION variable
+    CMP0025 # CMake 3.0 AppleClang vs. regular Clang
+    CMP0042 # CMake 3.0 ``MACOSX_RPATH`` is enabled by default.
+    CMP0054 # CMake 3.1 Only interpret ``if()`` arguments as variables or keywords when unquoted.
+    CMP0056 # CMake 3.2 Honor link flags in ``try_compile()`` source-file signature.
+    CMP0058 # CMake 3.3 Ninja requires custom command byproducts to be explicit.
+    CMP0063 # CMake 3.3.2 Honor visibility properties for all target types
+    )
+  if(POLICY ${p})
+    cmake_policy(SET ${p} NEW)
+  endif()
+endforeach()
 
+## Compiler flags need to be modified before the "project()" call
 include (CheckCXXCompilerFlag)
-
-if(POLICY CMP0058)
-  cmake_policy(SET CMP0058 NEW)
-endif()
-
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Setting build type to 'Release' as none was specified.")
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-    "MinSizeRel" "RelWithDebInfo")
-endif()
-
-include_directories(include src src/rml/include ${CMAKE_CURRENT_BINARY_DIR})
-
-option(TBB_BUILD_SHARED          "Build TBB shared library" ON)
-option(TBB_BUILD_STATIC          "Build TBB static library" ON)
-option(TBB_BUILD_TBBMALLOC       "Build TBB malloc library" ON)
-option(TBB_BUILD_TBBMALLOC_PROXY "Build TBB malloc proxy library" ON)
-option(TBB_BUILD_TESTS           "Build TBB tests and enable testing infrastructure" ON)
-
-if(APPLE)
-  set(CMAKE_MACOSX_RPATH ON)
-endif()
-
-file(GLOB tbb_src "${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/old/*.cpp")
-list(APPEND tbb_src ${CMAKE_CURRENT_SOURCE_DIR}/src/rml/client/rml_tbb.cpp)
-file(GLOB to_remove "${CMAKE_CURRENT_SOURCE_DIR}/src/old/test*.cpp")
-list(REMOVE_ITEM tbb_src ${to_remove})
-
-set(tbbmalloc_static_src
-  src/tbbmalloc/backend.cpp
-  src/tbbmalloc/large_objects.cpp
-  src/tbbmalloc/backref.cpp
-  src/tbbmalloc/tbbmalloc.cpp
-  src/tbbmalloc/frontend.cpp
-  src/tbb/itt_notify.cpp)
-
-set(tbbmalloc_src ${tbbmalloc_static_src})
-
-set(tbbmalloc_proxy_src
-  src/tbbmalloc/proxy.cpp
-  src/tbbmalloc/tbb_function_replacement.cpp)
-
 if (NOT APPLE AND NOT MINGW)
   add_definitions(-DDO_ITT_NOTIFY)
 endif()
@@ -62,6 +33,7 @@ if (UNIX)
 
   check_cxx_compiler_flag ("-std=c++11" SUPPORTS_STDCXX11)
   if (SUPPORTS_STDCXX11)
+    set (CMAKE_CXX_STANDARD 11) # For cmake version >= 3.3.2
     set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
   endif ()
 
@@ -110,6 +82,80 @@ elseif (UNIX)
   set(ENABLE_RTTI "-frtti -fexceptions ")
   set(DISABLE_RTTI "-fno-rtti -fno-exceptions ")
 endif ()
+
+
+project(tbb)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
+
+set(tbb_VERSION 2017.0.0)
+include(GenerateExportHeader)
+
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+    "MinSizeRel" "RelWithDebInfo")
+endif()
+
+include_directories(include src src/rml/include ${CMAKE_CURRENT_BINARY_DIR})
+
+option(TBB_BUILD_SHARED          "Build TBB shared library" ON)
+option(TBB_BUILD_STATIC          "Build TBB static library" ON)
+option(TBB_BUILD_TBBMALLOC       "Build TBB malloc library" ON)
+option(TBB_BUILD_TBBMALLOC_PROXY "Build TBB malloc proxy library" ON)
+option(TBB_BUILD_TESTS           "Build TBB tests and enable testing infrastructure" ON)
+
+
+if(APPLE)
+  set(CMAKE_MACOSX_RPATH ON)
+endif()
+
+file(GLOB tbb_src "${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/old/*.cpp")
+list(APPEND tbb_src ${CMAKE_CURRENT_SOURCE_DIR}/src/rml/client/rml_tbb.cpp)
+file(GLOB to_remove "${CMAKE_CURRENT_SOURCE_DIR}/src/old/test*.cpp")
+list(REMOVE_ITEM tbb_src ${to_remove})
+
+set(tbbmalloc_static_src
+  src/tbbmalloc/backend.cpp
+  src/tbbmalloc/large_objects.cpp
+  src/tbbmalloc/backref.cpp
+  src/tbbmalloc/tbbmalloc.cpp
+  src/tbbmalloc/frontend.cpp
+  src/tbb/itt_notify.cpp)
+
+set(tbbmalloc_src ${tbbmalloc_static_src})
+
+set(tbbmalloc_proxy_src
+  src/tbbmalloc/proxy.cpp
+  src/tbbmalloc/tbb_function_replacement.cpp)
+
+##--------
+#   - Added TBB_USE_GLIBCXX_VERSION macro to specify the version of GNU
+#     libstdc++ when it cannot be properly recognized, e.g. when used
+#     with Clang on Linux* OS. Inspired by a contribution from David A.
+if(NOT TBB_USE_GLIBCXX_VERSION AND UNIX AND NOT APPLE)
+  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    # using Clang
+    string(REPLACE "." "0" TBB_USE_GLIBCXX_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+    message(STATUS "TBB_USE_GLIBCXX_VERSION:${TBB_USE_GLIBCXX_VERSION}:")
+
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # Do nothing using GCC
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    # Do nothing when using Intel C++
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    # Do nothgin when using Visual Studio C++
+  endif()
+endif()
+if(TBB_USE_GLIBCXX_VERSION)
+   message(STATUS "ADDING: -DTBB_USE_GLIBCXX_VERSION=${TBB_USE_GLIBCXX_VERSION}")
+   add_definitions(-DTBB_USE_GLIBCXX_VERSION=${TBB_USE_GLIBCXX_VERSION})
+endif()
+
+##-------
 
 # Linker export definitions
 if (APPLE)
@@ -160,6 +206,36 @@ endif()
 
 add_custom_target(tbb_def_files DEPENDS tbb.def tbbmalloc.def)
 
+## From https://cmake.org/cmake/help/v3.0/manual/cmake-packages.7.html#package-configuration-file
+macro(SET_SHARED_LIB_VERSION_PROPERTIES shdlibname extern_def_filename TBB_COMPILE_DEFINITIONS RTTI_FLAGS)
+  generate_export_header(${shdlibname})
+  set_property(TARGET ${shdlibname} PROPERTY VERSION ${tbb_VERSION})
+  set_property(TARGET ${shdlibname} PROPERTY SOVERSION 2017)
+  set_property(TARGET ${shdlibname} PROPERTY INTERFACE_tbb_MAJOR_VERSION 2017)
+  set_property(TARGET ${shdlibname} APPEND PROPERTY COMPATIBLE_INTERFACE_STRING tbb_MAJOR_VERSION)
+
+  set_property(TARGET ${shdlibname} APPEND PROPERTY COMPILE_DEFINITIONS "${TBB_COMPILE_DEFINITIONS}")
+  set_property(TARGET ${shdlibname} APPEND_STRING PROPERTY COMPILE_FLAGS ${RTTI_FLAGS})
+  add_dependencies(${shdlibname} tbb_def_files)
+
+  if (APPLE)
+    set_property(TARGET ${shdlibname} APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/${extern_def_filename}")
+  elseif (MSVC)
+    set_property(TARGET ${shdlibname} APPEND PROPERTY LINK_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}/${extern_def_filename}")
+  else ()
+    set_property(TARGET ${shdlibname} APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/${extern_def_filename}")
+  endif()
+
+install(TARGETS ${shdlibname} EXPORT tbbTargets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+  )
+
+endmacro()
+
+
 # TBB library
 if (TBB_BUILD_STATIC)
   add_library(tbb_static STATIC ${tbb_src})
@@ -170,21 +246,7 @@ endif()
 
 if (TBB_BUILD_SHARED)
   add_library(tbb SHARED ${tbb_src})
-  set_property(TARGET tbb APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
-  set_property(TARGET tbb APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
-  add_dependencies(tbb tbb_def_files)
-
-  if (APPLE)
-    set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
-  elseif (MSVC)
-    set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
-  else ()
-    set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
-  endif()
-  install(TARGETS tbb
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib
-          RUNTIME DESTINATION bin)
+  SET_SHARED_LIB_VERSION_PROPERTIES(tbb tbb.def "__TBB_BUILD=1" "${ENABLE_RTTI}")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -202,24 +264,13 @@ if(TBB_BUILD_TBBMALLOC)
     set_property(TARGET tbbmalloc_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_static APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     install(TARGETS tbbmalloc_static ARCHIVE DESTINATION lib)
+    target_link_libraries(tbbmalloc_static tbb_static)
   endif()
 
   if (TBB_BUILD_SHARED)
     add_library(tbbmalloc SHARED ${tbbmalloc_src})
-    set_property(TARGET tbbmalloc APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
-    set_property(TARGET tbbmalloc APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
-    add_dependencies(tbbmalloc tbb_def_files)
-    if (APPLE)
-      set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
-    elseif (MSVC)
-      set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
-    else ()
-      set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
-    endif()
-    install(TARGETS tbbmalloc
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
+    SET_SHARED_LIB_VERSION_PROPERTIES(tbbmalloc tbbmalloc.def "__TBBMALLOC_BUILD=1" "${DISABLE_RTTI}")
+    target_link_libraries(tbbmalloc tbb)
   endif()
 endif()
 
@@ -230,17 +281,13 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     set_property(TARGET tbbmalloc_proxy_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_proxy_static APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     install(TARGETS tbbmalloc_proxy_static ARCHIVE DESTINATION lib)
+    target_link_libraries(tbbmalloc_proxy_static tbbmalloc_static)
   endif()
 
   if (TBB_BUILD_SHARED)
     add_library(tbbmalloc_proxy SHARED ${tbbmalloc_proxy_src})
-    set_property(TARGET tbbmalloc_proxy APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
-    set_property(TARGET tbbmalloc_proxy APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
+    SET_SHARED_LIB_VERSION_PROPERTIES(tbbmalloc_proxy tbbmalloc.def "__TBBMALLOC_BUILD=1" "${DISABLE_RTTI}")
     target_link_libraries(tbbmalloc_proxy tbbmalloc)
-    install(TARGETS tbbmalloc_proxy
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
   endif()
 endif()
 
@@ -259,7 +306,7 @@ else ()
   set (_configure_date "Unknown")
 endif()
 include_directories (${CMAKE_BINARY_DIR})
-configure_file (build/version_string.ver.in version_string.ver @ONLY)
+configure_file (${CMAKE_CURRENT_LIST_DIR}/build/version_string.ver.in version_string.ver @ONLY)
 
 
 if (TBB_BUILD_TESTS)
@@ -269,7 +316,7 @@ if (TBB_BUILD_TESTS)
   find_library (LIBRT_LIBRARIES rt)
   find_library (LIDL_LIBRARIES dl)
   find_package (Threads)
-  find_package (OpenMP)
+  find_package (OpenMP QUIET)
 
   add_custom_target (tests)
 
@@ -417,3 +464,38 @@ if (TBB_BUILD_TESTS)
   tbb_add_test (write_once_node)
   tbb_add_test (yield)
 endif ()
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/tbb/tbbConfigVersion.cmake"
+  VERSION ${tbb_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+export(EXPORT tbbTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/tbb/tbbTargets.cmake"
+  NAMESPACE tbb::
+)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/build/tbbConfig.cmake
+  "${CMAKE_CURRENT_BINARY_DIR}/tbb/tbbConfig.cmake"
+  COPYONLY
+)
+
+set(ConfigPackageLocation lib/cmake/tbb)
+install(EXPORT tbbTargets
+  FILE
+    tbbTargets.cmake
+  NAMESPACE
+    tbb::
+  DESTINATION
+    ${ConfigPackageLocation}
+)
+install(
+  FILES
+    ${CMAKE_CURRENT_LIST_DIR}/build/tbbConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/tbb/tbbConfigVersion.cmake"
+  DESTINATION
+    ${ConfigPackageLocation}
+  COMPONENT
+    Devel
+)

@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "tbb/scalable_allocator.h"
@@ -274,7 +274,7 @@ Harness::SpinBarrier CrossThreadRun::barrier;
 rml::MemoryPool **CrossThreadRun::pool;
 char **CrossThreadRun::obj;
 
-// pools created, used and destored by different threads
+// pools created, used and destroyed by different threads
 void TestCrossThreadPools()
 {
     for (int p=MinThread; p<=MaxThread; p++) {
@@ -287,7 +287,7 @@ void TestCrossThreadPools()
     }
 }
 
-// buffer is too small to pool be created, but must not leak resourses
+// buffer is too small to pool be created, but must not leak resources
 void TestTooSmallBuffer()
 {
     poolSpace = new PoolSpace(8*1024);
@@ -643,7 +643,7 @@ rml::MemoryPool *CreateUsablePool(size_t size)
     }
     ASSERT(o, "Created pool must be useful.");
     ASSERT(getMemSuccessful == 1 || getMemAll > getMemSuccessful,
-           "Multiple requests are allowed only when unsuccessful request occured.");
+           "Multiple requests are allowed only when unsuccessful request occurred.");
     ASSERT(!putMemAll, NULL);
     pool_free(pool, o);
 

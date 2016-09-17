@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "tbb/atomic.h"
@@ -60,8 +60,11 @@ public:
 class SpinBarrier
 {
     unsigned numThreads;
-    tbb::atomic<unsigned> numThreadsFinished; /* threads reached barrier in this epoch */
-    tbb::atomic<unsigned> epoch;   /* how many times this barrier used - XXX move to a separate cache line */
+    tbb::atomic<unsigned> numThreadsFinished; // reached the barrier in this epoch
+    // the number of times the barrier was opened; TODO: move to a separate cache line
+    tbb::atomic<unsigned> epoch;
+    // a throwaway barrier can be used only once, then wait() becomes a no-op
+    bool throwaway;
 
     struct DummyCallback {
         void operator() () const {}
@@ -72,33 +75,39 @@ class SpinBarrier
     SpinBarrier( const SpinBarrier& );    // no copy ctor
     void operator=( const SpinBarrier& ); // no assignment
 public:
-    SpinBarrier( unsigned nthreads = 0 ) { initialize(nthreads); };
-
-    void initialize( unsigned nthreads ) {
+    SpinBarrier( unsigned nthreads = 0, bool throwaway_ = false ) {
+        initialize(nthreads, throwaway_);
+    }
+    void initialize( unsigned nthreads, bool throwaway_ = false ) {
         numThreads = nthreads;
         numThreadsFinished = 0;
         epoch = 0;
-    };
+        throwaway = throwaway_;
+    }
 
-    // onOpenBarrierCallback is called by last thread arrived on a barrier
+    // Returns whether this thread was the last to reach the barrier.
+    // onWaitCallback is called by a thread for waiting;
+    // onOpenBarrierCallback is called by the last thread before unblocking other threads.
     template<typename WaitEq, typename Callback>
     bool custom_wait(const WaitEq &onWaitCallback, const Callback &onOpenBarrierCallback)
-    { // return true if last thread
+    {
+        if (throwaway && epoch)
+            return false;
         unsigned myEpoch = epoch;
         unsigned myNumThreads = numThreads; // read it before the increment
         int threadsLeft = myNumThreads - numThreadsFinished.fetch_and_increment() - 1;
         ASSERT(threadsLeft>=0, "Broken barrier");
         if (threadsLeft > 0) {
-            /* not the last threading reaching barrier, wait until epoch changes & return 0 */
+            /* this thread is not the last; wait until the epoch changes & return false */
             onWaitCallback(epoch, myEpoch);
             return false;
         }
+        /* This thread is the last one at the barrier in this epoch */
         onOpenBarrierCallback();
-        /* No more threads left to enter, so I'm the last one reaching this epoch;
-           reset the barrier, increment epoch, and return non-zero */
+        /* reset the barrier, increment the epoch, and return true */
         threadsLeft = numThreadsFinished -= myNumThreads;
         ASSERT( threadsLeft == 0, "Broken barrier");
-        /* wakes up threads waiting to exit this epoch */
+        /* wakes up threads waiting to exit in this epoch */
         myEpoch -= epoch++;
         ASSERT( myEpoch == 0, "Broken barrier");
         return true;
@@ -112,7 +121,7 @@ public:
         ASSERT( n_seconds >= 0, msg); // TODO: refactor to avoid passing msg here and rising assertion
         return is_last;
     }
-    //! onOpenBarrierCallback is called by last thread arrived on a barrier
+    // onOpenBarrierCallback is called by the last thread before unblocking other threads.
     template<typename Callback>
     bool wait(const Callback &onOpenBarrierCallback) {
         return custom_wait(WaitWhileEq(), onOpenBarrierCallback);

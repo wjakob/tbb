@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::flow::interface8::sender&lt; T &gt; Class Template Reference</title>
+<title>tbb::task_handle&lt; F &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,156 +33,51 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface8</b></li><li class="navelem"><a class="el" href="a00143.html">sender</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00228.html">tbb</a></li><li class="navelem"><a class="el" href="a00143.html">task_handle</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pro-methods">Protected Member Functions</a> &#124;
-<a href="a00324.html">List of all members</a>  </div>
+<a href="#friends">Friends</a> &#124;
+<a href="a00295.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::flow::interface8::sender&lt; T &gt; Class Template Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
+<div class="title">tbb::task_handle&lt; F &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>Pure virtual template class that defines a sender of messages of type T.  
- <a href="a00143.html#details">More...</a></p>
-
-<p><code>#include &lt;flow_graph.h&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for tbb::flow::interface8::sender&lt; T &gt;:</div>
+Inheritance diagram for tbb::task_handle&lt; F &gt;:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="a00143.png" usemap="#tbb::flow::interface8::sender&lt; T &gt;_map" alt=""/>
-  <map id="tbb::flow::interface8::sender&lt; T &gt;_map" name="tbb::flow::interface8::sender&lt; T &gt;_map">
-<area href="a00170.html" alt="tbb::flow::interface8::internal::untyped_sender" shape="rect" coords="0,0,266,24"/>
+  <img src="a00143.png" usemap="#tbb::task_handle&lt; F &gt;_map" alt=""/>
+  <map id="tbb::task_handle&lt; F &gt;_map" name="tbb::task_handle&lt; F &gt;_map">
 </map>
  </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a3dfb7b8e2d3a99304528a189c9e6149f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3dfb7b8e2d3a99304528a189c9e6149f"></a>
-typedef T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#a3dfb7b8e2d3a99304528a189c9e6149f">output_type</a></td></tr>
-<tr class="memdesc:a3dfb7b8e2d3a99304528a189c9e6149f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The output type of this sender. <br/></td></tr>
-<tr class="separator:a3dfb7b8e2d3a99304528a189c9e6149f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c118211e07adb4e986b33504df11737"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c118211e07adb4e986b33504df11737"></a>
-typedef <br class="typebreak"/>
-internal::async_helpers&lt; T &gt;<br class="typebreak"/>
-::filtered_type&#160;</td><td class="memItemRight" valign="bottom"><b>filtered_type</b></td></tr>
-<tr class="separator:a7c118211e07adb4e986b33504df11737"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3dfb7b8e2d3a99304528a189c9e6149f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3dfb7b8e2d3a99304528a189c9e6149f"></a>
-typedef T&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#a3dfb7b8e2d3a99304528a189c9e6149f">output_type</a></td></tr>
-<tr class="memdesc:a3dfb7b8e2d3a99304528a189c9e6149f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The output type of this sender. <br/></td></tr>
-<tr class="separator:a3dfb7b8e2d3a99304528a189c9e6149f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af744e95e5ebca2cf9341cc6db56606f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af744e95e5ebca2cf9341cc6db56606f2"></a>
-typedef <a class="el" href="a00123.html">receiver</a>&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#af744e95e5ebca2cf9341cc6db56606f2">successor_type</a></td></tr>
-<tr class="memdesc:af744e95e5ebca2cf9341cc6db56606f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The successor type for this node. <br/></td></tr>
-<tr class="separator:af744e95e5ebca2cf9341cc6db56606f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97c0e383b47530e2b87c2aa05097e0b1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a97c0e383b47530e2b87c2aa05097e0b1"></a>
-typedef <br class="typebreak"/>
-<a class="el" href="a00055.html">internal::edge_container</a><br class="typebreak"/>
-&lt; <a class="el" href="a00170.html#a5e1e9fa9285b26d5515b442a68e1d524">successor_type</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#a97c0e383b47530e2b87c2aa05097e0b1">built_successors_type</a></td></tr>
-<tr class="memdesc:a97c0e383b47530e2b87c2aa05097e0b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">interface to record edges for traversal &amp; deletion <br/></td></tr>
-<tr class="separator:a97c0e383b47530e2b87c2aa05097e0b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d27e46e39c584cc4070ae7d76f2993d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d27e46e39c584cc4070ae7d76f2993d"></a>
-typedef <br class="typebreak"/>
-built_successors_type::edge_list_type&#160;</td><td class="memItemRight" valign="bottom"><b>successor_list_type</b></td></tr>
-<tr class="separator:a7d27e46e39c584cc4070ae7d76f2993d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_a00170"><td colspan="2" onclick="javascript:toggleInherit('pub_types_a00170')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="a00170.html">tbb::flow::interface8::internal::untyped_sender</a></td></tr>
-<tr class="memitem:a5e1e9fa9285b26d5515b442a68e1d524 inherit pub_types_a00170"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5e1e9fa9285b26d5515b442a68e1d524"></a>
-typedef <a class="el" href="a00169.html">untyped_receiver</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00170.html#a5e1e9fa9285b26d5515b442a68e1d524">successor_type</a></td></tr>
-<tr class="memdesc:a5e1e9fa9285b26d5515b442a68e1d524 inherit pub_types_a00170"><td class="mdescLeft">&#160;</td><td class="mdescRight">The successor type for this node. <br/></td></tr>
-<tr class="separator:a5e1e9fa9285b26d5515b442a68e1d524 inherit pub_types_a00170"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6a27a4c9032c36ae0ad61fe59c456d2 inherit pub_types_a00170"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac6a27a4c9032c36ae0ad61fe59c456d2"></a>
-typedef <br class="typebreak"/>
-<a class="el" href="a00055.html">internal::edge_container</a><br class="typebreak"/>
-&lt; <a class="el" href="a00170.html#a5e1e9fa9285b26d5515b442a68e1d524">successor_type</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00170.html#ac6a27a4c9032c36ae0ad61fe59c456d2">built_successors_type</a></td></tr>
-<tr class="memdesc:ac6a27a4c9032c36ae0ad61fe59c456d2 inherit pub_types_a00170"><td class="mdescLeft">&#160;</td><td class="mdescRight">interface to record edges for traversal &amp; deletion <br/></td></tr>
-<tr class="separator:ac6a27a4c9032c36ae0ad61fe59c456d2 inherit pub_types_a00170"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad995604f726c8b7778d2a2a264dc833e inherit pub_types_a00170"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad995604f726c8b7778d2a2a264dc833e"></a>
-typedef <br class="typebreak"/>
-built_successors_type::edge_list_type&#160;</td><td class="memItemRight" valign="bottom"><b>successor_list_type</b></td></tr>
-<tr class="separator:ad995604f726c8b7778d2a2a264dc833e inherit pub_types_a00170"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a8fc2cbd52623d2e39f5a190069e47bb1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8fc2cbd52623d2e39f5a190069e47bb1"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#a8fc2cbd52623d2e39f5a190069e47bb1">try_get</a> (T &amp;)</td></tr>
-<tr class="memdesc:a8fc2cbd52623d2e39f5a190069e47bb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Request an item from the sender. <br/></td></tr>
-<tr class="separator:a8fc2cbd52623d2e39f5a190069e47bb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2853285daf7fef4620c0a0ac179c71f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2853285daf7fef4620c0a0ac179c71f"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#aa2853285daf7fef4620c0a0ac179c71f">try_reserve</a> (T &amp;)</td></tr>
-<tr class="memdesc:aa2853285daf7fef4620c0a0ac179c71f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reserves an item in the sender. <br/></td></tr>
-<tr class="separator:aa2853285daf7fef4620c0a0ac179c71f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af27dee0fad51ae6a878a2ac16fcdf613"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af27dee0fad51ae6a878a2ac16fcdf613"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#af27dee0fad51ae6a878a2ac16fcdf613">register_successor</a> (<a class="el" href="a00170.html#a5e1e9fa9285b26d5515b442a68e1d524">successor_type</a> &amp;r)=0</td></tr>
-<tr class="memdesc:af27dee0fad51ae6a878a2ac16fcdf613"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a new successor to this node. <br/></td></tr>
-<tr class="separator:af27dee0fad51ae6a878a2ac16fcdf613"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a81bc1f9509206c0a64517b6fb6ed70"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0a81bc1f9509206c0a64517b6fb6ed70"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#a0a81bc1f9509206c0a64517b6fb6ed70">remove_successor</a> (<a class="el" href="a00170.html#a5e1e9fa9285b26d5515b442a68e1d524">successor_type</a> &amp;r)=0</td></tr>
-<tr class="memdesc:a0a81bc1f9509206c0a64517b6fb6ed70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a successor from this node. <br/></td></tr>
-<tr class="separator:a0a81bc1f9509206c0a64517b6fb6ed70"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fc2cbd52623d2e39f5a190069e47bb1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8fc2cbd52623d2e39f5a190069e47bb1"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#a8fc2cbd52623d2e39f5a190069e47bb1">try_get</a> (T &amp;)</td></tr>
-<tr class="memdesc:a8fc2cbd52623d2e39f5a190069e47bb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Request an item from the sender. <br/></td></tr>
-<tr class="separator:a8fc2cbd52623d2e39f5a190069e47bb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2853285daf7fef4620c0a0ac179c71f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2853285daf7fef4620c0a0ac179c71f"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#aa2853285daf7fef4620c0a0ac179c71f">try_reserve</a> (T &amp;)</td></tr>
-<tr class="memdesc:aa2853285daf7fef4620c0a0ac179c71f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reserves an item in the sender. <br/></td></tr>
-<tr class="separator:aa2853285daf7fef4620c0a0ac179c71f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab67fe0635a4a968d181192822004a3e7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab67fe0635a4a968d181192822004a3e7"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#ab67fe0635a4a968d181192822004a3e7">try_release</a> ()</td></tr>
-<tr class="memdesc:ab67fe0635a4a968d181192822004a3e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the reserved item. <br/></td></tr>
-<tr class="separator:ab67fe0635a4a968d181192822004a3e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13e2049bf72f85040379a6b03b9e4d86"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13e2049bf72f85040379a6b03b9e4d86"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html#a13e2049bf72f85040379a6b03b9e4d86">try_consume</a> ()</td></tr>
-<tr class="memdesc:a13e2049bf72f85040379a6b03b9e4d86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Consumes the reserved item. <br/></td></tr>
-<tr class="separator:a13e2049bf72f85040379a6b03b9e4d86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33802bda0c3a109adb850d4f72ef6565"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33802bda0c3a109adb850d4f72ef6565"></a>
-virtual <a class="el" href="a00170.html#ac6a27a4c9032c36ae0ad61fe59c456d2">built_successors_type</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>built_successors</b> ()=0</td></tr>
-<tr class="separator:a33802bda0c3a109adb850d4f72ef6565"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7bf4ab9217c3a928b3d3b5d555560b4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae7bf4ab9217c3a928b3d3b5d555560b4"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_add_built_successor</b> (<a class="el" href="a00170.html#a5e1e9fa9285b26d5515b442a68e1d524">successor_type</a> &amp;)=0</td></tr>
-<tr class="separator:ae7bf4ab9217c3a928b3d3b5d555560b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a927549c3169aa8364a118fc9bfd7c029"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a927549c3169aa8364a118fc9bfd7c029"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>internal_delete_built_successor</b> (<a class="el" href="a00170.html#a5e1e9fa9285b26d5515b442a68e1d524">successor_type</a> &amp;)=0</td></tr>
-<tr class="separator:a927549c3169aa8364a118fc9bfd7c029"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d1388d49bed1317f30ad821329b1312"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d1388d49bed1317f30ad821329b1312"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>copy_successors</b> (successor_list_type &amp;)=0</td></tr>
-<tr class="separator:a9d1388d49bed1317f30ad821329b1312"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a388b9c98a85533b18f3d81d9cca45669"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a388b9c98a85533b18f3d81d9cca45669"></a>
-virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><b>successor_count</b> ()=0</td></tr>
-<tr class="separator:a388b9c98a85533b18f3d81d9cca45669"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e213e12e1c2d789c22e56901b53b1d2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e213e12e1c2d789c22e56901b53b1d2"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>task_handle</b> (const F &amp;f)</td></tr>
+<tr class="separator:a1e213e12e1c2d789c22e56901b53b1d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab09a19aa92286d48cc42d3e9cd60b5d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab09a19aa92286d48cc42d3e9cd60b5d8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> () const </td></tr>
+<tr class="separator:ab09a19aa92286d48cc42d3e9cd60b5d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
-Protected Member Functions</h2></td></tr>
-<tr class="memitem:a6fab14ddb9b48b07e573a51187874943"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6fab14ddb9b48b07e573a51187874943"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>try_get_wrapper</b> (void *p, bool is_async)</td></tr>
-<tr class="separator:a6fab14ddb9b48b07e573a51187874943"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af732d16fe147fa29cf0051593c5cf749"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af732d16fe147fa29cf0051593c5cf749"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>try_reserve_wrapper</b> (void *p, bool is_async)</td></tr>
-<tr class="separator:af732d16fe147fa29cf0051593c5cf749"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_methods_a00170"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_a00170')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="a00170.html">tbb::flow::interface8::internal::untyped_sender</a></td></tr>
-<tr class="memitem:ac4de35215255a7070d07c9d2289025f2 inherit pro_methods_a00170"><td class="memTemplParams" colspan="2"><a class="anchor" id="ac4de35215255a7070d07c9d2289025f2"></a>
-template&lt;typename X &gt; </td></tr>
-<tr class="memitem:ac4de35215255a7070d07c9d2289025f2 inherit pro_methods_a00170"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="a00170.html#ac4de35215255a7070d07c9d2289025f2">try_get</a> (X &amp;t)</td></tr>
-<tr class="memdesc:ac4de35215255a7070d07c9d2289025f2 inherit pro_methods_a00170"><td class="mdescLeft">&#160;</td><td class="mdescRight">Request an item from the sender. <br/></td></tr>
-<tr class="separator:ac4de35215255a7070d07c9d2289025f2 inherit pro_methods_a00170"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbe8fb9d63e74d9f3ae28b5c0ccb6381 inherit pro_methods_a00170"><td class="memTemplParams" colspan="2"><a class="anchor" id="acbe8fb9d63e74d9f3ae28b5c0ccb6381"></a>
-template&lt;typename X &gt; </td></tr>
-<tr class="memitem:acbe8fb9d63e74d9f3ae28b5c0ccb6381 inherit pro_methods_a00170"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="a00170.html#acbe8fb9d63e74d9f3ae28b5c0ccb6381">try_reserve</a> (X &amp;t)</td></tr>
-<tr class="memdesc:acbe8fb9d63e74d9f3ae28b5c0ccb6381 inherit pro_methods_a00170"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reserves an item in the sender. <br/></td></tr>
-<tr class="separator:acbe8fb9d63e74d9f3ae28b5c0ccb6381 inherit pro_methods_a00170"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a70a59090420eb9c76bd067b3ed3f1e72"><td class="memTemplParams" colspan="2"><a class="anchor" id="a70a59090420eb9c76bd067b3ed3f1e72"></a>
+template&lt;typename _F &gt; </td></tr>
+<tr class="memitem:a70a59090420eb9c76bd067b3ed3f1e72"><td class="memTemplItemLeft" align="right" valign="top">class&#160;</td><td class="memTemplItemRight" valign="bottom"><b>internal::task_handle_task</b></td></tr>
+<tr class="separator:a70a59090420eb9c76bd067b3ed3f1e72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe85fe1f158cb2a40cd7203854b9460a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe85fe1f158cb2a40cd7203854b9460a"></a>
+class&#160;</td><td class="memItemRight" valign="bottom"><b>task_group</b></td></tr>
+<tr class="separator:abe85fe1f158cb2a40cd7203854b9460a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2913777f78e95f9ea09d788b12db6b62"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2913777f78e95f9ea09d788b12db6b62"></a>
+class&#160;</td><td class="memItemRight" valign="bottom"><b>structured_task_group</b></td></tr>
+<tr class="separator:a2913777f78e95f9ea09d788b12db6b62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename T&gt;<br/>
-class tbb::flow::interface8::sender&lt; T &gt;</h3>
-
-<p>Pure virtual template class that defines a sender of messages of type T. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
-<li><a class="el" href="a00194.html">flow_graph.h</a></li>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>task_group.h</li>
 </ul>
 </div><!-- contents -->
 <hr>

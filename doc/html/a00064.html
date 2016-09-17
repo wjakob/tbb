@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::interface9::global_control Class Reference</title>
+<title>tbb::flow::interface9::graph_proxy Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,42 +33,47 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><b>interface9</b></li><li class="navelem"><a class="el" href="a00064.html">global_control</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00228.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface9</b></li><li class="navelem"><a class="el" href="a00064.html">graph_proxy</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="a00400.html">List of all members</a>  </div>
+<a href="a00320.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::interface9::global_control Class Reference</div>  </div>
+<div class="title">tbb::flow::interface9::graph_proxy Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Pure virtual template classes that define interfaces for async communication.  
+ <a href="a00064.html#details">More...</a></p>
+
+<p><code>#include &lt;flow_graph_abstractions.h&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for tbb::flow::interface9::graph_proxy:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="a00064.png" usemap="#tbb::flow::interface9::graph_proxy_map" alt=""/>
+  <map id="tbb::flow::interface9::graph_proxy_map" name="tbb::flow::interface9::graph_proxy_map">
+<area href="a00115.html" alt="tbb::flow::interface9::receiver_gateway&lt; Input &gt;" shape="rect" coords="0,56,280,80"/>
+</map>
+ </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a04221b8e619bef332234db90d31f3e5e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>parameter</b> { <b>max_allowed_parallelism</b>, 
-<b>thread_stack_size</b>, 
-<b>parameter_max</b>
- }</td></tr>
-<tr class="separator:a04221b8e619bef332234db90d31f3e5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a5375ee43ca415f20f3c1f47db5220302"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5375ee43ca415f20f3c1f47db5220302"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>global_control</b> (parameter p, size_t value)</td></tr>
-<tr class="separator:a5375ee43ca415f20f3c1f47db5220302"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a8451d931cfc205d896ca2da26fe123ff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8451d931cfc205d896ca2da26fe123ff"></a>
-static size_t&#160;</td><td class="memItemRight" valign="bottom"><b>active_value</b> (parameter p)</td></tr>
-<tr class="separator:a8451d931cfc205d896ca2da26fe123ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89db56a08929f4d3e45d27838cec3272"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89db56a08929f4d3e45d27838cec3272"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00064.html#a89db56a08929f4d3e45d27838cec3272">reserve_wait</a> ()=0</td></tr>
+<tr class="memdesc:a89db56a08929f4d3e45d27838cec3272"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inform a graph that messages may come from outside, to prevent premature graph completion. <br/></td></tr>
+<tr class="separator:a89db56a08929f4d3e45d27838cec3272"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f751c4f3a0b5be4f97b2b857aaecea0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5f751c4f3a0b5be4f97b2b857aaecea0"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00064.html#a5f751c4f3a0b5be4f97b2b857aaecea0">release_wait</a> ()=0</td></tr>
+<tr class="memdesc:a5f751c4f3a0b5be4f97b2b857aaecea0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inform a graph that a previous call to reserve_wait is no longer in effect. <br/></td></tr>
+<tr class="separator:a5f751c4f3a0b5be4f97b2b857aaecea0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
-<li>global_control.h</li>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Pure virtual template classes that define interfaces for async communication. </p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
+<li>flow_graph_abstractions.h</li>
 </ul>
 </div><!-- contents -->
 <hr>

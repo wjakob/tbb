@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::flow::interface8::opencl_node&lt; tuple&lt; Ports...&gt;, JP &gt; Class Template Reference</title>
+<title>tbb::pre_scan_tag Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,42 +33,33 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface8</b></li><li class="navelem"><a class="el" href="a00098.html">opencl_node< tuple< Ports...>, JP ></a></li>  </ul>
+<li class="navelem"><a class="el" href="a00228.html">tbb</a></li><li class="navelem"><a class="el" href="a00098.html">pre_scan_tag</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="a00355.html">List of all members</a>  </div>
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="a00275.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::flow::interface8::opencl_node&lt; tuple&lt; Ports...&gt;, JP &gt; Class Template Reference</div>  </div>
+<div class="title">tbb::pre_scan_tag Struct Reference<div class="ingroups"><a class="el" href="a00246.html">Algorithms</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="dynheader">
-Inheritance diagram for tbb::flow::interface8::opencl_node&lt; tuple&lt; Ports...&gt;, JP &gt;:</div>
-<div class="dyncontent">
- <div class="center">
-  <img src="a00098.png" usemap="#tbb::flow::interface8::opencl_node&lt; tuple&lt; Ports...&gt;, JP &gt;_map" alt=""/>
-  <map id="tbb::flow::interface8::opencl_node&lt; tuple&lt; Ports...&gt;, JP &gt;_map" name="tbb::flow::interface8::opencl_node&lt; tuple&lt; Ports...&gt;, JP &gt;_map">
-<area href="a00096.html" alt="tbb::flow::interface8::opencl_node&lt; tuple&lt; Ports...&gt;, JP, default_opencl_factory &gt;" shape="rect" coords="0,0,474,24"/>
-</map>
- </div></div>
+
+<p>Used to indicate that the initial scan is being performed.  
+ <a href="a00098.html#details">More...</a></p>
+
+<p><code>#include &lt;parallel_scan.h&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
-Public Member Functions</h2></td></tr>
-<tr class="memitem:ada9be09a09d50799479a9999bcf6bbad"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada9be09a09d50799479a9999bcf6bbad"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>opencl_node</b> (<a class="el" href="a00094.html">opencl_graph</a> &amp;g, const std::string &amp;kernel)</td></tr>
-<tr class="separator:ada9be09a09d50799479a9999bcf6bbad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7156c2fd28408ff3799edbe736e1651b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7156c2fd28408ff3799edbe736e1651b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>opencl_node</b> (<a class="el" href="a00094.html">opencl_graph</a> &amp;g, const <a class="el" href="a00100.html">opencl_program</a>&lt; <a class="el" href="a00052.html">default_opencl_factory</a> &gt; &amp;p, const std::string &amp;kernel)</td></tr>
-<tr class="separator:a7156c2fd28408ff3799edbe736e1651b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11523c06df66f0823e240a1b6a3ab850"><td class="memTemplParams" colspan="2"><a class="anchor" id="a11523c06df66f0823e240a1b6a3ab850"></a>
-template&lt;typename DeviceSelector &gt; </td></tr>
-<tr class="memitem:a11523c06df66f0823e240a1b6a3ab850"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>opencl_node</b> (<a class="el" href="a00094.html">opencl_graph</a> &amp;g, const <a class="el" href="a00100.html">opencl_program</a>&lt; <a class="el" href="a00052.html">default_opencl_factory</a> &gt; &amp;p, const std::string &amp;kernel, DeviceSelector d)</td></tr>
-<tr class="separator:a11523c06df66f0823e240a1b6a3ab850"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a1d71947e8273d28e01620f92a292be59"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d71947e8273d28e01620f92a292be59"></a>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_final_scan</b> ()</td></tr>
+<tr class="separator:a1d71947e8273d28e01620f92a292be59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
-<li>flow_graph_opencl_node.h</li>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Used to indicate that the initial scan is being performed. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
+<li>parallel_scan.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
