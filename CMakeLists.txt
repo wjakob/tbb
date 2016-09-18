@@ -86,7 +86,12 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
-include_directories(include src src/rml/include ${CMAKE_CURRENT_BINARY_DIR})
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src
+                    ${CMAKE_CURRENT_SOURCE_DIR}/include
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/rml/include
+                    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 option(TBB_BUILD_SHARED          "Build TBB shared library" ON)
 option(TBB_BUILD_STATIC          "Build TBB static library" ON)
@@ -352,7 +357,7 @@ else ()
   set (_configure_date "Unknown")
 endif()
 include_directories (${CMAKE_BINARY_DIR})
-configure_file (build/version_string.ver.in version_string.ver @ONLY)
+configure_file (${CMAKE_CURRENT_LIST_DIR}/build/version_string.ver.in version_string.ver @ONLY)
 
 
 if (TBB_BUILD_TESTS)
