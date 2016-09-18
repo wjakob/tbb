@@ -1,11 +1,83 @@
-cmake_minimum_required (VERSION 2.8)
-project (tbb CXX)
-
-include (CheckCXXCompilerFlag)
-
-if(POLICY CMP0058)
-  cmake_policy(SET CMP0058 NEW)
+#
+# CMake buld configuration for tbb
+#
+if(DEFINED CMAKE_CXX_STANDARD AND (NOT ${CMAKE_CXX_STANDARD} EQUAL "98" ))
+  cmake_minimum_required(VERSION 3.2.0 FATAL_ERROR) ## 3.2.0 needed for AppleClang CXX11 finding
+else()
+  cmake_minimum_required (VERSION 2.8.7 FATAL_ERROR)
 endif()
+
+if("${CMAKE_VERSION}" VERSION_LESS 3.2.0)
+  message(STATUS "NOTE: CMake version 3.2.0 or greater will provide more complete build support features.")
+endif()
+
+#
+# enable language features that may affect other settings
+# including the ability to try_compile when searching for C++11
+enable_language(CXX)
+#
+# Try to force compilers support CXX 11 by default
+#
+# NOTE: Linking libraries compiled with different standards conformance
+#       may result in errors at runtime.  This is particularly true
+#       on some mac build environments where the
+#       standard template library is defaulted to versions with
+#       different ABI based on the the CXX standard choosen.
+#       It is recommended that all applications (i.e. downstream
+#       applications that depend on this build of tbb) use
+#       the same compiler standard conformance as when tbb
+#       as built.
+#
+#
+#
+include (CheckCXXCompilerFlag)
+if("${CMAKE_VERSION}" VERSION_LESS 3.2.0) #Fallback for old versions of cmake
+  if(NOT CMAKE_CXX_STANDARD OR "${CMAKE_CXX_STANDARD}" LESS "98")
+    ## Use unreliable method for propagating and configuring for
+    #  cmake instrospection with c++11 features
+    check_cxx_compiler_flag ("-std=c++11" SUPPORTS_STDCXX11)
+    if (SUPPORTS_STDCXX11)
+      set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+      set(CMAKE_CXX_STANDARD "11") ## Default to cmake standard version 11 if not previously set
+    else()
+      set(CMAKE_CXX_STANDARD "98") ## Default to cmake standard version 98 if -std=c++11 not supported
+    endif ()
+   endif()
+else()
+  ## In recent versions of cmake, it is recommended
+  ## to use CMAKE_CXX_STANDARD, which will allow for
+  ## 98,11,or 14 as options currently, and provides
+  ## extensive compiler specific feature support.
+  if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD "11") ## Default to cmake standard version 11 if not previously set
+  endif()
+endif()
+message(STATUS "Building with CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}")
+
+foreach(p
+    CMP048  ##NEW project() behavior for setting VERSION variable
+    CMP0025 # CMake 3.0 AppleClang vs. regular Clang
+    CMP0042 # CMake 3.0 ``MACOSX_RPATH`` is enabled by default.
+    CMP0054 # CMake 3.1 Only interpret ``if()`` arguments as variables or keywords when unquoted.
+    CMP0056 # CMake 3.2 Honor link flags in ``try_compile()`` source-file signature.
+    CMP0058 # CMake 3.3 Ninja requires custom command byproducts to be explicit.
+    CMP0063 # CMake 3.3.2 Honor visibility properties for all target types
+    )
+  if(POLICY ${p})
+    cmake_policy(SET ${p} NEW)
+  endif()
+endforeach()
+
+########
+########
+## Now start configuring the project itself
+########
+########
+project (tbb CXX)
+#
+# enable language features that may affect other settings
+enable_language(CXX)
+
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Release' as none was specified.")
@@ -14,7 +86,36 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
-include_directories(include src src/rml/include ${CMAKE_CURRENT_BINARY_DIR})
+## Packaging setup
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
+
+#-----------------------------------------------------------------------------
+# Define where to place items in the build tree
+if(NOT COMMAND SETIFEMPTY)
+  macro(SETIFEMPTY)
+    set(KEY ${ARGV0})
+    set(VALUE ${ARGV1})
+    if(NOT ${KEY})
+      set(${ARGV})
+    endif()
+  endmacro()
+endif()
+SETIFEMPTY(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+SETIFEMPTY(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+SETIFEMPTY(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+#-----------------------------------------------------------------------------
+
+
+set(tbb_VERSION 2017.0.0)
+include(GenerateExportHeader)
+
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src
+                    ${CMAKE_CURRENT_SOURCE_DIR}/include
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/rml/include
+                    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 option(TBB_BUILD_SHARED          "Build TBB shared library" ON)
 option(TBB_BUILD_STATIC          "Build TBB static library" ON)
@@ -58,24 +159,20 @@ if (APPLE)
 endif()
 
 if (UNIX)
-  add_definitions (-DUSE_PTHREAD)
-
-  check_cxx_compiler_flag ("-std=c++11" SUPPORTS_STDCXX11)
-  if (SUPPORTS_STDCXX11)
-    set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-  endif ()
-
   check_cxx_compiler_flag ("-mrtm" SUPPORTS_MRTM)
   if (SUPPORTS_MRTM)
     set (CMAKE_CXX_FLAGS "-mrtm ${CMAKE_CXX_FLAGS}")
+    message(STATUS "NOTE: Using -mrtm flag for compiler")
   endif ()
+endif()
 
+if (UNIX)
+  add_definitions (-DUSE_PTHREAD)
 elseif(WIN32)
   if (MSVC)
     #pragma comment( linker, "/nodefaultlib:tbb_debug.lib" )
     set (CMAKE_DEBUG_POSTFIX "_debug")
-
-    cmake_minimum_required (VERSION 3.1)
+    cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
     enable_language(ASM_MASM)
     set(CMAKE_CXX_FLAGS "/GS- /Zc:wchar_t /Zc:forScope /DUSE_WINTHREAD ${CMAKE_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS "/D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600 ${CMAKE_CXX_FLAGS}")
@@ -110,6 +207,31 @@ elseif (UNIX)
   set(ENABLE_RTTI "-frtti -fexceptions ")
   set(DISABLE_RTTI "-fno-rtti -fno-exceptions ")
 endif ()
+
+##--------
+#   - Added TBB_USE_GLIBCXX_VERSION macro to specify the version of GNU
+#     libstdc++ when it cannot be properly recognized, e.g. when used
+#     with Clang on Linux* OS. Inspired by a contribution from David A.
+if(NOT TBB_USE_GLIBCXX_VERSION AND UNIX AND NOT APPLE)
+  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    # using Clang
+    string(REPLACE "." "0" TBB_USE_GLIBCXX_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+    message(STATUS "TBB_USE_GLIBCXX_VERSION:${TBB_USE_GLIBCXX_VERSION}:")
+
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # Do nothing using GCC
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    # Do nothing when using Intel C++
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    # Do nothgin when using Visual Studio C++
+  endif()
+endif()
+if(TBB_USE_GLIBCXX_VERSION)
+   message(STATUS "ADDING: -DTBB_USE_GLIBCXX_VERSION=${TBB_USE_GLIBCXX_VERSION}")
+   add_definitions(-DTBB_USE_GLIBCXX_VERSION=${TBB_USE_GLIBCXX_VERSION})
+endif()
+
+##-------
 
 # Linker export definitions
 if (APPLE)
@@ -160,31 +282,66 @@ endif()
 
 add_custom_target(tbb_def_files DEPENDS tbb.def tbbmalloc.def)
 
+macro(SET_TARGET_INCLUDE_DIR libname)
+  set_property(TARGET ${libname} APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/rml/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    $<INSTALL_INTERFACE:include>
+  )
+
+endmacro()
+
+## From https://cmake.org/cmake/help/v3.0/manual/cmake-packages.7.html#package-configuration-file
+macro(SET_SHARED_LIB_VERSION_PROPERTIES shdlibname extern_def_filename TBB_COMPILE_DEFINITIONS RTTI_FLAGS)
+  set_property(TARGET ${shdlibname} PROPERTY VERSION ${tbb_VERSION})
+  set_property(TARGET ${shdlibname} PROPERTY SOVERSION 2017)
+  set_property(TARGET ${shdlibname} PROPERTY INTERFACE_tbb_MAJOR_VERSION 2017)
+  set_property(TARGET ${shdlibname} APPEND PROPERTY COMPATIBLE_INTERFACE_STRING tbb_MAJOR_VERSION)
+
+  set_property(TARGET ${shdlibname} APPEND PROPERTY COMPILE_DEFINITIONS "${TBB_COMPILE_DEFINITIONS}")
+  set_property(TARGET ${shdlibname} APPEND_STRING PROPERTY COMPILE_FLAGS ${RTTI_FLAGS})
+  # NOT NEEDED generate_export_header(${shdlibname}), tbb uses tbb_def_files instead
+  add_dependencies(${shdlibname} tbb_def_files)
+
+  if (APPLE)
+    set_property(TARGET ${shdlibname} APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/${extern_def_filename}")
+  elseif (MSVC)
+    set_property(TARGET ${shdlibname} APPEND PROPERTY LINK_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}/${extern_def_filename}")
+  else ()
+    set_property(TARGET ${shdlibname} APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/${extern_def_filename}")
+  endif()
+  SET_TARGET_INCLUDE_DIR(${shdlibname})
+
+  if("${CMAKE_VERSION}" VERSION_LESS 2.8.12)
+    install(TARGETS ${shdlibname} EXPORT tbbTargets
+      LIBRARY DESTINATION lib
+      ARCHIVE DESTINATION lib
+      RUNTIME DESTINATION bin
+    )
+  else()
+    install(TARGETS ${shdlibname} EXPORT tbbTargets
+      LIBRARY DESTINATION lib
+      ARCHIVE DESTINATION lib
+      RUNTIME DESTINATION bin
+      INCLUDES DESTINATION include
+    )
+  endif()
+endmacro()
+
 # TBB library
 if (TBB_BUILD_STATIC)
   add_library(tbb_static STATIC ${tbb_src})
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb_static APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
+  SET_TARGET_INCLUDE_DIR(tbb_static)
   install(TARGETS tbb_static ARCHIVE DESTINATION lib)
 endif()
 
 if (TBB_BUILD_SHARED)
   add_library(tbb SHARED ${tbb_src})
-  set_property(TARGET tbb APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
-  set_property(TARGET tbb APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
-  add_dependencies(tbb tbb_def_files)
-
-  if (APPLE)
-    set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
-  elseif (MSVC)
-    set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
-  else ()
-    set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
-  endif()
-  install(TARGETS tbb
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib
-          RUNTIME DESTINATION bin)
+  SET_SHARED_LIB_VERSION_PROPERTIES(tbb tbb.def "__TBB_BUILD=1" "${ENABLE_RTTI}")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -201,25 +358,15 @@ if(TBB_BUILD_TBBMALLOC)
     add_library(tbbmalloc_static STATIC ${tbbmalloc_static_src})
     set_property(TARGET tbbmalloc_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_static APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
+    SET_TARGET_INCLUDE_DIR(tbbmalloc_static)
     install(TARGETS tbbmalloc_static ARCHIVE DESTINATION lib)
+    target_link_libraries(tbbmalloc_static tbb_static)
   endif()
 
   if (TBB_BUILD_SHARED)
     add_library(tbbmalloc SHARED ${tbbmalloc_src})
-    set_property(TARGET tbbmalloc APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
-    set_property(TARGET tbbmalloc APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
-    add_dependencies(tbbmalloc tbb_def_files)
-    if (APPLE)
-      set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
-    elseif (MSVC)
-      set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
-    else ()
-      set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def")
-    endif()
-    install(TARGETS tbbmalloc
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
+    SET_SHARED_LIB_VERSION_PROPERTIES(tbbmalloc tbbmalloc.def "__TBBMALLOC_BUILD=1" "${DISABLE_RTTI}")
+    target_link_libraries(tbbmalloc tbb)
   endif()
 endif()
 
@@ -229,18 +376,15 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     add_library(tbbmalloc_proxy_static STATIC ${tbbmalloc_proxy_src})
     set_property(TARGET tbbmalloc_proxy_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_proxy_static APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
+    SET_TARGET_INCLUDE_DIR(tbbmalloc_proxy_static)
     install(TARGETS tbbmalloc_proxy_static ARCHIVE DESTINATION lib)
+    target_link_libraries(tbbmalloc_proxy_static tbbmalloc_static)
   endif()
 
   if (TBB_BUILD_SHARED)
     add_library(tbbmalloc_proxy SHARED ${tbbmalloc_proxy_src})
-    set_property(TARGET tbbmalloc_proxy APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
-    set_property(TARGET tbbmalloc_proxy APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
+    SET_SHARED_LIB_VERSION_PROPERTIES(tbbmalloc_proxy tbbmalloc.def "__TBBMALLOC_BUILD=1" "${DISABLE_RTTI}")
     target_link_libraries(tbbmalloc_proxy tbbmalloc)
-    install(TARGETS tbbmalloc_proxy
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
   endif()
 endif()
 
@@ -259,22 +403,24 @@ else ()
   set (_configure_date "Unknown")
 endif()
 include_directories (${CMAKE_BINARY_DIR})
-configure_file (build/version_string.ver.in version_string.ver @ONLY)
+configure_file (${CMAKE_CURRENT_LIST_DIR}/build/version_string.ver.in version_string.ver @ONLY)
 
 
 if (TBB_BUILD_TESTS)
-  enable_language (C)
+  enable_language (C) ## Needed for testing, Only enable C language for testing
   enable_testing ()
 
   find_library (LIBRT_LIBRARIES rt)
   find_library (LIDL_LIBRARIES dl)
   find_package (Threads)
-  find_package (OpenMP)
+  find_package (OpenMP QUIET)
 
   add_custom_target (tests)
 
   macro (tbb_add_test testname)
     add_executable (test_${testname} EXCLUDE_FROM_ALL src/test/test_${testname}.cpp)
+    set_target_properties( test_${testname} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/testbin )
+
     add_dependencies (tests test_${testname})
     if (TBB_BUILD_SHARED)
       target_link_libraries (test_${testname} tbb tbbmalloc)
@@ -417,3 +563,50 @@ if (TBB_BUILD_TESTS)
   tbb_add_test (write_once_node)
   tbb_add_test (yield)
 endif ()
+
+
+######
+######
+## Now configure the packages
+######
+######
+#set(TBB_CONFIG_DIR_NAME "tbb-${tbb_VERSION}")
+set(TBB_CONFIG_DIR_NAME "tbb")
+if("${CMAKE_VERSION}" VERSION_LESS 3.2.0)
+  message(STATUS "NOTE: very old cmake versions do not fully support CMakePackageConfigHelpers")
+else()
+  include(CMakePackageConfigHelpers)
+  write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/tbbConfigVersion.cmake"
+    VERSION ${tbb_VERSION}
+    COMPATIBILITY AnyNewerVersion
+  )
+
+  export(EXPORT tbbTargets
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/tbbTargets.cmake"
+    NAMESPACE tbb::
+  )
+  configure_file(${CMAKE_CURRENT_LIST_DIR}/build/tbbConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/tbbConfig.cmake"
+    COPYONLY
+  )
+
+  set(ConfigPackageLocation lib/cmake/${TBB_CONFIG_DIR_NAME})
+  install(EXPORT tbbTargets
+    FILE
+      tbbTargets.cmake
+    NAMESPACE
+      tbb::
+    DESTINATION
+      ${ConfigPackageLocation}
+  )
+  install(
+    FILES
+      ${CMAKE_CURRENT_LIST_DIR}/build/tbbConfig.cmake
+      "${CMAKE_CURRENT_BINARY_DIR}/tbbConfigVersion.cmake"
+    DESTINATION
+      ${ConfigPackageLocation}
+    COMPONENT
+    Devel
+  )
+endif()

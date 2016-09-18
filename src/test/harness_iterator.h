@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef harness_iterator_H
@@ -23,12 +23,13 @@
 
 #include <iterator>
 #include <memory>
+#include "tbb/atomic.h"
+#include "harness_assert.h"
 
 namespace Harness {
 
 template <class T>
 class InputIterator {
-    T * my_ptr;
 public:
 #if HARNESS_EXTENDED_STD_COMPLIANCE
     typedef std::input_iterator_tag iterator_category;
@@ -38,13 +39,66 @@ public:
     typedef typename std::allocator<T>::reference reference;
 #endif /* HARNESS_EXTENDED_STD_COMPLIANCE */
 
-    explicit InputIterator( T * ptr): my_ptr(ptr){}
+    explicit InputIterator ( T * ptr ) : my_ptr(ptr), my_shared_epoch(new Epoch), my_current_epoch(0) {}
 
-    T& operator* () { return *my_ptr; }
+    InputIterator( const InputIterator& it ) {
+        ASSERT(it.my_current_epoch == it.my_shared_epoch->epoch, "Copying an invalidated iterator");
+        my_ptr = it.my_ptr;
+        my_shared_epoch = it.my_shared_epoch;
+        my_current_epoch = it.my_current_epoch;
+        ++my_shared_epoch->refcounter;
+    }
 
-    InputIterator& operator++ () { ++my_ptr; return *this; }
+    InputIterator& operator= ( const InputIterator& it ) {
+        ASSERT(it.my_current_epoch == it.my_shared_epoch->epoch, "Assigning an invalidated iterator");
+        my_ptr = it.my_ptr;
+        my_current_epoch = it.my_current_epoch;
+        if(my_shared_epoch == it.my_shared_epoch)
+            return *this;
+        destroy();
+        my_shared_epoch = it.my_shared_epoch;
+        ++my_shared_epoch->refcounter;
+        return *this;
+    }
 
-    bool operator== ( const InputIterator& r ) { return my_ptr == r.my_ptr; }
+    T operator* () {
+        ASSERT(my_shared_epoch->epoch == my_current_epoch, "Dereferencing an invalidated input iterator");
+        return *my_ptr;
+    }
+
+    InputIterator& operator++ () {
+        ASSERT(my_shared_epoch->epoch == my_current_epoch, "Incrementing an invalidated input iterator");
+        ++my_ptr;
+        ++my_current_epoch;
+        ++my_shared_epoch->epoch;
+        return *this;
+    }
+
+    bool operator== ( const InputIterator& it ) {
+        ASSERT(my_shared_epoch->epoch == my_current_epoch, "Comparing an invalidated input iterator");
+        ASSERT(it.my_shared_epoch->epoch == it.my_current_epoch, "Comparing with an invalidated input iterator");
+        return my_ptr == it.my_ptr;
+    }
+
+    ~InputIterator() {
+        destroy();
+    }
+private:
+    void destroy() {
+        if(0 == --my_shared_epoch->refcounter) {
+            delete my_shared_epoch;
+        }
+    }
+    struct Epoch {
+        typedef tbb::atomic<size_t> Counter;
+        Epoch() { epoch = 0; refcounter = 1; }
+        Counter epoch;
+        Counter refcounter;
+    };
+
+    T * my_ptr;
+    Epoch *my_shared_epoch;
+    size_t my_current_epoch;
 };
 
 template <class T>
