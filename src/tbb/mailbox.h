@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef _TBB_mailbox_H
@@ -76,9 +76,6 @@ struct task_proxy : public task {
         }
         // Proxied task has already been claimed from another proxy location.
         __TBB_ASSERT( task_and_tag == from_bit, "Empty proxy cannot contain non-zero task pointer" );
-        poison_pointer(outbox);
-        poison_pointer(next_in_mailbox);
-        poison_value(task_and_tag);
         return NULL;
     }
 }; // struct task_proxy
@@ -102,31 +99,42 @@ protected:
 /** Padded to occupy a cache line. */
 class mail_outbox : padded<unpadded_mail_outbox> {
 
-    task_proxy* internal_pop() {
-        task_proxy* const first = __TBB_load_relaxed(my_first);
-        if( !first )
+    task_proxy* internal_pop( __TBB_ISOLATION_EXPR(isolation_tag isolation) ) {
+        task_proxy* curr = __TBB_load_relaxed( my_first );
+        if ( !curr )
             return NULL;
+        task_proxy **prev_ptr = &my_first;
+#if __TBB_TASK_ISOLATION
+        if ( isolation != no_isolation ) {
+            while ( curr->prefix().isolation != isolation ) {
+                prev_ptr = &curr->next_in_mailbox;
+                curr = curr->next_in_mailbox;
+                if ( !curr )
+                    return NULL;
+            }
+        }
+#endif /* __TBB_TASK_ISOLATION */
         __TBB_control_consistency_helper(); // on my_first
         // There is a first item in the mailbox.  See if there is a second.
-        if( task_proxy* second = first->next_in_mailbox ) {
+        if ( task_proxy* second = curr->next_in_mailbox ) {
             // There are at least two items, so first item can be popped easily.
-            my_first = second;
+            *prev_ptr = second;
         } else {
             // There is only one item.  Some care is required to pop it.
-            my_first = NULL;
-            if( as_atomic(my_last).compare_and_swap(&my_first,&first->next_in_mailbox) == &first->next_in_mailbox )
-            {
+            *prev_ptr = NULL;
+            if ( as_atomic( my_last ).compare_and_swap( prev_ptr, &curr->next_in_mailbox ) == &curr->next_in_mailbox ) {
                 // Successfully transitioned mailbox from having one item to having none.
-                __TBB_ASSERT(!first->next_in_mailbox,NULL);
+                __TBB_ASSERT( !curr->next_in_mailbox, NULL );
             } else {
                 // Some other thread updated my_last but has not filled in first->next_in_mailbox
                 // Wait until first item points to second item.
                 atomic_backoff backoff;
-                while( !(second = first->next_in_mailbox) ) backoff.pause();
-                my_first = second;
+                while ( !(second = curr->next_in_mailbox) ) backoff.pause();
+                *prev_ptr = second;
             }
         }
-        return first;
+        __TBB_ASSERT( curr, NULL );
+        return curr;
     }
 public:
     friend class mail_inbox;
@@ -195,8 +203,8 @@ public:
         my_putter = NULL;
     }
     //! Get next piece of mail, or NULL if mailbox is empty.
-    task_proxy* pop() {
-        return my_putter->internal_pop();
+    task_proxy* pop( __TBB_ISOLATION_EXPR( isolation_tag isolation ) ) {
+        return my_putter->internal_pop( __TBB_ISOLATION_EXPR( isolation ) );
     }
     //! Return true if mailbox is empty
     bool empty() {

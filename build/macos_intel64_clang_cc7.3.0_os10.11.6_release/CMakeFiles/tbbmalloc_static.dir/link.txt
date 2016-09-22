@@ -1,0 +1,2 @@
+/usr/bin/ar Scr libtbbmalloc_static.a  CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/backend.cpp.o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/large_objects.cpp.o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/backref.cpp.o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/tbbmalloc.cpp.o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/frontend.cpp.o CMakeFiles/tbbmalloc_static.dir/src/tbb/itt_notify.cpp.o
+/usr/bin/ranlib -no_warning_for_no_symbols -c libtbbmalloc_static.a

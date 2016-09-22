@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "rml_tbb.h"
@@ -325,10 +325,10 @@ class server_thread : public IExecutionContext, public server_thread_rep {
 protected:
     server_thread( bool is_tbb, bool assigned, IScheduler* s, IExecutionResource* r, thread_map& map, rml::client& cl ) : server_thread_rep(assigned,s,r,map,cl), tbb_thread(is_tbb) {}
     ~server_thread() {}
-    /*override*/ unsigned int GetId() const { return uid; }
-    /*override*/ IScheduler* GetScheduler() { return my_scheduler; }
-    /*override*/ IThreadProxy* GetProxy()   { return my_proxy; }
-    /*override*/ void SetProxy( IThreadProxy* thr_proxy ) { my_proxy = thr_proxy; }
+    unsigned int GetId() const __TBB_override { return uid; }
+    IScheduler* GetScheduler() __TBB_override { return my_scheduler; }
+    IThreadProxy* GetProxy()   __TBB_override { return my_proxy; }
+    void SetProxy( IThreadProxy* thr_proxy ) __TBB_override { my_proxy = thr_proxy; }
 
 private:
     bool tbb_thread;
@@ -346,7 +346,7 @@ public:
         activation_count = 0;
     }
     ~tbb_server_thread() {}
-    /*override*/ void Dispatch( DispatchState* );
+    void Dispatch( DispatchState* ) __TBB_override;
     inline bool initiate_termination();
     bool sleep_perhaps();
     //! Switch out this thread
@@ -364,7 +364,7 @@ public:
     omp_server_thread( bool assigned, IScheduler* s, IExecutionResource* r, omp_connection_v2* con, thread_map& map, rml::client& cl ) :
         server_thread(false,assigned,s,r,map,cl), my_conn(con), my_cookie(NULL), my_index(UINT_MAX) {}
     ~omp_server_thread() {}
-    /*override*/ void Dispatch( DispatchState* );
+    void Dispatch( DispatchState* ) __TBB_override;
     inline void* get_cookie() {return my_cookie;}
     inline ::__kmp::rml::omp_client::size_type get_index() {return my_index;}
 
@@ -382,13 +382,13 @@ private:
 template<typename Connection>
 class scheduler : no_copy, public IScheduler {
 public:
-    /*override*/ unsigned int GetId() const {return uid;}
-    /*override*/ void Statistics( unsigned int* /*pTaskCompletionRate*/, unsigned int* /*pTaskArrivalRate*/, unsigned int* /*pNumberOfTaskEnqueued*/) {}
-    /*override*/ SchedulerPolicy GetPolicy() const { __TBB_ASSERT(my_policy,NULL); return *my_policy; }
-    /*override*/ void AddVirtualProcessors( IVirtualProcessorRoot** vproots, unsigned int count ) { if( !my_conn.is_closing() ) my_conn.add_virtual_processors( vproots, count); }
-    /*override*/ void RemoveVirtualProcessors( IVirtualProcessorRoot** vproots, unsigned int count );
-    /*override*/ void NotifyResourcesExternallyIdle( IVirtualProcessorRoot** vproots, unsigned int count ) { __TBB_ASSERT( false, "This call is not allowed for TBB" ); }
-    /*override*/ void NotifyResourcesExternallyBusy( IVirtualProcessorRoot** vproots, unsigned int count ) { __TBB_ASSERT( false, "This call is not allowed for TBB" ); }
+    unsigned int GetId() const __TBB_override {return uid;}
+    void Statistics( unsigned int* /*pTaskCompletionRate*/, unsigned int* /*pTaskArrivalRate*/, unsigned int* /*pNumberOfTaskEnqueued*/) __TBB_override {}
+    SchedulerPolicy GetPolicy() const __TBB_override { __TBB_ASSERT(my_policy,NULL); return *my_policy; }
+    void AddVirtualProcessors( IVirtualProcessorRoot** vproots, unsigned int count ) __TBB_override { if( !my_conn.is_closing() ) my_conn.add_virtual_processors( vproots, count); }
+    void RemoveVirtualProcessors( IVirtualProcessorRoot** vproots, unsigned int count ) __TBB_override;
+    void NotifyResourcesExternallyIdle( IVirtualProcessorRoot** vproots, unsigned int count ) __TBB_override { __TBB_ASSERT( false, "This call is not allowed for TBB" ); }
+    void NotifyResourcesExternallyBusy( IVirtualProcessorRoot** vproots, unsigned int count ) __TBB_override { __TBB_ASSERT( false, "This call is not allowed for TBB" ); }
 protected:
     scheduler( Connection& conn );
     virtual ~scheduler() { __TBB_ASSERT( my_policy, NULL ); delete my_policy; }
@@ -417,11 +417,11 @@ public:
 #endif
     }
     ~thread_scavenger_thread() {}
-    /*override*/ unsigned int GetId() const { return uid; }
-    /*override*/ IScheduler* GetScheduler() { return my_scheduler; }
-    /*override*/ IThreadProxy* GetProxy()   { return my_proxy; }
-    /*override*/ void SetProxy( IThreadProxy* thr_proxy ) { my_proxy = thr_proxy; }
-    /*override*/ void Dispatch( DispatchState* );
+    unsigned int GetId() const __TBB_override { return uid; }
+    IScheduler* GetScheduler() __TBB_override { return my_scheduler; }
+    IThreadProxy* GetProxy()   __TBB_override { return my_proxy; }
+    void SetProxy( IThreadProxy* thr_proxy ) __TBB_override { my_proxy = thr_proxy; }
+    void Dispatch( DispatchState* ) __TBB_override;
     inline thread_state_t read_state() { return my_state; }
     inline void set_state( thread_state_t s ) { my_state = s; }
     inline IVirtualProcessorRoot* get_virtual_processor() { return my_virtual_processor_root; }
@@ -868,7 +868,7 @@ thread_map::size_type thread_map::wakeup_tbb_threads( size_type n ) {
 skip:
         ;
     }
-    return n<my_unrealized_threads ? n : my_unrealized_threads;
+    return n<my_unrealized_threads ? n : size_type(my_unrealized_threads);
 }
 #else /* RML_USE_WCRM */
 
@@ -976,7 +976,7 @@ public:
     int current_balance() const {int k = the_balance; return k;}
     ::rml::client& client() const {return my_client;}
     void register_as_master( server::execution_resource_t& v ) const { (IExecutionResource*&)v = my_scheduler_proxy ? my_scheduler_proxy->SubscribeCurrentThread() : NULL; }
-    // Rremove() should be called from the same thread that subscribed the current h/w thread (i.e., the one that
+    // Remove() should be called from the same thread that subscribed the current h/w thread (i.e., the one that
     // called register_as_master() ).
     void unregister( server::execution_resource_t v ) const {if( v ) ((IExecutionResource*)v)->Remove( my_scheduler );}
     void add_virtual_processors( IVirtualProcessorRoot** vprocs, unsigned int count, tbb_connection_v2& conn, ::tbb::spin_mutex& mtx );
@@ -1022,10 +1022,10 @@ void make_job( Connection& c, server_thread& t );
 
 template<typename Server, typename Client>
 class generic_connection: public Server, no_copy {
-    /*override*/ version_type version() const {return SERVER_VERSION;}
-    /*override*/ void yield() {thread_monitor::yield();}
-    /*override*/ void independent_thread_number_changed( int delta ) { my_thread_map.adjust_balance( -delta ); }
-    /*override*/ unsigned default_concurrency() const { return the_default_concurrency; }
+    version_type version() const __TBB_override {return SERVER_VERSION;}
+    void yield() __TBB_override {thread_monitor::yield();}
+    void independent_thread_number_changed( int delta ) __TBB_override { my_thread_map.adjust_balance( -delta ); }
+    unsigned default_concurrency() const __TBB_override { return the_default_concurrency; }
     friend void wakeup_some_tbb_threads();
     friend class connection_scavenger_thread;
 
@@ -1098,18 +1098,18 @@ struct connection_traits<tbb_server,tbb_client> {
 //! Represents a server/client binding.
 /** The internal representation uses inheritance for the server part and a pointer for the client part. */
 class tbb_connection_v2: public generic_connection<tbb_server,tbb_client> {
-    /*override*/ void adjust_job_count_estimate( int delta );
+    void adjust_job_count_estimate( int delta ) __TBB_override;
 #if !RML_USE_WCRM
 #if _WIN32||_WIN64
-    /*override*/ void register_master ( rml::server::execution_resource_t& /*v*/ ) {}
-    /*override*/ void unregister_master ( rml::server::execution_resource_t /*v*/ ) {}
+    void register_master ( rml::server::execution_resource_t& /*v*/ ) __TBB_override {}
+    void unregister_master ( rml::server::execution_resource_t /*v*/ ) __TBB_override {}
 #endif
 #else
-    /*override*/ void register_master ( rml::server::execution_resource_t& v ) {
+    void register_master ( rml::server::execution_resource_t& v ) __TBB_override {
         my_thread_map.register_as_master(v);
         if( v ) ++nesting;
     }
-    /*override*/ void unregister_master ( rml::server::execution_resource_t v ) {
+    void unregister_master ( rml::server::execution_resource_t v ) __TBB_override {
         if( v ) {
             __TBB_ASSERT( nesting>0, NULL );
             if( --nesting==0 ) {
@@ -1225,30 +1225,30 @@ struct connection_traits<omp_server,omp_client> {
 
 class omp_connection_v2: public generic_connection<omp_server,omp_client> {
 #if !RML_USE_WCRM
-    /*override*/ int  current_balance() const {return the_balance;}
+    int  current_balance() const __TBB_override {return the_balance;}
 #else
     friend void  free_all_connections( uintptr_t );
     friend class scheduler<omp_connection_v2>;
-    /*override*/ int current_balance() const {return my_thread_map.current_balance();}
+    int current_balance() const __TBB_override {return my_thread_map.current_balance();}
 #endif /* !RML_USE_WCRM */
-    /*override*/ int  try_increase_load( size_type n, bool strict );
-    /*override*/ void decrease_load( size_type n );
-    /*override*/ void get_threads( size_type request_size, void* cookie, job* array[] );
+    int  try_increase_load( size_type n, bool strict ) __TBB_override;
+    void decrease_load( size_type n ) __TBB_override;
+    void get_threads( size_type request_size, void* cookie, job* array[] ) __TBB_override;
 #if !RML_USE_WCRM
 #if _WIN32||_WIN64
-    /*override*/ void register_master ( rml::server::execution_resource_t& /*v*/ ) {}
-    /*override*/ void unregister_master ( rml::server::execution_resource_t /*v*/ ) {}
+    void register_master ( rml::server::execution_resource_t& /*v*/ ) __TBB_override {}
+    void unregister_master ( rml::server::execution_resource_t /*v*/ ) __TBB_override {}
 #endif
 #else
-    /*override*/ void register_master ( rml::server::execution_resource_t& v ) {
+    void register_master ( rml::server::execution_resource_t& v ) __TBB_override {
         my_thread_map.register_as_master( v );
         my_thread_map.addto_original_exec_resources( (IExecutionResource*)v, map_mtx );
     }
-    /*override*/ void unregister_master ( rml::server::execution_resource_t v ) { my_thread_map.unregister(v); }
+    void unregister_master ( rml::server::execution_resource_t v ) __TBB_override { my_thread_map.unregister(v); }
 #endif /* !RML_USE_WCRM */
 #if _WIN32||_WIN64
-    /*override*/ void deactivate( rml::job* j );
-    /*override*/ void reactivate( rml::job* j );
+    void deactivate( rml::job* j ) __TBB_override;
+    void reactivate( rml::job* j ) __TBB_override;
 #endif /* _WIN32||_WIN64 */
 #if RML_USE_WCRM
 public:
@@ -1645,7 +1645,7 @@ activate_threads:
     for( iterator_thr ti=thr_vec.begin(); ti!=thr_vec.end(); ++ti ) {
         omp_server_thread* thr = (omp_server_thread*) *ti;
         __TBB_ASSERT( thr, "thread not created?" );
-        // Thread is already grabbed; since it is nrewly created, we need to activate it.
+        // Thread is already grabbed; since it is newly created, we need to activate it.
         thr->get_virtual_processor()->Activate( thr );
         job* j = thr->wait_for_job();
         array[index] = j;
@@ -2270,7 +2270,7 @@ void tbb_server_thread::Dispatch( DispatchState* ) {
             } else {
                 __TBB_ASSERT( false, "someone tampered with my state" );
             }
-        } // someone else might set the state to somthing other than ts_idle
+        } // someone else might set the state to something other than ts_idle
     }
 }
 
@@ -2291,7 +2291,7 @@ void omp_server_thread::Dispatch( DispatchState* ) {
             my_thread_map.adjust_balance( 1 );
             set_state( ts_idle );
         }
-        // someone else might set the state to somthing other than ts_idle
+        // someone else might set the state to something other than ts_idle
     }
 }
 
@@ -2390,8 +2390,8 @@ bool tbb_server_thread::sleep_perhaps () {
         if( my_state.compare_and_swap( ts_asleep, ts_idle )==ts_idle ) {
             // If a thread is between read_state() and compare_and_swap(), and the master tries to terminate,
             // the master's compare_and_swap() will fail because the thread's state is ts_idle.
-            // We need to check if terminate is true or not before letting the thread go to sleep oetherwise
-            // we will miss the terminate signal.
+            // We need to check if terminate is true or not before letting the thread go to sleep,
+            // otherwise we will miss the terminate signal.
             if( !terminate ) {
                 if( !is_removed() ) {
                     --activation_count;
@@ -2427,8 +2427,8 @@ void omp_server_thread::sleep_perhaps () {
         if( my_state.compare_and_swap( ts_asleep, ts_idle )==ts_idle ) {
             // If a thread is between read_state() and compare_and_swap(), and the master tries to terminate,
             // the master's compare_and_swap() will fail because the thread's state is ts_idle.
-            // We need to check if terminate is true or not before letting the thread go to sleep oetherwise
-            // we will miss the terminate signal.
+            // We need to check if terminate is true or not before letting the thread go to sleep,
+            // otherwise we will miss the terminate signal.
             if( !terminate ) {
                 get_virtual_processor()->Deactivate( this );
                 __TBB_ASSERT( !is_removed(), "OMP threads should not be deprived of a virtual processor" );
@@ -2469,7 +2469,7 @@ bool server_thread_rep::destroy_job( Connection* c ) {
 
 void thread_map::assist_cleanup( bool assist_null_only ) {
     // To avoid deadlock, the current thread *must* help out with cleanups that have not started,
-    // becausd the thread that created the job may be busy for a long time.
+    // because the thread that created the job may be busy for a long time.
     for( iterator i = begin(); i!=end(); ++i ) {
         rml::job* j=0;
         server_thread* thr = (*i).second;
@@ -2499,7 +2499,7 @@ void thread_map::add_virtual_processors( IVirtualProcessorRoot** vproots, unsign
         tbb::spin_mutex::scoped_lock lck( mtx );
         __TBB_ASSERT( my_map.size()==0||count==1, NULL );
         end = my_map.end(); //remember 'end' at the time of 'find'
-        // find entries in the map for those VPs that were previosly added and then removed.
+        // find entries in the map for those VPs that were previously added and then removed.
         for( size_t i=0; i<count; ++i ) {
             vec[i] = my_map.find( (key_type) vproots[i] );
 #if TBB_USE_DEBUG
@@ -2846,7 +2846,7 @@ void thread_map::mark_virtual_processors_as_returned( IVirtualProcessorRoot** vp
                 omp_server_thread* thr = (omp_server_thread*) (*i).second;
                 if( ((uintptr_t)thr)&~(uintptr_t)1 ) {
                     __TBB_ASSERT( !thr->is_removed(), "incorrectly removed" );
-                    // we shoud not make any assumption on the initial state of an added vproc.
+                    // we should not make any assumption on the initial state of an added vproc.
                     thr->set_returned();
                 }
             }
@@ -3103,10 +3103,10 @@ void connection_scavenger_thread::process_requests( uintptr_t conn_ex )
         }
         __TBB_ASSERT( conn_ex, NULL );
         if( is_tbb )
-            // remove extra srever ref count; this will trigger Shutdown/Release of ConcRT RM
+            // remove extra server ref count; this will trigger Shutdown/Release of ConcRT RM
             tbb_conn->remove_server_ref();
         else
-            // remove extra srever ref count; this will trigger Shutdown/Release of ConcRT RM
+            // remove extra server ref count; this will trigger Shutdown/Release of ConcRT RM
             omp_conn->remove_server_ref();
     }
 }

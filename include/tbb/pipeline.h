@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef __TBB_pipeline_H
@@ -412,14 +412,14 @@ class concrete_filter: public tbb::filter {
     typedef token_helper<U,is_large_object<U>::value > u_helper;
     typedef typename u_helper::pointer u_pointer;
 
-    /*override*/ void* operator()(void* input) {
+    void* operator()(void* input) __TBB_override {
         t_pointer temp_input = t_helper::cast_from_void_ptr(input);
         u_pointer output_u = u_helper::create_token(my_body(t_helper::token(temp_input)));
         t_helper::destroy_token(temp_input);
         return u_helper::cast_to_void_ptr(output_u);
     }
 
-    /*override*/ void finalize(void * input) {
+    void finalize(void * input) __TBB_override {
         t_pointer temp_input = t_helper::cast_from_void_ptr(input);
         t_helper::destroy_token(temp_input);
     }
@@ -435,7 +435,7 @@ class concrete_filter<void,U,Body>: public filter {
     typedef token_helper<U, is_large_object<U>::value > u_helper;
     typedef typename u_helper::pointer u_pointer;
 
-    /*override*/void* operator()(void*) {
+    void* operator()(void*) __TBB_override {
         flow_control control;
         u_pointer output_u = u_helper::create_token(my_body(control));
         if(control.is_pipeline_stopped) {
@@ -459,13 +459,13 @@ class concrete_filter<T,void,Body>: public filter {
     typedef token_helper<T, is_large_object<T>::value > t_helper;
     typedef typename t_helper::pointer t_pointer;
 
-    /*override*/ void* operator()(void* input) {
+    void* operator()(void* input) __TBB_override {
         t_pointer temp_input = t_helper::cast_from_void_ptr(input);
         my_body(t_helper::token(temp_input));
         t_helper::destroy_token(temp_input);
         return NULL;
     }
-    /*override*/ void finalize(void* input) {
+    void finalize(void* input) __TBB_override {
         t_pointer temp_input = t_helper::cast_from_void_ptr(input);
         t_helper::destroy_token(temp_input);
     }
@@ -479,7 +479,7 @@ class concrete_filter<void,void,Body>: public filter {
     const Body& my_body;
 
     /** Override privately because it is always called virtually */
-    /*override*/ void* operator()(void*) {
+    void* operator()(void*) __TBB_override {
         flow_control control;
         my_body(control);
         void* output = control.is_pipeline_stopped ? NULL : (void*)(intptr_t)-1;
@@ -537,7 +537,7 @@ template<typename T, typename U, typename Body>
 class filter_node_leaf: public filter_node  {
     const tbb::filter::mode mode;
     const Body body;
-    /*override*/void add_to( pipeline& p ) {
+    void add_to( pipeline& p ) __TBB_override {
         concrete_filter<T,U,Body>* f = new concrete_filter<T,U,Body>(mode,body);
         p.add_filter( *f );
     }
@@ -550,11 +550,11 @@ class filter_node_join: public filter_node {
     friend class filter_node; // to suppress GCC 3.2 warnings
     filter_node& left;
     filter_node& right;
-    /*override*/~filter_node_join() {
+    ~filter_node_join() {
        left.remove_ref();
        right.remove_ref();
     }
-    /*override*/void add_to( pipeline& p ) {
+    void add_to( pipeline& p ) __TBB_override {
         left.add_to(p);
         right.add_to(p);
     }

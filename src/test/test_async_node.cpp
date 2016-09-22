@@ -1,41 +1,31 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
-
-#ifndef TBB_PREVIEW_FLOW_GRAPH_NODES
-    #define TBB_PREVIEW_FLOW_GRAPH_NODES 1
-#endif
 
 #include "harness.h"
 #include "harness_graph.h"
 #include "harness_barrier.h"
-
-#if __TBB_PREVIEW_ASYNC_NODE
-
 #include "tbb/concurrent_queue.h"
 #include "tbb/flow_graph.h"
 #include "tbb/task.h"
-
 #include "tbb/tbb_thread.h"
-
 #include <string>
-
 
 class minimal_type {
     template<typename T>
@@ -100,7 +90,7 @@ tbb::atomic<int> async_activity_processed_msg_count;
 tbb::atomic<int> end_body_exec_count;
 
 typedef tbb::flow::async_node< int, int > counting_async_node_type;
-typedef counting_async_node_type::async_gateway_type counting_async_gateway_type;
+typedef counting_async_node_type::gateway_type counting_gateway_type;
 
 struct counting_async_body {
     tbb::atomic<int> my_async_body_exec_count;
@@ -109,7 +99,7 @@ struct counting_async_body {
         my_async_body_exec_count = 0;
     }
 
-    void operator()( const int &input, counting_async_gateway_type& my_node ) {
+    void operator()( const int &input, counting_gateway_type& gateway) {
         REMARK( "Body execution with input == %d\n", input);
         ++my_async_body_exec_count;
         ++async_body_exec_count;
@@ -119,7 +109,7 @@ struct counting_async_body {
             ASSERT( result == true, "attempted to cancel graph twice" );
             Harness::Sleep(50);
         }
-        my_node.async_try_put(input);
+        gateway.try_put(input);
     }
 };
 
@@ -267,11 +257,11 @@ public:
     typedef Input input_type;
     typedef Output output_type;
     typedef tbb::flow::async_node< input_type, output_type > async_node_type;
-    typedef typename async_node_type::async_gateway_type async_gateway_type;
+    typedef typename async_node_type::gateway_type gateway_type;
 
     struct work_type {
         input_type input;
-        async_gateway_type* callback;
+        gateway_type* gateway;
     };
 
     class ServiceThreadBody {
@@ -300,8 +290,8 @@ public:
         my_service_thread.join();
     }
 
-    void submit( const input_type &input, async_gateway_type& callback ) {
-        work_type work = { input, &callback };
+    void submit( const input_type &input, gateway_type& gateway ) {
+        work_type work = { input, &gateway};
         my_work_queue.push( work );
     }
 
@@ -314,9 +304,9 @@ public:
                 output_type output;
                 wrapper_helper<output_type, output_type>::copy_value(work.input, output);
                 wrapper_helper<output_type, output_type>::check(work.input, output);
-                work.callback->async_try_put(output);
+                work.gateway->try_put(output);
                 if ( my_expected_items == UNKNOWN_NUMBER_OF_ITEMS || int(async_activity_processed_msg_count) == my_expected_items ) {
-                    work.callback->async_commit();
+                    work.gateway->release_wait();
                 }
             }
         } while( my_quit == false || !my_work_queue.empty());
@@ -350,7 +340,7 @@ struct basic_test {
     typedef Input input_type;
     typedef Output output_type;
     typedef tbb::flow::async_node< input_type, output_type > async_node_type;
-    typedef typename async_node_type::async_gateway_type async_gateway_type;
+    typedef typename async_node_type::gateway_type gateway_type;
 
     class start_body_type {
         typedef Input input_type;
@@ -365,7 +355,7 @@ struct basic_test {
         typedef Input input_type;
         typedef Output output_type;
         typedef tbb::flow::async_node< input_type, output_type > async_node_type;
-        typedef typename async_node_type::async_gateway_type async_gateway_type;
+        typedef typename async_node_type::gateway_type gateway_type;
     public:
         typedef async_activity<input_type, output_type> async_activity_type;
 
@@ -373,11 +363,11 @@ struct basic_test {
 
         async_body_type( const async_body_type& other ) : my_async_activity( other.my_async_activity ) { }
 
-        void operator()( const input_type &input, async_gateway_type& my_node ) {
+        void operator()( const input_type &input, gateway_type& gateway ) {
             ++async_body_exec_count;
-            my_async_activity->submit( input, my_node );
+            my_async_activity->submit( input, gateway);
             if ( my_async_activity->should_reserve_each_time() )
-                my_node.async_reserve();
+                gateway.reserve_wait();
         }
 
     private:
@@ -404,11 +394,11 @@ public:
         tbb::flow::graph g;
         tbb::flow::function_node< int, input_type > start_node( g, tbb::flow::unlimited, start_body_type() );
 #if __TBB_LAMBDAS_PRESENT
-        async_node_type offload_node( g, tbb::flow::unlimited, [&] (const input_type &input, async_gateway_type& my_node) {
+        async_node_type offload_node(g, tbb::flow::unlimited, [&] (const input_type &input, gateway_type& gateway) {
             ++async_body_exec_count;
-            my_async_activity.submit( input, my_node );
-            if ( my_async_activity.should_reserve_each_time() )
-                my_node.async_reserve();
+            my_async_activity.submit(input, gateway);
+            if(my_async_activity.should_reserve_each_time())
+                gateway.reserve_wait();
         } );
 #else
         async_node_type offload_node( g, tbb::flow::unlimited, async_body_type( &my_async_activity ) );
@@ -427,7 +417,7 @@ public:
         end_body_exec_count = 0;
 
         if (async_expected_items != UNKNOWN_NUMBER_OF_ITEMS ) {
-            offload_node.async_reserve();
+            offload_node.gateway().reserve_wait();
         }
         for (int i = 0; i < NUMBER_OF_MSGS; ++i) {
             start_node.try_put(i);
@@ -492,7 +482,7 @@ struct spin_test {
     typedef Input input_type;
     typedef Output output_type;
     typedef tbb::flow::async_node< input_type, output_type > async_node_type;
-    typedef typename async_node_type::async_gateway_type async_gateway_type;
+    typedef typename async_node_type::gateway_type gateway_type;
 
     class start_body_type {
         typedef Input input_type;
@@ -507,7 +497,7 @@ struct spin_test {
         typedef Input input_type;
         typedef Output output_type;
         typedef tbb::flow::async_node< input_type, output_type > async_node_type;
-        typedef typename async_node_type::async_gateway_type async_gateway_type;
+        typedef typename async_node_type::gateway_type gateway_type;
     public:
         typedef async_activity<input_type, output_type> async_activity_type;
 
@@ -515,11 +505,11 @@ struct spin_test {
 
         async_body_type( const async_body_type& other ) : my_async_activity( other.my_async_activity ) { }
 
-        void operator()( const input_type &input, async_gateway_type& my_node ) {
+        void operator()(const input_type &input, gateway_type& gateway) {
             ++async_body_exec_count;
-            my_async_activity->submit( input, my_node );
-            if ( my_async_activity->should_reserve_each_time() )
-                my_node.async_reserve();
+            my_async_activity->submit(input, gateway);
+            if(my_async_activity->should_reserve_each_time())
+                gateway.reserve_wait();
         }
 
     private:
@@ -551,12 +541,12 @@ struct spin_test {
         tbb::flow::graph g;
         tbb::flow::function_node< int, input_type > start_node( g, tbb::flow::unlimited, start_body_type() );
 #if __TBB_LAMBDAS_PRESENT
-        async_node_type offload_node( g, tbb::flow::unlimited, [&] (const input_type &input, async_gateway_type& my_node) {
+        async_node_type offload_node(g, tbb::flow::unlimited, [&](const input_type &input, gateway_type& gateway) {
             ++async_body_exec_count;
-            my_async_activity.submit( input, my_node );
-            if ( my_async_activity.should_reserve_each_time() )
-                my_node.async_reserve();
-        } );
+            my_async_activity.submit(input, gateway);
+            if(my_async_activity.should_reserve_each_time())
+                gateway.reserve_wait();
+        });
 #else
         async_node_type offload_node( g, tbb::flow::unlimited, async_body_type( &my_async_activity ) );
 #endif
@@ -573,7 +563,7 @@ struct spin_test {
         main_tid_count = 0;
 
         if (async_expected_items != UNKNOWN_NUMBER_OF_ITEMS ) {
-            offload_node.async_reserve();
+            offload_node.gateway().reserve_wait();
         }
         for (int i = 0; i < nthreads*NUMBER_OF_MSGS; ++i) {
             start_node.try_put(i);
@@ -603,11 +593,7 @@ int run_tests() {
     return Harness::Done;
 }
 
-
-#endif // __TBB_PREVIEW_ASYNC_NODE
-
 int TestMain() {
-#if __TBB_PREVIEW_ASYNC_NODE
     tbb::task_scheduler_init init(4);
     run_tests<int, int>();
     run_tests<minimal_type, minimal_type>();
@@ -616,8 +602,5 @@ int TestMain() {
     test_copy_ctor();
     test_for_spin_avoidance();
     return Harness::Done;
-#else
-    return Harness::Skipped;
-#endif
 }
 

@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 /** @file harness_graph.cpp
@@ -32,6 +32,8 @@
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/task.h"
 #include "tbb/task_scheduler_init.h"
+
+using tbb::flow::internal::SUCCESSFULLY_ENQUEUED;
 
 #define WAIT_MAX 2000000
 #define BACKOFF_WAIT(ex,msg) \
@@ -287,9 +289,9 @@ struct harness_counting_receiver : public tbb::flow::receiver<T>, NoCopy {
        num_copies = c;
     }
 
-    /* override */ tbb::task *try_put_task( const T & ) {
+    tbb::task *try_put_task( const T & ) __TBB_override {
       ++my_count;
-      return const_cast<tbb::task *>(tbb::flow::interface8::SUCCESSFULLY_ENQUEUED);
+      return const_cast<tbb::task *>(SUCCESSFULLY_ENQUEUED);
     }
 
     void validate() {
@@ -300,16 +302,15 @@ struct harness_counting_receiver : public tbb::flow::receiver<T>, NoCopy {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
     built_predecessors_type mbp;
-    /*override*/ built_predecessors_type &built_predecessors() { return mbp; }
+    built_predecessors_type &built_predecessors() __TBB_override { return mbp; }
     typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
     typedef typename tbb::flow::receiver<T>::predecessor_type predecessor_type;
-    /*override*/void internal_add_built_predecessor(predecessor_type &) {}
-    /*override*/void internal_delete_built_predecessor(predecessor_type &) {}
-    /*override*/void copy_predecessors(predecessor_list_type &) { }
-    /*override*/size_t predecessor_count() { return 0; }
-    /*override*/void clear_predecessors() { my_count = 0; };
+    void internal_add_built_predecessor(predecessor_type &) __TBB_override {}
+    void internal_delete_built_predecessor(predecessor_type &) __TBB_override {}
+    void copy_predecessors(predecessor_list_type &) __TBB_override { }
+    size_t predecessor_count() __TBB_override { return 0; }
 #endif
-    /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) { my_count = 0; }
+    void reset_receiver(tbb::flow::reset_flags /*f*/) __TBB_override { my_count = 0; }
 };
 
 //! Counts the number of puts received
@@ -338,7 +339,7 @@ struct harness_mapped_receiver : public tbb::flow::receiver<T>, NoCopy {
        my_map = new map_type;
     }
 
-    /* override */ tbb::task * try_put_task( const T &t ) {
+    tbb::task * try_put_task( const T &t ) __TBB_override {
       if ( my_map ) {
           tbb::atomic<size_t> a;
           a = 1;
@@ -350,7 +351,7 @@ struct harness_mapped_receiver : public tbb::flow::receiver<T>, NoCopy {
       } else {
           ++my_count;
       }
-      return const_cast<tbb::task *>(tbb::flow::interface8::SUCCESSFULLY_ENQUEUED);
+      return const_cast<tbb::task *>(SUCCESSFULLY_ENQUEUED);
     }
 
     void validate() {
@@ -367,16 +368,15 @@ struct harness_mapped_receiver : public tbb::flow::receiver<T>, NoCopy {
 #if TBB_PREVIEW_FLOW_GRAPH_FEATURES
     typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
     built_predecessors_type mbp;
-    /*override*/ built_predecessors_type &built_predecessors() { return mbp; }
+    built_predecessors_type &built_predecessors() __TBB_override { return mbp; }
     typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
     typedef typename tbb::flow::receiver<T>::predecessor_type predecessor_type;
-    /*override*/void internal_add_built_predecessor(predecessor_type &) {}
-    /*override*/void internal_delete_built_predecessor(predecessor_type &) {}
-    /*override*/void copy_predecessors(predecessor_list_type &) { }
-    /*override*/size_t predecessor_count() { return 0; }
-    /*override*/void clear_predecessors() { my_count = 0; };
+    void internal_add_built_predecessor(predecessor_type &) __TBB_override {}
+    void internal_delete_built_predecessor(predecessor_type &) __TBB_override {}
+    void copy_predecessors(predecessor_list_type &) __TBB_override { }
+    size_t predecessor_count() __TBB_override { return 0; }
 #endif
-    /*override*/void reset_receiver(tbb::flow::reset_flags /*f*/) {
+    void reset_receiver(tbb::flow::reset_flags /*f*/) __TBB_override {
         my_count = 0;
         if(my_map) delete my_map;
         my_map = new map_type;
@@ -406,12 +406,12 @@ struct harness_counting_sender : public tbb::flow::sender<T>, NoCopy {
        my_received = 0;
     }
 
-    /* override */ bool register_successor( successor_type &r ) {
+    bool register_successor( successor_type &r ) __TBB_override {
         my_receiver = &r;
         return true;
     }
 
-    /* override */ bool remove_successor( successor_type &r ) {
+    bool remove_successor( successor_type &r ) __TBB_override {
         successor_type *s = my_receiver.fetch_and_store( NULL );
         ASSERT( s == &r, NULL );
         return true;
@@ -421,15 +421,14 @@ struct harness_counting_sender : public tbb::flow::sender<T>, NoCopy {
     typedef typename tbb::flow::sender<T>::successor_list_type successor_list_type;
     typedef typename tbb::flow::sender<T>::built_successors_type built_successors_type;
     built_successors_type bst;
-    /*override*/ built_successors_type &built_successors() { return bst; }
-    /* override */ void internal_add_built_successor( successor_type &) {}
-    /* override */ void internal_delete_built_successor( successor_type &) {}
-    /* override */ void copy_successors(successor_list_type &) { }
-    /*override*/ void clear_successors() { my_receiver = NULL; }
-    /* override */ size_t successor_count() { return 0; }
+    built_successors_type &built_successors() __TBB_override { return bst; }
+    void internal_add_built_successor( successor_type &) __TBB_override {}
+    void internal_delete_built_successor( successor_type &) __TBB_override {}
+    void copy_successors(successor_list_type &) __TBB_override { }
+    size_t successor_count() __TBB_override { return 0; }
 #endif
 
-    /* override */ bool try_get( T & v ) {
+    bool try_get( T & v ) __TBB_override {
         size_t i = my_count.fetch_and_increment();
         if ( i < my_limit ) {
            v = T( i );
@@ -917,7 +916,7 @@ protected:
         }
     };
 
-    /*override*/void set_up_lists() {
+    void set_up_lists() __TBB_override {
         middle_count = 0;
         out0_count = 0;
         out1_count = 0;

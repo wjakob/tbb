@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef __TBB_exception_H
@@ -42,34 +42,34 @@ namespace tbb {
 //! Exception for concurrent containers
 class bad_last_alloc : public std::bad_alloc {
 public:
-    /*override*/ const char* what() const throw();
+    const char* what() const throw() __TBB_override;
 #if __TBB_DEFAULT_DTOR_THROW_SPEC_BROKEN
-    /*override*/ ~bad_last_alloc() throw() {}
+    ~bad_last_alloc() throw() __TBB_override {}
 #endif
 };
 
 //! Exception for PPL locks
 class improper_lock : public std::exception {
 public:
-    /*override*/ const char* what() const throw();
+    const char* what() const throw() __TBB_override;
 };
 
 //! Exception for user-initiated abort
 class user_abort : public std::exception {
 public:
-    /*override*/ const char* what() const throw();
+    const char* what() const throw() __TBB_override;
 };
 
 //! Exception for missing wait on structured_task_group
 class missing_wait : public std::exception {
 public:
-    /*override*/ const char* what() const throw();
+    const char* what() const throw() __TBB_override;
 };
 
 //! Exception for repeated scheduling of the same task_handle
 class invalid_multiple_scheduling : public std::exception {
 public:
-    /*override*/ const char* what() const throw();
+    const char* what() const throw() __TBB_override;
 };
 
 namespace internal {
@@ -182,7 +182,7 @@ public:
     virtual const char* name() const throw() = 0;
 
     //! Returns the result of originally intercepted exception's what() method.
-    virtual const char* what() const throw() = 0;
+    virtual const char* what() const throw() __TBB_override = 0;
 
     /** Operator delete is provided only to allow using existing smart pointers
         with TBB exception objects obtained as the result of applying move()
@@ -225,20 +225,15 @@ public:
         return *this;
     }
 
-    /*override*/
-    captured_exception* __TBB_EXPORTED_METHOD move () throw();
+    captured_exception* __TBB_EXPORTED_METHOD move () throw() __TBB_override;
 
-    /*override*/
-    void __TBB_EXPORTED_METHOD destroy () throw();
+    void __TBB_EXPORTED_METHOD destroy () throw() __TBB_override;
 
-    /*override*/
-    void throw_self () { __TBB_THROW(*this); }
+    void throw_self () __TBB_override { __TBB_THROW(*this); }
 
-    /*override*/
-    const char* __TBB_EXPORTED_METHOD name() const throw();
+    const char* __TBB_EXPORTED_METHOD name() const throw() __TBB_override;
 
-    /*override*/
-    const char* __TBB_EXPORTED_METHOD what() const throw();
+    const char* __TBB_EXPORTED_METHOD what() const throw() __TBB_override;
 
     void __TBB_EXPORTED_METHOD set ( const char* name, const char* info ) throw();
     void __TBB_EXPORTED_METHOD clear () throw();
@@ -299,12 +294,11 @@ public:
 
     const ExceptionData& data () const throw() { return my_exception_data; }
 
-    /*override*/ const char* name () const throw() { return my_exception_name; }
+    const char* name () const throw() __TBB_override { return my_exception_name; }
 
-    /*override*/ const char* what () const throw() { return "tbb::movable_exception"; }
+    const char* what () const throw() __TBB_override { return "tbb::movable_exception"; }
 
-    /*override*/
-    movable_exception* move () throw() {
+    movable_exception* move () throw() __TBB_override {
         void* e = internal::allocate_via_handler_v3(sizeof(movable_exception));
         if ( e ) {
             ::new (e) movable_exception(*this);
@@ -312,16 +306,14 @@ public:
         }
         return (movable_exception*)e;
     }
-    /*override*/
-    void destroy () throw() {
+    void destroy () throw() __TBB_override {
         __TBB_ASSERT ( my_dynamic, "Method destroy can be called only on dynamically allocated movable_exceptions" );
         if ( my_dynamic ) {
             this->~movable_exception();
             internal::deallocate_via_handler_v3(this);
         }
     }
-    /*override*/
-    void throw_self () { __TBB_THROW( *this ); }
+    void throw_self () __TBB_override { __TBB_THROW( *this ); }
 
 protected:
     //! User data

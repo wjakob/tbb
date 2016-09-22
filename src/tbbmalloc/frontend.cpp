@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 
@@ -344,19 +344,19 @@ protected:
 };
 
 template<size_t padd>
-struct Padding {
+struct PaddingImpl {
     size_t       __padding[padd];
 };
 
 template<>
-struct Padding<0> {
+struct PaddingImpl<0> {
 };
 
-class LocalBlockFields : public GlobalBlockFields {
-protected:
-    Padding<(blockHeaderAlignment -
-             sizeof(GlobalBlockFields))/sizeof(size_t)> pad_local;
+template<int N>
+struct Padding : PaddingImpl<N/sizeof(size_t)> {};
 
+class LocalBlockFields : public GlobalBlockFields, Padding<blockHeaderAlignment - sizeof(GlobalBlockFields)>  {
+protected:
     Block       *next;
     Block       *previous;        /* Use double linked list to speed up removal */
     FreeObject  *bumpPtr;         /* Bump pointer moves from the end to the beginning of a block */
@@ -378,9 +378,11 @@ protected:
     friend Block *MemoryPool::getEmptyBlock(size_t size);
 };
 
-class Block : public LocalBlockFields {
-    Padding<(2*blockHeaderAlignment -
-             sizeof(LocalBlockFields))/sizeof(size_t)> pad_public;
+// Use inheritance to guarantee that a user data start on next cache line.
+// Can't use member for it, because when LocalBlockFields already on cache line,
+// we must have no additional memory consumption for all compilers.
+class Block : public LocalBlockFields,
+              Padding<2*blockHeaderAlignment - sizeof(LocalBlockFields)> {
 public:
     bool empty() const { return allocatedCount==0 && publicFreeList==NULL; }
     inline FreeObject* allocate();
@@ -802,6 +804,19 @@ static inline unsigned int highestBitPos(unsigned int n)
     return pos;
 }
 
+template<bool Is32Bit>
+unsigned int getSmallObjectIndex(unsigned int size)
+{
+    return (size-1)>>3;
+}
+template<>
+unsigned int getSmallObjectIndex</*Is32Bit=*/false>(unsigned int size)
+{
+    // For 64-bit malloc, 16 byte alignment is needed except for bin 0.
+    unsigned int result = (size-1)>>3;
+    if (result) result |= 1; // 0,1,3,5,7; bins 2,4,6 are not aligned to 16 bytes
+    return result;
+}
 /*
  * Depending on indexRequest, for a given size return either the index into the bin
  * for objects of this size, or the actual size of objects in this bin.
@@ -809,9 +824,10 @@ static inline unsigned int highestBitPos(unsigned int n)
 template<bool indexRequest>
 static unsigned int getIndexOrObjectSize (unsigned int size)
 {
-    if (size <= maxSmallObjectSize) { // selection from 4/8/16/24/32/40/48/56/64
-         /* Index 0 holds up to 8 bytes, Index 1 16 and so forth */
-        return indexRequest ? (size - 1) >> 3 : alignUp(size,8);
+    if (size <= maxSmallObjectSize) { // selection from 8/16/24/32/40/48/56/64
+        unsigned int index = getSmallObjectIndex</*Is32Bit=*/(sizeof(size_t)<=4)>( size );
+         /* Bin 0 is for 8 bytes, bin 1 is for 16, and so forth */
+        return indexRequest ? index : (index+1)<<3;
     }
     else if (size <= maxSegregatedObjectSize ) { // 80/96/112/128 / 160/192/224/256 / 320/384/448/512 / 640/768/896/1024
         unsigned int order = highestBitPos(size-1); // which group of bin sizes?
@@ -849,12 +865,12 @@ static unsigned int getIndexOrObjectSize (unsigned int size)
 
 static unsigned int getIndex (unsigned int size)
 {
-    return getIndexOrObjectSize</*indexRequest*/true>(size);
+    return getIndexOrObjectSize</*indexRequest=*/true>(size);
 }
 
 static unsigned int getObjectSize (unsigned int size)
 {
-    return getIndexOrObjectSize</*indexRequest*/false>(size);
+    return getIndexOrObjectSize</*indexRequest=*/false>(size);
 }
 
 
@@ -2799,6 +2815,7 @@ extern "C" void __TBB_mallocProcessShutdownNotification()
            1.*cacheHits/mallocCalls, 1.*memHitKB/memAllocKB);
     defaultMemPool->extMemPool.loc.reportStat(stdout);
 #endif
+
     shutdownSync.processExit();
 #if __TBB_SOURCE_DIRECTLY_INCLUDED
 /* Pthread keys must be deleted as soon as possible to not call key dtor
@@ -2924,13 +2941,13 @@ extern "C" void* __TBB_malloc_safer_realloc(void* ptr, size_t sz, void* original
 #if USE_WINTHREAD
     else if (original_realloc && sz) {
         orig_ptrs *original_ptrs = static_cast<orig_ptrs*>(original_realloc);
-        if ( original_ptrs->orig_msize ){
-            size_t oldSize = original_ptrs->orig_msize(ptr);
+        if ( original_ptrs->msize ){
+            size_t oldSize = original_ptrs->msize(ptr);
             tmp = internalMalloc(sz);
             if (tmp) {
                 memcpy(tmp, ptr, sz<oldSize? sz : oldSize);
-                if ( original_ptrs->orig_free ){
-                    original_ptrs->orig_free( ptr );
+                if ( original_ptrs->free ){
+                    original_ptrs->free( ptr );
                 }
             }
         } else
@@ -3049,23 +3066,24 @@ extern "C" void * __TBB_malloc_safer_aligned_realloc(void *ptr, size_t size, siz
     }
 #if USE_WINTHREAD
     else {
-        orig_ptrs *original_ptrs = static_cast<orig_ptrs*>(orig_function);
+        orig_aligned_ptrs *original_ptrs = static_cast<orig_aligned_ptrs*>(orig_function);
         if (size) {
             // Without orig_msize, we can't do anything with this.
             // Just keeping old pointer.
-            if ( original_ptrs->orig_msize ){
-                size_t oldSize = original_ptrs->orig_msize(ptr);
+            if ( original_ptrs->aligned_msize ){
+                // set alignment and offset to have possibly correct oldSize
+                size_t oldSize = original_ptrs->aligned_msize(ptr, sizeof(void*), 0);
                 tmp = allocateAligned(defaultMemPool, size, alignment);
                 if (tmp) {
                     memcpy(tmp, ptr, size<oldSize? size : oldSize);
-                    if ( original_ptrs->orig_free ){
-                        original_ptrs->orig_free( ptr );
+                    if ( original_ptrs->aligned_free ){
+                        original_ptrs->aligned_free( ptr );
                     }
                 }
             }
         } else {
-            if ( original_ptrs->orig_free ){
-                original_ptrs->orig_free( ptr );
+            if ( original_ptrs->aligned_free ){
+                original_ptrs->aligned_free( ptr );
             }
             return NULL;
         }

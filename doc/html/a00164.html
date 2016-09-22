@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::internal::thread_closure_0&lt; F &gt; Struct Template Reference</title>
+<title>tbb::interface5::concurrent_unordered_map_traits&lt; Key, T, Hash_compare, Allocator, Allow_multimapping &gt;::value_compare Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,56 +33,51 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><b>internal</b></li><li class="navelem"><a class="el" href="a00164.html">thread_closure_0</a></li>  </ul>
+<li class="navelem"><a class="el" href="a00228.html">tbb</a></li><li class="navelem"><b>interface5</b></li><li class="navelem"><a class="el" href="a00041.html">concurrent_unordered_map_traits</a></li><li class="navelem"><a class="el" href="a00164.html">value_compare</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="a00408.html">List of all members</a>  </div>
+<a href="#pro-attribs">Protected Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
+<a href="a00354.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::internal::thread_closure_0&lt; F &gt; Struct Template Reference</div>  </div>
+<div class="title">tbb::interface5::concurrent_unordered_map_traits&lt; Key, T, Hash_compare, Allocator, Allow_multimapping &gt;::value_compare Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="dynheader">
-Inheritance diagram for tbb::internal::thread_closure_0&lt; F &gt;:</div>
+Inheritance diagram for tbb::interface5::concurrent_unordered_map_traits&lt; Key, T, Hash_compare, Allocator, Allow_multimapping &gt;::value_compare:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="a00164.png" usemap="#tbb::internal::thread_closure_0&lt; F &gt;_map" alt=""/>
-  <map id="tbb::internal::thread_closure_0&lt; F &gt;_map" name="tbb::internal::thread_closure_0&lt; F &gt;_map">
-<area href="a00167.html" alt="tbb::internal::thread_closure_base" shape="rect" coords="0,0,214,24"/>
+  <img src="a00164.png" usemap="#tbb::interface5::concurrent_unordered_map_traits&lt; Key, T, Hash_compare, Allocator, Allow_multimapping &gt;::value_compare_map" alt=""/>
+  <map id="tbb::interface5::concurrent_unordered_map_traits&lt; Key, T, Hash_compare, Allocator, Allow_multimapping &gt;::value_compare_map" name="tbb::interface5::concurrent_unordered_map_traits&lt; Key, T, Hash_compare, Allocator, Allow_multimapping &gt;::value_compare_map">
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a538aa9db5b40cf64cdafc0af0649a7f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a538aa9db5b40cf64cdafc0af0649a7f2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>thread_closure_0</b> (const F &amp;f)</td></tr>
-<tr class="separator:a538aa9db5b40cf64cdafc0af0649a7f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_a00167"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_a00167')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="a00167.html">tbb::internal::thread_closure_base</a></td></tr>
-<tr class="memitem:a624f5a5a40051faf39444ad3a9f36df5 inherit pub_methods_a00167"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a624f5a5a40051faf39444ad3a9f36df5"></a>
-void *&#160;</td><td class="memItemRight" valign="bottom"><b>operator new</b> (size_t size)</td></tr>
-<tr class="separator:a624f5a5a40051faf39444ad3a9f36df5 inherit pub_methods_a00167"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56e1bfd2ca46abcc3c3f265eff10360d inherit pub_methods_a00167"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56e1bfd2ca46abcc3c3f265eff10360d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>operator delete</b> (void *ptr)</td></tr>
-<tr class="separator:a56e1bfd2ca46abcc3c3f265eff10360d inherit pub_methods_a00167"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab45af27d6a7ce27dfdd5cd86b9e242a4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab45af27d6a7ce27dfdd5cd86b9e242a4"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const value_type &amp;left, const value_type &amp;right) const </td></tr>
+<tr class="separator:ab45af27d6a7ce27dfdd5cd86b9e242a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a950d35402dcfda797180cfa504e62696"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a950d35402dcfda797180cfa504e62696"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>value_compare</b> (const hash_compare &amp;comparator)</td></tr>
+<tr class="separator:a950d35402dcfda797180cfa504e62696"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a4b9e7370103f473212ccb10e65d676fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b9e7370103f473212ccb10e65d676fb"></a>
-static __TBB_NATIVE_THREAD_ROUTINE&#160;</td><td class="memItemRight" valign="bottom"><b>start_routine</b> (void *c)</td></tr>
-<tr class="separator:a4b9e7370103f473212ccb10e65d676fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:a9f3947368607fd396df7f112f79abc1f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f3947368607fd396df7f112f79abc1f"></a>
+hash_compare&#160;</td><td class="memItemRight" valign="bottom"><b>my_hash_compare</b></td></tr>
+<tr class="separator:a9f3947368607fd396df7f112f79abc1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:aff55f3266cccfbb2d296aa9b07239ce8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff55f3266cccfbb2d296aa9b07239ce8"></a>
-F&#160;</td><td class="memItemRight" valign="bottom"><b>function</b></td></tr>
-<tr class="separator:aff55f3266cccfbb2d296aa9b07239ce8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:af8b0853dc699e83103d36df2c881aa67"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af8b0853dc699e83103d36df2c881aa67"></a>
+class&#160;</td><td class="memItemRight" valign="bottom"><b>concurrent_unordered_map_traits&lt; Key, T, Hash_compare, Allocator, Allow_multimapping &gt;</b></td></tr>
+<tr class="separator:af8b0853dc699e83103d36df2c881aa67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
-<li>tbb_thread.h</li>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>concurrent_unordered_map.h</li>
 </ul>
 </div><!-- contents -->
 <hr>

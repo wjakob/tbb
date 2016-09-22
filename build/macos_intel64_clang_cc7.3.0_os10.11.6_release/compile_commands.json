@@ -1,0 +1,852 @@
+[
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_yield.dir/src/test/test_yield.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_yield.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_yield.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_tuple.dir/src/test/test_tuple.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_tuple.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_tuple.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_tick_count.dir/src/test/test_tick_count.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_tick_count.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_tick_count.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_tbb_header.dir/src/test/test_tbb_header.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_tbb_header.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_tbb_header.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_tbb_fork.dir/src/test/test_tbb_fork.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_tbb_fork.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_tbb_fork.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_tbb_condition_variable.dir/src/test/test_tbb_condition_variable.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_tbb_condition_variable.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_tbb_condition_variable.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_task_scheduler_observer.dir/src/test/test_task_scheduler_observer.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_task_scheduler_observer.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_task_scheduler_observer.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_task_group.dir/src/test/test_task_group.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_task_group.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_task_group.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_std_thread.dir/src/test/test_std_thread.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_std_thread.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_std_thread.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_write_once_node.dir/src/test/test_write_once_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_write_once_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_write_once_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_static_assert.dir/src/test/test_static_assert.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_static_assert.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_static_assert.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_tbb_thread.dir/src/test/test_tbb_thread.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_tbb_thread.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_tbb_thread.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_semaphore.dir/src/test/test_semaphore.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_semaphore.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_semaphore.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_ScalableAllocator_STL.dir/src/test/test_ScalableAllocator_STL.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_ScalableAllocator_STL.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_ScalableAllocator_STL.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_queue_node.dir/src/test/test_queue_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_queue_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_queue_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_pipeline.dir/src/test/test_pipeline.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_pipeline.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_pipeline.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_invoke.dir/src/test/test_parallel_invoke.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_invoke.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_invoke.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_for_each.dir/src/test/test_parallel_for_each.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_for_each.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_for_each.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_source_node.dir/src/test/test_source_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_source_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_source_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_for.dir/src/test/test_parallel_for.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_for.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_for.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_for_vectorization.dir/src/test/test_parallel_for_vectorization.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_for_vectorization.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_for_vectorization.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fopenmp -o CMakeFiles/test_openmp.dir/src/test/test_openmp.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_openmp.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_openmp.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_task.dir/src/test/test_task.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_task.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_task.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_mutex.dir/src/test/test_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_reader_writer_lock.dir/src/test/test_reader_writer_lock.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_reader_writer_lock.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_reader_writer_lock.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_malloc_regression.dir/src/test/test_malloc_regression.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_malloc_regression.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_malloc_regression.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_malloc_pools.dir/src/test/test_malloc_pools.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_malloc_pools.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_malloc_pools.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_priority_queue_node.dir/src/test/test_priority_queue_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_priority_queue_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_priority_queue_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_handle_perror.dir/src/test/test_handle_perror.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_handle_perror.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_handle_perror.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_async_node.dir/src/test/test_async_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_async_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_async_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_malloc_compliance.dir/src/test/test_malloc_compliance.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_malloc_compliance.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_malloc_compliance.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_mutex_native_threads.dir/src/test/test_mutex_native_threads.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_mutex_native_threads.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_mutex_native_threads.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_cache_aligned_allocator.dir/src/test/test_cache_aligned_allocator.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_cache_aligned_allocator.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_cache_aligned_allocator.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_limiter_node.dir/src/test/test_limiter_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_limiter_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_limiter_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_ittnotify.dir/src/test/test_ittnotify.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_ittnotify.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_ittnotify.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_model_plugin.dir/src/test/test_model_plugin.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_model_plugin.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_model_plugin.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_intrusive_list.dir/src/test/test_intrusive_list.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_intrusive_list.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_intrusive_list.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_concurrent_unordered_map.dir/src/test/test_concurrent_unordered_map.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_concurrent_unordered_map.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_concurrent_unordered_map.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_inits_loop.dir/src/test/test_inits_loop.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_inits_loop.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_inits_loop.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -Dtbbmalloc_proxy_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_proxy.dir/src/tbbmalloc/proxy.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/proxy.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/proxy.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -Dtbbmalloc_proxy_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_proxy.dir/src/tbbmalloc/tbb_function_replacement.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/tbb_function_replacement.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/tbb_function_replacement.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_flow_graph.dir/src/test/test_flow_graph.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_flow_graph.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_flow_graph.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_concurrent_hash_map.dir/src/test/test_concurrent_hash_map.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_concurrent_hash_map.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_concurrent_hash_map.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_examples_common_utility.dir/src/test/test_examples_common_utility.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_examples_common_utility.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_examples_common_utility.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_eh_flow_graph.dir/src/test/test_eh_flow_graph.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_eh_flow_graph.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_eh_flow_graph.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_tagged_msg.dir/src/test/test_tagged_msg.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_tagged_msg.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_tagged_msg.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_sort.dir/src/test/test_parallel_sort.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_sort.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_sort.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_continue_node.dir/src/test/test_continue_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_continue_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_continue_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_pipeline.dir/src/test/test_parallel_pipeline.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_pipeline.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_pipeline.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_enumerable_thread_specific.dir/src/test/test_enumerable_thread_specific.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_enumerable_thread_specific.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_enumerable_thread_specific.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_split_node.dir/src/test/test_split_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_split_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_split_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_concurrent_queue.dir/src/test/test_concurrent_queue.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_concurrent_queue.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_concurrent_queue.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_concurrent_lru_cache.dir/src/test/test_concurrent_lru_cache.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_concurrent_lru_cache.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_concurrent_lru_cache.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_combinable.dir/src/test/test_combinable.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_combinable.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_combinable.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_cache_aligned_allocator_STL.dir/src/test/test_cache_aligned_allocator_STL.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_cache_aligned_allocator_STL.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_cache_aligned_allocator_STL.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_task_steal_limit.dir/src/test/test_task_steal_limit.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_task_steal_limit.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_task_steal_limit.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_buffer_node.dir/src/test/test_buffer_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_buffer_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_buffer_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_blocked_range.dir/src/test/test_blocked_range.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_blocked_range.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_blocked_range.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/arena.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/arena.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/arena.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/cache_aligned_allocator.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/cache_aligned_allocator.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/cache_aligned_allocator.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/concurrent_hash_map.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/concurrent_hash_map.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/concurrent_hash_map.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/concurrent_monitor.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/concurrent_monitor.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/concurrent_monitor.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/concurrent_queue.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/concurrent_queue.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/concurrent_queue.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/concurrent_vector.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/concurrent_vector.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/concurrent_vector.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/condition_variable.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/condition_variable.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/condition_variable.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/critical_section.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/critical_section.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/critical_section.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/dynamic_link.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/dynamic_link.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/dynamic_link.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/governor.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/governor.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/governor.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/itt_notify.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/itt_notify.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/itt_notify.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/market.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/market.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/market.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/observer_proxy.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/observer_proxy.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/observer_proxy.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/pipeline.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/pipeline.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/pipeline.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/private_server.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/private_server.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/private_server.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/queuing_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/queuing_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/queuing_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/queuing_rw_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/queuing_rw_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/queuing_rw_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/reader_writer_lock.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/reader_writer_lock.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/reader_writer_lock.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/recursive_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/recursive_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/recursive_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/scheduler.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/scheduler.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/scheduler.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/semaphore.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/semaphore.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/semaphore.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/spin_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/spin_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/spin_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/spin_rw_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/spin_rw_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/spin_rw_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/task.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/task.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/task.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/task_group_context.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/task_group_context.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/task_group_context.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/tbb_main.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_main.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_main.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/tbb_misc.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_misc.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_misc.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/tbb_misc_ex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_misc_ex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_misc_ex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/tbb_statistics.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_statistics.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_statistics.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/tbb_thread.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_thread.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_thread.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/tbb/x86_rtm_rw_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/x86_rtm_rw_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/x86_rtm_rw_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/old/concurrent_queue_v2.cpp.o -c /Users/johnsonhj/src/tbb/src/old/concurrent_queue_v2.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/old/concurrent_queue_v2.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/old/concurrent_vector_v2.cpp.o -c /Users/johnsonhj/src/tbb/src/old/concurrent_vector_v2.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/old/concurrent_vector_v2.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/old/spin_rw_mutex_v2.cpp.o -c /Users/johnsonhj/src/tbb/src/old/spin_rw_mutex_v2.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/old/spin_rw_mutex_v2.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/old/task_v2.cpp.o -c /Users/johnsonhj/src/tbb/src/old/task_v2.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/old/task_v2.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -frtti -fexceptions  -o CMakeFiles/tbb_static.dir/src/rml/client/rml_tbb.cpp.o -c /Users/johnsonhj/src/tbb/src/rml/client/rml_tbb.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/rml/client/rml_tbb.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_broadcast_node.dir/src/test/test_broadcast_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_broadcast_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_broadcast_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_while.dir/src/test/test_parallel_while.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_while.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_while.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_cilk_dynamic_load.dir/src/test/test_cilk_dynamic_load.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_cilk_dynamic_load.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_cilk_dynamic_load.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_blocked_range2d.dir/src/test/test_blocked_range2d.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_blocked_range2d.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_blocked_range2d.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_malloc_init_shutdown.dir/src/test/test_malloc_init_shutdown.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_malloc_init_shutdown.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_malloc_init_shutdown.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_async_msg.dir/src/test/test_async_msg.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_async_msg.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_async_msg.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_overwrite_node.dir/src/test/test_overwrite_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_overwrite_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_overwrite_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_critical_section.dir/src/test/test_critical_section.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_critical_section.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_critical_section.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_scan.dir/src/test/test_parallel_scan.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_scan.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_scan.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_cilk_interop.dir/src/test/test_cilk_interop.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_cilk_interop.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_cilk_interop.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_indexer_node.dir/src/test/test_indexer_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_indexer_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_indexer_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_aligned_space.dir/src/test/test_aligned_space.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_aligned_space.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_aligned_space.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_rwm_upgrade_downgrade.dir/src/test/test_rwm_upgrade_downgrade.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_rwm_upgrade_downgrade.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_rwm_upgrade_downgrade.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_aggregator.dir/src/test/test_aggregator.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_aggregator.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_aggregator.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_halt.dir/src/test/test_halt.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_halt.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_halt.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_assembly.dir/src/test/test_assembly.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_assembly.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_assembly.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_proxy_static.dir/src/tbbmalloc/proxy.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/proxy.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/proxy.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_proxy_static.dir/src/tbbmalloc/tbb_function_replacement.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/tbb_function_replacement.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/tbb_function_replacement.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -Dtbbmalloc_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc.dir/src/tbbmalloc/backend.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/backend.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/backend.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -Dtbbmalloc_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc.dir/src/tbbmalloc/large_objects.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/large_objects.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/large_objects.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -Dtbbmalloc_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc.dir/src/tbbmalloc/backref.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/backref.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/backref.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -Dtbbmalloc_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc.dir/src/tbbmalloc/tbbmalloc.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/tbbmalloc.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/tbbmalloc.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -Dtbbmalloc_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc.dir/src/tbbmalloc/frontend.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/frontend.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/frontend.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -Dtbbmalloc_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc.dir/src/tbb/itt_notify.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/itt_notify.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/itt_notify.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/backend.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/backend.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/backend.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/large_objects.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/large_objects.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/large_objects.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/backref.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/backref.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/backref.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/tbbmalloc.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/tbbmalloc.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/tbbmalloc.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_static.dir/src/tbbmalloc/frontend.cpp.o -c /Users/johnsonhj/src/tbb/src/tbbmalloc/frontend.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbbmalloc/frontend.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBBMALLOC_BUILD=1 -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -fno-rtti -fno-exceptions  -o CMakeFiles/tbbmalloc_static.dir/src/tbb/itt_notify.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/itt_notify.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/itt_notify.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_task_auto_init.dir/src/test/test_task_auto_init.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_task_auto_init.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_task_auto_init.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_lambda.dir/src/test/test_lambda.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_lambda.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_lambda.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_flow_graph_whitebox.dir/src/test/test_flow_graph_whitebox.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_flow_graph_whitebox.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_flow_graph_whitebox.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_parallel_reduce.dir/src/test/test_parallel_reduce.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_parallel_reduce.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_parallel_reduce.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_dynamic_link.dir/src/test/test_dynamic_link.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_dynamic_link.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_dynamic_link.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_composite_node.dir/src/test/test_composite_node.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_composite_node.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_composite_node.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_concurrent_vector.dir/src/test/test_concurrent_vector.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_concurrent_vector.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_concurrent_vector.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG   -o CMakeFiles/test_blocked_range3d.dir/src/test/test_blocked_range3d.cpp.o -c /Users/johnsonhj/src/tbb/src/test/test_blocked_range3d.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/test/test_blocked_range3d.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/arena.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/arena.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/arena.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/cache_aligned_allocator.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/cache_aligned_allocator.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/cache_aligned_allocator.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/concurrent_hash_map.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/concurrent_hash_map.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/concurrent_hash_map.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/concurrent_monitor.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/concurrent_monitor.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/concurrent_monitor.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/concurrent_queue.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/concurrent_queue.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/concurrent_queue.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/concurrent_vector.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/concurrent_vector.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/concurrent_vector.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/condition_variable.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/condition_variable.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/condition_variable.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/critical_section.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/critical_section.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/critical_section.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/dynamic_link.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/dynamic_link.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/dynamic_link.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/governor.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/governor.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/governor.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/itt_notify.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/itt_notify.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/itt_notify.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/market.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/market.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/market.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/observer_proxy.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/observer_proxy.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/observer_proxy.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/pipeline.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/pipeline.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/pipeline.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/private_server.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/private_server.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/private_server.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/queuing_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/queuing_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/queuing_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/queuing_rw_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/queuing_rw_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/queuing_rw_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/reader_writer_lock.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/reader_writer_lock.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/reader_writer_lock.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/recursive_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/recursive_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/recursive_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/scheduler.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/scheduler.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/scheduler.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/semaphore.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/semaphore.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/semaphore.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/spin_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/spin_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/spin_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/spin_rw_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/spin_rw_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/spin_rw_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/task.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/task.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/task.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/task_group_context.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/task_group_context.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/task_group_context.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/tbb_main.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_main.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_main.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/tbb_misc.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_misc.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_misc.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/tbb_misc_ex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_misc_ex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_misc_ex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/tbb_statistics.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_statistics.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_statistics.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/tbb_thread.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/tbb_thread.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/tbb_thread.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/tbb/x86_rtm_rw_mutex.cpp.o -c /Users/johnsonhj/src/tbb/src/tbb/x86_rtm_rw_mutex.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/tbb/x86_rtm_rw_mutex.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/old/concurrent_queue_v2.cpp.o -c /Users/johnsonhj/src/tbb/src/old/concurrent_queue_v2.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/old/concurrent_queue_v2.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/old/concurrent_vector_v2.cpp.o -c /Users/johnsonhj/src/tbb/src/old/concurrent_vector_v2.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/old/concurrent_vector_v2.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/old/spin_rw_mutex_v2.cpp.o -c /Users/johnsonhj/src/tbb/src/old/spin_rw_mutex_v2.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/old/spin_rw_mutex_v2.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/old/task_v2.cpp.o -c /Users/johnsonhj/src/tbb/src/old/task_v2.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/old/task_v2.cpp"
+},
+{
+  "directory": "/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release",
+  "command": "/usr/local/bin/g++-6   -DUSE_PTHREAD -D__TBB_BUILD=1 -Dtbb_EXPORTS -I/Users/johnsonhj/src/tbb/include -I/Users/johnsonhj/src/tbb/src -I/Users/johnsonhj/src/tbb/src/rml/include -I/Users/johnsonhj/src/tbb/build/macos_intel64_clang_cc7.3.0_os10.11.6_release  -mrtm -std=c++11  -O3 -DNDEBUG -fPIC   -frtti -fexceptions  -o CMakeFiles/tbb.dir/src/rml/client/rml_tbb.cpp.o -c /Users/johnsonhj/src/tbb/src/rml/client/rml_tbb.cpp",
+  "file": "/Users/johnsonhj/src/tbb/src/rml/client/rml_tbb.cpp"
+}
+]
