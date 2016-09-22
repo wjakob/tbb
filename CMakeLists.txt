@@ -115,26 +115,22 @@ endif ()
 #   - Added TBB_USE_GLIBCXX_VERSION macro to specify the version of GNU
 #     libstdc++ when it cannot be properly recognized, e.g. when used
 #     with Clang on Linux* OS. Inspired by a contribution from David A.
-if(NOT TBB_USE_GLIBCXX_VERSION AND UNIX AND NOT APPLE)
+if (NOT TBB_USE_GLIBCXX_VERSION AND UNIX AND NOT APPLE)
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     # using Clang
     string(REPLACE "." "0" TBB_USE_GLIBCXX_VERSION ${CMAKE_CXX_COMPILER_VERSION})
-    message(STATUS "TBB_USE_GLIBCXX_VERSION:${TBB_USE_GLIBCXX_VERSION}:")
-
-  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    # Do nothing using GCC
-  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-    # Do nothing when using Intel C++
-  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    # Do nothgin when using Visual Studio C++
   endif()
 endif()
-if(TBB_USE_GLIBCXX_VERSION)
-   message(STATUS "ADDING: -DTBB_USE_GLIBCXX_VERSION=${TBB_USE_GLIBCXX_VERSION}")
+
+if (TBB_USE_GLIBCXX_VERSION)
    add_definitions(-DTBB_USE_GLIBCXX_VERSION=${TBB_USE_GLIBCXX_VERSION})
 endif()
 
 ##-------
+
+if (CMAKE_COMPILER_IS_GNUCC AND UNIX AND NOT APPLE)
+   add_definitions(-flifetime-dse=1)
+endif()
 
 # Linker export definitions
 if (APPLE)
