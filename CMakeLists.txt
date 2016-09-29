@@ -214,6 +214,10 @@ if (TBB_BUILD_SHARED)
           RUNTIME DESTINATION bin)
 endif()
 
+if (UNIX AND NOT APPLE)
+  target_link_libraries(tbb PUBLIC pthread dl)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCC)
   # Quench a warning on GCC
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/governor.cpp COMPILE_FLAGS "-Wno-missing-field-initializers ")
