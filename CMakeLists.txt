@@ -1,10 +1,14 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.12 FATAL_ERROR)
 project (tbb CXX)
 
 include (CheckCXXCompilerFlag)
 
 if(POLICY CMP0058)
   cmake_policy(SET CMP0058 NEW)
+endif()
+
+if (POLICY CMP0023)
+  cmake_policy(SET CMP0023 OLD)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
