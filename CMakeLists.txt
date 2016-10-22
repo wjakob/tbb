@@ -212,11 +212,11 @@ if (TBB_BUILD_SHARED)
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib
           RUNTIME DESTINATION bin)
+  if (UNIX AND NOT APPLE)
+    target_link_libraries(tbb PUBLIC pthread dl)
+  endif()
 endif()
 
-if (UNIX AND NOT APPLE)
-  target_link_libraries(tbb PUBLIC pthread dl)
-endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
   # Quench a warning on GCC
@@ -254,6 +254,9 @@ if(TBB_BUILD_TBBMALLOC)
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
             RUNTIME DESTINATION bin)
+    if (UNIX AND NOT APPLE)
+      target_link_libraries(tbbmalloc PUBLIC pthread dl)
+    endif()
   endif()
 endif()
 
@@ -275,6 +278,9 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
             RUNTIME DESTINATION bin)
+    if (UNIX AND NOT APPLE)
+      target_link_libraries(tbbmalloc_proxy PUBLIC pthread dl)
+    endif()
   endif()
 endif()
 
