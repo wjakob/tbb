@@ -135,7 +135,10 @@ endif()
 ##-------
 
 if (CMAKE_COMPILER_IS_GNUCC AND UNIX AND NOT APPLE)
-   add_definitions(-flifetime-dse=1)
+   check_cxx_compiler_flag ("-flifetime-dse=1" SUPPORTS_FLIFETIME)
+   if (SUPPORTS_FLIFETIME)
+     add_definitions(-flifetime-dse=1)
+   endif()
 endif()
 
 # Linker export definitions
