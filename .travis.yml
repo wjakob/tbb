@@ -13,10 +13,12 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - kubuntu-backports
           packages:
             - g++-4.8
             - g++-4.8-multilib
             - g++-multilib
+            - cmake
     - os: osx
       compiler: clang
       script:
@@ -35,6 +37,7 @@ matrix:
             - g++-mingw-w64-x86-64
             - gcc-mingw-w64-x86-64
             - binutils-mingw-w64-x86-64
+            - cmake
     - os: linux
       compiler: i686-w64-mingw32-g++
       script:
@@ -47,3 +50,4 @@ matrix:
             - g++-mingw-w64-i686
             - gcc-mingw-w64-i686
             - binutils-mingw-w64-i686
+            - cmake
