@@ -138,7 +138,7 @@ endif()
 
 ##-------
 
-if (CMAKE_COMPILER_IS_GNUCC AND UNIX AND NOT APPLE)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND UNIX AND NOT APPLE)
    check_cxx_compiler_flag ("-flifetime-dse=1" SUPPORTS_FLIFETIME)
    if (SUPPORTS_FLIFETIME)
      add_definitions(-flifetime-dse=1)
@@ -225,7 +225,7 @@ if (TBB_BUILD_SHARED)
 endif()
 
 
-if(CMAKE_COMPILER_IS_GNUCC)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # Quench a warning on GCC
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/governor.cpp COMPILE_FLAGS "-Wno-missing-field-initializers ")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
