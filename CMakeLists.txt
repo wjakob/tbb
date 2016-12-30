@@ -200,6 +200,7 @@ if (TBB_BUILD_STATIC)
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb_static APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
   install(TARGETS tbb_static ARCHIVE DESTINATION lib)
+  target_include_directories(tbb_static PUBLIC include)
 endif()
 
 if (TBB_BUILD_SHARED)
