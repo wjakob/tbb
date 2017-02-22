@@ -985,6 +985,146 @@ void TestIsolatedExecute() {
 }
 #endif /* __TBB_TASK_ISOLATION */
 //--------------------------------------------------//
+//--------------------------------------------------//
+
+class TestDelegatedSpawnWaitBody : NoAssign {
+    tbb::task_arena &my_a;
+    Harness::SpinBarrier &my_b1, &my_b2;
+
+    struct Spawner : NoAssign {
+        tbb::task* const a_task;
+        Spawner(tbb::task* const t) : a_task(t) {}
+        void operator()() const {
+            tbb::task::spawn( *new(a_task->allocate_child()) tbb::empty_task );
+        }
+    };
+
+    struct Waiter : NoAssign {
+        tbb::task* const a_task;
+        Waiter(tbb::task* const t) : a_task(t) {}
+        void operator()() const {
+            a_task->wait_for_all();
+        }
+    };
+
+public:
+    TestDelegatedSpawnWaitBody( tbb::task_arena &a, Harness::SpinBarrier &b1, Harness::SpinBarrier &b2)
+        : my_a(a), my_b1(b1), my_b2(b2) {}
+    // NativeParallelFor's functor
+    void operator()(int idx) const {
+        if ( idx==0 ) { // thread 0 works in the arena, thread 1 waits for it (to prevent test hang)
+            for( int i=0; i<2; ++i ) my_a.enqueue(*this); // tasks to sync with workers
+            tbb::empty_task* root_task = new(tbb::task::allocate_root()) tbb::empty_task;
+            root_task->set_ref_count(100001);
+            my_b1.timed_wait(10); // sync with the workers
+            for( int i=0; i<100000; ++i) {
+                my_a.execute(Spawner(root_task));
+            }
+            my_a.execute(Waiter(root_task));
+            tbb::task::destroy(*root_task);
+        }
+        my_b2.timed_wait(10); // sync both threads
+    }
+    // Arena's functor
+    void operator()() const {
+        my_b1.timed_wait(10); // sync with the arena master
+    }
+};
+
+void TestDelegatedSpawnWait() {
+    // Regression test for a bug with missed wakeup notification from a delegated task
+    REMARK( "Testing delegated spawn & wait\n" );
+    tbb::task_arena a(2,0);
+    a.initialize();
+    Harness::SpinBarrier barrier1(3), barrier2(2);
+    NativeParallelFor( 2, TestDelegatedSpawnWaitBody(a, barrier1, barrier2) );
+    a.debug_wait_until_empty();
+}
+
+class TestMultipleWaitsArenaWait {
+public:
+    TestMultipleWaitsArenaWait( int idx, int bunch_size, int num_tasks, tbb::task** waiters, tbb::atomic<int>& processed )
+        : my_idx( idx ), my_bunch_size( bunch_size ), my_num_tasks(num_tasks), my_waiters( waiters ), my_processed( processed ) {}
+    void operator()() const {
+        ++my_processed;
+        // Wait for all tasks
+        if ( my_idx < my_num_tasks )
+            my_waiters[my_idx]->wait_for_all();
+        // Signal waiting tasks
+        if ( my_idx >= my_bunch_size )
+            my_waiters[my_idx-my_bunch_size]->decrement_ref_count();
+    }
+private:
+    int my_idx;
+    int my_bunch_size;
+    int my_num_tasks;
+    tbb::task** my_waiters;
+    tbb::atomic<int>& my_processed;
+};
+
+class TestMultipleWaitsThreadBody {
+public:
+    TestMultipleWaitsThreadBody( int bunch_size, int num_tasks, tbb::task_arena& a, tbb::task** waiters, tbb::atomic<int>& processed )
+        : my_bunch_size( bunch_size ), my_num_tasks( num_tasks ), my_arena( a ), my_waiters( waiters ), my_processed( processed ) {}
+    void operator()( int idx ) const {
+        my_arena.execute( TestMultipleWaitsArenaWait( idx, my_bunch_size, my_num_tasks, my_waiters, my_processed ) );
+        --my_processed;
+    }
+private:
+    int my_bunch_size;
+    int my_num_tasks;
+    tbb::task_arena& my_arena;
+    tbb::task** my_waiters;
+    tbb::atomic<int>& my_processed;
+};
+
+#include "tbb/tbb_thread.h"
+
+void TestMultipleWaits( int num_threads, int num_bunches, int bunch_size ) {
+    tbb::task_arena a( num_threads );
+    const int num_tasks = (num_bunches-1)*bunch_size;
+    tbb::task** tasks = new tbb::task*[num_tasks];
+    for ( int i = 0; i<num_tasks; ++i )
+        tasks[i] = new (tbb::task::allocate_root()) tbb::empty_task();
+    tbb::atomic<int> processed;
+    processed = 0;
+    for ( int repeats = 0; repeats<10; ++repeats ) {
+        int idx = 0;
+        for ( int bunch = 0; bunch < num_bunches-1; ++bunch ) {
+            // Sync with the previous bunch of tasks to prevent "false" nested dependicies (when a nested task waits for an outer task).
+            while ( processed < bunch*bunch_size ) __TBB_Yield();
+            // Run the bunch of threads/tasks that depend on the next bunch of threads/tasks.
+            for ( int i = 0; i<bunch_size; ++i ) {
+                tasks[idx]->set_ref_count( 2 );
+                tbb::tbb_thread( TestMultipleWaitsThreadBody( bunch_size, num_tasks, a, tasks, processed ), idx++ ).detach();
+            }
+        }
+        // No sync because the threads of the last bunch do not call wait_for_all.
+        // Run the last bunch of threads.
+        for ( int i = 0; i<bunch_size; ++i )
+            tbb::tbb_thread( TestMultipleWaitsThreadBody( bunch_size, num_tasks, a, tasks, processed ), idx++ ).detach();
+        while ( processed ) __TBB_Yield();
+    }
+    for ( int i = 0; i<num_tasks; ++i )
+        tbb::task::destroy( *tasks[i] );
+    delete[] tasks;
+}
+
+void TestMultipleWaits() {
+    REMARK( "Testing multiple waits\n" );
+    // Limit the number of threads to prevent heavy oversubscription.
+    const int max_threads = min( 16, tbb::task_scheduler_init::default_num_threads() );
+
+    Harness::FastRandom rnd(1234);
+    for ( int threads = 1; threads <= max_threads; threads += max( threads/2, 1 ) ) {
+        for ( int i = 0; i<3; ++i ) {
+            const int num_bunches = 3 + rnd.get()%3;
+            const int bunch_size = max_threads + rnd.get()%max_threads;
+            TestMultipleWaits( threads, num_bunches, bunch_size );
+        }
+    }
+}
+//--------------------------------------------------//
 int TestMain () {
 #if __TBB_TASK_ISOLATION
     TestIsolatedExecute();
@@ -1002,6 +1142,7 @@ int TestMain () {
     TestArenaEntryConsistency();
     TestAttach(MaxThread);
     TestConstantFunctorRequirement();
-
+    TestDelegatedSpawnWait();
+    TestMultipleWaits();
     return Harness::Done;
 }

@@ -90,10 +90,6 @@ int TestMain ();
         #pragma warning (pop)
         #pragma comment (lib, "dbghelp.lib")
     #endif
-    #if _XBOX
-        #undef HARNESS_NO_PARSE_COMMAND_LINE
-        #define HARNESS_NO_PARSE_COMMAND_LINE 1
-    #endif
     #if __TBB_WIN8UI_SUPPORT
         #include <thread>
     #endif
@@ -116,11 +112,51 @@ int TestMain ();
     #define BACKTRACE_FUNCTION_AVAILABLE 1
 #endif
 
+namespace Harness {
+    class NativeMutex {
+#if _WIN32||_WIN64
+        CRITICAL_SECTION my_critical_section;
+      public:
+        NativeMutex() {
+            InitializeCriticalSectionEx(&my_critical_section, 4000, 0);
+        }
+        void lock() {
+            EnterCriticalSection(&my_critical_section);
+        }
+        void unlock() {
+            LeaveCriticalSection(&my_critical_section);
+        }
+        ~NativeMutex() {
+            DeleteCriticalSection(&my_critical_section);
+        }
+#else
+        pthread_mutex_t m_mutex;
+    public:
+        NativeMutex() {
+             pthread_mutex_init(&m_mutex, NULL);
+        }
+        void lock() {
+            pthread_mutex_lock(&m_mutex);
+        }
+        void unlock() {
+            pthread_mutex_unlock(&m_mutex);
+        }
+        ~NativeMutex() {
+            pthread_mutex_destroy(&m_mutex);
+        }
+#endif
+    };
+    namespace internal {
+        static NativeMutex print_stack_mutex;
+    }
+}
+
 #include "harness_runtime_loader.h"
 #include "harness_report.h"
 
 //! Prints current call stack
 void print_call_stack() {
+    Harness::internal::print_stack_mutex.lock();
     fflush(stdout); fflush(stderr);
     #if BACKTRACE_FUNCTION_AVAILABLE
         const int sz = 100; // max number of frames to capture
@@ -151,6 +187,7 @@ void print_call_stack() {
             REPORT("[%d] %016I64X+%04I64X: %s\n", i, sym.Address, offset, sym.Name); //TODO: print module name
         }
     #endif /*BACKTRACE_FUNCTION_AVAILABLE*/
+    Harness::internal::print_stack_mutex.unlock();
 }
 
 #if !HARNESS_NO_ASSERT
@@ -752,7 +789,7 @@ public:
     public:
         DummyBody( int iters ) : m_numIters( iters ) {}
         void operator()( int ) const {
-            for ( volatile int i = 0; i < m_numIters; ++i );
+            for ( volatile int i = 0; i < m_numIters; ++i ) {}
         }
     };
 } // namespace Harness

@@ -69,7 +69,7 @@ std::string PathToFile(const std::string& fileName) {
     return prefix + "/src/test/" + fileName;
 }
 
-typedef tbb::flow::default_opencl_factory::range_type OCLRange;
+typedef tbb::flow::opencl_range OCLRange;
 
 void TestArgumentPassing() {
     REMARK( "TestArgumentPassing: " );
@@ -223,7 +223,9 @@ public:
     device_selector( const device_selector& ) : my_state( COPY_INITIALIZED ) {}
     device_selector( device_selector&& ) : my_state( COPY_INITIALIZED ) {}
     ~device_selector() { my_state = DELETED; }
-    opencl_device operator()( default_opencl_factory &f ) {
+
+    template <typename D>
+    opencl_device operator()( opencl_factory<D> &f ) {
         ASSERT( my_state == COPY_INITIALIZED, NULL );
         ASSERT( ! f.devices().empty(), NULL );
         return *( f.devices().begin() );
@@ -497,9 +499,9 @@ public:
     }
 };
 
-const int concurrencyTestNumRepeats = 10;
+const int concurrencyTestNumRepeats = 5;
 
-template <typename Factory = default_opencl_factory>
+template <typename Factory = interface9::default_opencl_factory>
 void ConcurrencyTest( const std::vector<opencl_device> &filteredDevices ) {
     const int numThreads = min( tbb::task_scheduler_init::default_num_threads(), 8 );
     for ( int i = 0; i < concurrencyTestNumRepeats; ++i ) {
@@ -693,9 +695,11 @@ void PrecompiledKernelTest() {
         i2[i] = v2[i] = float( 2 * i );
     }
 
-    opencl_program<> p( g, opencl_program_type::PRECOMPILED, PathToFile( "test_opencl_precompiled_kernel_gpu.clbin" ) );
-    opencl_node < tuple<opencl_buffer<float>, opencl_buffer<float> > > k1( g, p.get_kernel( "custom_subtractor" ) );
-    k1.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
+    std::string path_to_file = PathToFile(std::string("test_opencl_precompiled_kernel_gpu_") + std::to_string((*it).address_bits()) + std::string(".ir"));
+
+    opencl_program<> p(g, opencl_program_type::PRECOMPILED, path_to_file);
+    opencl_node < tuple<opencl_buffer<float>, opencl_buffer<float> > > k1(g, p.get_kernel("custom_subtractor"));
+    k1.set_range({ BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) });
 
     input_port<0>(k1).try_put( b1 );
     input_port<1>(k1).try_put( b2 );

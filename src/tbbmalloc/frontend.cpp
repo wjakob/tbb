@@ -24,6 +24,9 @@
 #include <new>        /* for placement new */
 #include <string.h>   /* for memset */
 
+#include "../tbb/tbb_version.h"
+#include "../tbb/itt_notify.h" // for __TBB_load_ittnotify()
+
 //! Define the main synchronization method
 #define FINE_GRAIN_LOCKS
 
@@ -333,7 +336,7 @@ const size_t MemoryPool::defaultGranularity;
 MallocMutex  MemoryPool::memPoolListLock;
 // TODO: move huge page status to default pool, because that's its states
 HugePagesStatus hugePages;
-static bool usedBySrcIncluded;
+static bool usedBySrcIncluded = false;
 
 // Slab block is 16KB-aligned. To prevent false sharing, separate locally-accessed
 // fields and fields commonly accessed by not owner threads.
@@ -1881,13 +1884,11 @@ void StartupBlock::free(void *ptr)
 static intptr_t mallocInitialized;   // implicitly initialized to 0
 static MallocMutex initMutex;
 
-#include "../tbb/tbb_version.h"
-
 /** The leading "\0" is here so that applying "strings" to the binary
     delivers a clean result. */
 static char VersionString[] = "\0" TBBMALLOC_VERSION_STRINGS;
 
-#if _XBOX || __TBB_WIN8UI_SUPPORT
+#if __TBB_WIN8UI_SUPPORT
 bool GetBoolEnvironmentVariable(const char *) { return false; }
 #else
 bool GetBoolEnvironmentVariable(const char *name)
@@ -1901,7 +1902,7 @@ bool GetBoolEnvironmentVariable(const char *name)
 void AllocControlledMode::initReadEnv(const char *envName, intptr_t defaultVal)
 {
     if (!setDone) {
-#if !_XBOX && !__TBB_WIN8UI_SUPPORT
+#if !__TBB_WIN8UI_SUPPORT
         const char *envVal = getenv(envName);
         if (envVal && !strcmp(envVal, "1"))
             val = 1;
@@ -1988,6 +1989,14 @@ inline bool isMallocInitialized() {
 
 bool isMallocInitializedExt() {
     return isMallocInitialized();
+}
+
+/** Caller is responsible for ensuring this routine is called exactly once. */
+extern "C" void MallocInitializeITT() {
+#if DO_ITT_NOTIFY
+    if (!usedBySrcIncluded)
+        tbb::internal::__TBB_load_ittnotify();
+#endif
 }
 
 /*
