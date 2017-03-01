@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 // Declarations for rock-bottom simple test harness.
@@ -90,10 +90,6 @@ int TestMain ();
         #pragma warning (pop)
         #pragma comment (lib, "dbghelp.lib")
     #endif
-    #if _XBOX
-        #undef HARNESS_NO_PARSE_COMMAND_LINE
-        #define HARNESS_NO_PARSE_COMMAND_LINE 1
-    #endif
     #if __TBB_WIN8UI_SUPPORT
         #include <thread>
     #endif
@@ -116,11 +112,51 @@ int TestMain ();
     #define BACKTRACE_FUNCTION_AVAILABLE 1
 #endif
 
+namespace Harness {
+    class NativeMutex {
+#if _WIN32||_WIN64
+        CRITICAL_SECTION my_critical_section;
+      public:
+        NativeMutex() {
+            InitializeCriticalSectionEx(&my_critical_section, 4000, 0);
+        }
+        void lock() {
+            EnterCriticalSection(&my_critical_section);
+        }
+        void unlock() {
+            LeaveCriticalSection(&my_critical_section);
+        }
+        ~NativeMutex() {
+            DeleteCriticalSection(&my_critical_section);
+        }
+#else
+        pthread_mutex_t m_mutex;
+    public:
+        NativeMutex() {
+             pthread_mutex_init(&m_mutex, NULL);
+        }
+        void lock() {
+            pthread_mutex_lock(&m_mutex);
+        }
+        void unlock() {
+            pthread_mutex_unlock(&m_mutex);
+        }
+        ~NativeMutex() {
+            pthread_mutex_destroy(&m_mutex);
+        }
+#endif
+    };
+    namespace internal {
+        static NativeMutex print_stack_mutex;
+    }
+}
+
 #include "harness_runtime_loader.h"
 #include "harness_report.h"
 
 //! Prints current call stack
 void print_call_stack() {
+    Harness::internal::print_stack_mutex.lock();
     fflush(stdout); fflush(stderr);
     #if BACKTRACE_FUNCTION_AVAILABLE
         const int sz = 100; // max number of frames to capture
@@ -151,6 +187,7 @@ void print_call_stack() {
             REPORT("[%d] %016I64X+%04I64X: %s\n", i, sym.Address, offset, sym.Name); //TODO: print module name
         }
     #endif /*BACKTRACE_FUNCTION_AVAILABLE*/
+    Harness::internal::print_stack_mutex.unlock();
 }
 
 #if !HARNESS_NO_ASSERT
@@ -422,10 +459,7 @@ class NoAssign {
     //! Assignment not allowed
     void operator=( const NoAssign& );
 public:
-#if __GNUC__
-    //! Explicitly define default construction, because otherwise gcc issues gratuitous warning.
-    NoAssign() {}
-#endif /* __GNUC__ */
+    NoAssign() {} // explicitly defined to prevent gratuitous warnings
 };
 
 //! Base class for prohibiting compiler-generated copy constructor or operator=
@@ -741,6 +775,23 @@ public:
 #endif
     }
 
+    char* GetEnv(const char *envname) {
+        ASSERT(envname, "Harness::GetEnv() requires a valid C string");
+#if __TBB_WIN8UI_SUPPORT
+        return NULL;
+#else
+        return std::getenv(envname);
+#endif
+    }
+
+    class DummyBody {
+        int m_numIters;
+    public:
+        DummyBody( int iters ) : m_numIters( iters ) {}
+        void operator()( int ) const {
+            for ( volatile int i = 0; i < m_numIters; ++i ) {}
+        }
+    };
 } // namespace Harness
 
 #endif /* tbb_tests_harness_H */

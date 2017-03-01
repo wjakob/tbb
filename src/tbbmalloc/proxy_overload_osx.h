@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 // The original source for this code is
@@ -50,6 +50,8 @@
 
 #include <AvailabilityMacros.h>
 #include <malloc/malloc.h>
+#include <mach/mach.h>
+#include <stdlib.h>
 
 static kern_return_t enumerator(task_t, void *, unsigned, vm_address_t,
                                 memory_reader_t, vm_range_recorder_t)
@@ -119,7 +121,7 @@ static size_t impl_pressure_relief(struct _malloc_zone_t *, size_t goal)
     return 0;
 }
 
-static malloc_zone_t *system_zone;
+static malloc_zone_t *system_zone = NULL;
 
 struct DoMallocReplacement {
     DoMallocReplacement() {
@@ -157,11 +159,30 @@ struct DoMallocReplacement {
 
         // make sure that default purgeable zone is initialized
         malloc_default_purgeable_zone();
-        // after unregistration of system zone, our zone became default
+        void* ptr = malloc(1);
+        // get all registered memory zones
+        unsigned zcount = 0;
+        malloc_zone_t** zone_array = NULL;
+        kern_return_t errorcode = malloc_get_all_zones(mach_task_self(),NULL,(vm_address_t**)&zone_array,&zcount);
+        if (!errorcode && zone_array && zcount>0) {
+            // find the zone that allocated ptr
+            for (unsigned i=0; i<zcount; ++i) {
+                malloc_zone_t* z = zone_array[i];
+                if (z && z->size(z,ptr)>0) { // the right one is found
+                    system_zone = z;
+                    break;
+                }
+            }
+        }
+        free(ptr);
+
         malloc_zone_register(&zone);
-        system_zone = malloc_default_zone();
-        malloc_zone_unregister(system_zone);
-        malloc_zone_register(system_zone);
+        if (system_zone) {
+            // after unregistration of the system zone, the last registered (i.e. our) zone becomes the default
+            malloc_zone_unregister(system_zone);
+            // register the system zone back
+            malloc_zone_register(system_zone);
+        }
     }
 };
 

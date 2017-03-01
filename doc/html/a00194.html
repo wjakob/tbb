@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>flow_graph.h File Reference</title>
+<title>memory_pool.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -40,111 +40,54 @@
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
 <a href="#namespaces">Constant Groups</a> &#124;
-<a href="#enum-members">Enumerations</a> &#124;
-<a href="#func-members">Functions</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
-<div class="title">flow_graph.h File Reference</div>  </div>
+<div class="title">memory_pool.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>The graph related classes and functions.  
-<a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00148.html">tbb::flow::interface8::internal::successor_cache&lt; T, M &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00077.html">tbb::interface6::memory_pool_allocator&lt; T, P &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Meets "allocator" requirements of ISO C++ Standard, Section 20.1.5.  <a href="a00077.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00026.html">tbb::flow::interface8::internal::broadcast_cache&lt; T, M &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00116.html">tbb::interface6::memory_pool_allocator&lt; T, P &gt;::rebind&lt; U &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00127.html">tbb::flow::interface8::internal::round_robin_cache&lt; T, M &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00078.html">tbb::interface6::memory_pool_allocator&lt; void, P &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Analogous to std::allocator&lt;void&gt;, as defined in ISO C++ Standard, Section 20.4.1.  <a href="a00078.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00107.html">tbb::flow::interface8::internal::predecessor_cache&lt; T, M &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00112.html">tbb::interface6::memory_pool_allocator&lt; void, P &gt;::rebind&lt; U &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00126.html">tbb::flow::interface8::internal::reservable_predecessor_cache&lt; T, M &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00076.html">tbb::interface6::memory_pool&lt; Alloc &gt;</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Thread-safe growable pool allocator for variable-size requests.  <a href="a00076.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00083.html">tbb::flow::interface8::null_type</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00049.html">tbb::flow::interface8::continue_msg</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An empty class used for messages that mean "I'm done".  <a href="a00049.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html">tbb::flow::interface8::sender&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pure virtual template class that defines a sender of messages of type T.  <a href="a00143.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00123.html">tbb::flow::interface8::receiver&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pure virtual template class that defines a receiver of messages of type T.  <a href="a00123.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00072.html">tbb::flow::interface8::limiter_node&lt; T &gt;</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00128.html">tbb::flow::interface8::run_and_put_task&lt; R, B &gt;</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00055.html">tbb::flow::interface8::internal::edge_container&lt; C &gt;</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00170.html">tbb::flow::interface8::internal::untyped_sender</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00169.html">tbb::flow::interface8::internal::untyped_receiver</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html">tbb::flow::interface8::sender&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pure virtual template class that defines a sender of messages of type T.  <a href="a00143.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00123.html">tbb::flow::interface8::receiver&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pure virtual template class that defines a receiver of messages of type T.  <a href="a00123.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00143.html">tbb::flow::interface8::sender&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pure virtual template class that defines a sender of messages of type T.  <a href="a00143.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00123.html">tbb::flow::interface8::receiver&lt; T &gt;</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pure virtual template class that defines a receiver of messages of type T.  <a href="a00123.html#details">More...</a><br/></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00050.html">tbb::flow::interface8::continue_receiver</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base class for receivers of completion messages.  <a href="a00050.html#details">More...</a><br/></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00062.html">tbb::interface6::fixed_pool</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
-<tr class="memitem:a00237"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00237.html">tbb</a></td></tr>
-<tr class="memdesc:a00237"><td class="mdescLeft">&#160;</td><td class="mdescRight">The namespace tbb contains all components of the library. <br/></td></tr>
+<tr class="memitem:a00234"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00234.html">tbb</a></td></tr>
+<tr class="memdesc:a00234"><td class="mdescLeft">&#160;</td><td class="mdescRight">The namespace tbb contains all components of the library. <br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Constant Groups</h2></td></tr>
-<tr class="memitem:a00237"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00237.html">tbb</a></td></tr>
-<tr class="memdesc:a00237"><td class="mdescLeft">&#160;</td><td class="mdescRight">The namespace tbb contains all components of the library. <br/></td></tr>
+<tr class="memitem:a00234"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00234.html">tbb</a></td></tr>
+<tr class="memdesc:a00234"><td class="mdescLeft">&#160;</td><td class="mdescRight">The namespace tbb contains all components of the library. <br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
-Enumerations</h2></td></tr>
-<tr class="memitem:a7bec4a3445fea3cd5974119730dea98f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>concurrency</b> { <b>unlimited</b> = 0, 
-<b>serial</b> = 1
- }</td></tr>
-<tr class="memdesc:a7bec4a3445fea3cd5974119730dea98f"><td class="mdescLeft">&#160;</td><td class="mdescRight">An enumeration the provides the two most common concurrency levels: unlimited and serial. <br/></td></tr>
-<tr class="separator:a7bec4a3445fea3cd5974119730dea98f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a97dd9efeffa8dd4277bd09cfd3dba0"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>reset_flags</b> { <b>rf_reset_protocol</b> = 0, 
-<b>rf_reset_bodies</b> = 1&lt;&lt;0, 
-<b>rf_clear_edges</b> = 1&lt;&lt;1
- }</td></tr>
-<tr class="separator:a3a97dd9efeffa8dd4277bd09cfd3dba0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ab6740d20f56c85f70196d40b183b9308"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab6740d20f56c85f70196d40b183b9308"></a>
-static tbb::task *&#160;</td><td class="memItemRight" valign="bottom"><b>tbb::flow::interface8::combine_tasks</b> (tbb::task *left, tbb::task *right)</td></tr>
-<tr class="separator:ab6740d20f56c85f70196d40b183b9308"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44f9db9a75974b985b424a8e3a06c1cc"><td class="memTemplParams" colspan="2"><a class="anchor" id="a44f9db9a75974b985b424a8e3a06c1cc"></a>
-template&lt;typename K , typename T &gt; </td></tr>
-<tr class="memitem:a44f9db9a75974b985b424a8e3a06c1cc"><td class="memTemplItemLeft" align="right" valign="top">K&#160;</td><td class="memTemplItemRight" valign="bottom"><b>tbb::flow::key_from_message</b> (const T &amp;t)</td></tr>
-<tr class="separator:a44f9db9a75974b985b424a8e3a06c1cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a1bf5c7d35ad50b5be3daf7b27950bef8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1bf5c7d35ad50b5be3daf7b27950bef8"></a>
-static tbb::task *const&#160;</td><td class="memItemRight" valign="bottom"><b>tbb::flow::interface8::SUCCESSFULLY_ENQUEUED</b> = (task *)-1</td></tr>
-<tr class="separator:a1bf5c7d35ad50b5be3daf7b27950bef8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21dc513d4407872bb3b257870c6d77b2"><td class="memTemplParams" colspan="2"><a class="anchor" id="a21dc513d4407872bb3b257870c6d77b2"></a>
+template&lt;typename T , typename U , typename P &gt; </td></tr>
+<tr class="memitem:a21dc513d4407872bb3b257870c6d77b2"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>tbb::interface6::operator==</b> (const memory_pool_allocator&lt; T, P &gt; &amp;a, const memory_pool_allocator&lt; U, P &gt; &amp;b)</td></tr>
+<tr class="separator:a21dc513d4407872bb3b257870c6d77b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed6a6d87d04444c2619b6f0136ab0702"><td class="memTemplParams" colspan="2"><a class="anchor" id="aed6a6d87d04444c2619b6f0136ab0702"></a>
+template&lt;typename T , typename U , typename P &gt; </td></tr>
+<tr class="memitem:aed6a6d87d04444c2619b6f0136ab0702"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><b>tbb::interface6::operator!=</b> (const memory_pool_allocator&lt; T, P &gt; &amp;a, const memory_pool_allocator&lt; U, P &gt; &amp;b)</td></tr>
+<tr class="separator:aed6a6d87d04444c2619b6f0136ab0702"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>The graph related classes and functions. </p>
-<p>There are some applications that best express dependencies as messages passed between nodes in a graph. These messages may contain data or simply act as signals that a predecessors has completed. The graph class and its associated node classes can be used to express such applications. </p>
-</div></div><!-- contents -->
+</div><!-- contents -->
 <hr>
 <p></p>
 Copyright &copy; 2005-2016 Intel Corporation.  All Rights Reserved.

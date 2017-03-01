@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 /* Some tests in this source file are based on PPL tests provided by Microsoft. */
@@ -70,6 +70,8 @@ struct ValueFactory {
     static V make(const K &value) { return V(value, value); }
     static Kstrip key(const V &value) { return value.first; }
     static Kstrip get(const V &value) { return (Kstrip)value.second; }
+    template< typename U >
+    static U convert(const V &value) { return U(value.second); }
 };
 
 // generator for cuset
@@ -78,10 +80,17 @@ struct ValueFactory<T, T> {
     static T make(const T &value) { return value; }
     static T key(const T &value) { return value; }
     static T get(const T &value) { return value; }
+    template< typename U >
+    static U convert(const T &value) { return U(value); }
 };
 
 template <typename T>
-struct Value : ValueFactory<typename T::key_type, typename T::value_type> {};
+struct Value : ValueFactory<typename T::key_type, typename T::value_type> {
+    template<typename U>
+    static bool compare( const typename T::iterator& it, U val ) {
+        return (Value::template convert<U>(*it) == val);
+    }
+};
 
 #if _MSC_VER
 #pragma warning(disable: 4189) // warning 4189 -- local variable is initialized but not referenced
@@ -148,34 +157,35 @@ void check_value_state(/* typename do_check_element_state =*/ tbb::internal::fal
 #define ASSERT_VALUE_STATE(do_check_element_state,state,value) check_value_state<state>(do_check_element_state,value,__FILE__,__LINE__)
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
-template<typename T, typename do_check_element_state>
-void test_rvalue_insert()
+template<typename T, typename do_check_element_state, typename V>
+void test_rvalue_insert(V v1, V v2)
 {
     typedef T container_t;
 
     container_t cont;
 
-    std::pair<typename container_t::iterator, bool> ins = cont.insert(Value<container_t>::make(1));
-    ASSERT(ins.second == true && Value<container_t>::get(*(ins.first)) == 1, "Element 1 has not been inserted properly");
+    std::pair<typename container_t::iterator, bool> ins = cont.insert(Value<container_t>::make(v1));
+    ASSERT(ins.second == true && Value<container_t>::get(*(ins.first)) == v1, "Element 1 has not been inserted properly");
     ASSERT_VALUE_STATE(do_check_element_state(),Harness::StateTrackableBase::MoveInitialized,*ins.first);
 
-    typename container_t::iterator it2 = cont.insert(ins.first, Value<container_t>::make(2));
-    ASSERT(Value<container_t>::get(*(it2)) == 2, "Element 2 has not been inserted properly");
+    typename container_t::iterator it2 = cont.insert(ins.first, Value<container_t>::make(v2));
+    ASSERT(Value<container_t>::get(*(it2)) == v2, "Element 2 has not been inserted properly");
     ASSERT_VALUE_STATE(do_check_element_state(),Harness::StateTrackableBase::MoveInitialized,*it2);
 
 }
 #if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+// The test does not use variadic templates, but emplace() does.
 
 namespace emplace_helpers {
 template<typename container_t, typename arg_t, typename value_t>
 std::pair<typename container_t::iterator, bool> call_emplace_impl(container_t& c, arg_t&& k, value_t *){
-    //this a set
+    // this is a set
     return c.emplace(std::forward<arg_t>(k));
 }
 
 template<typename container_t, typename arg_t, typename first_t, typename second_t>
 std::pair<typename container_t::iterator, bool> call_emplace_impl(container_t& c, arg_t&& k, std::pair<first_t, second_t> *){
-    //this is a map
+    // this is a map
     return c.emplace(k, std::forward<arg_t>(k));
 }
 
@@ -187,13 +197,13 @@ std::pair<typename container_t::iterator, bool> call_emplace(container_t& c, arg
 
 template<typename container_t, typename arg_t, typename value_t>
 typename container_t::iterator call_emplace_hint_impl(container_t& c, typename container_t::const_iterator hint, arg_t&& k, value_t *){
-    //this a set
+    // this is a set
     return c.emplace_hint(hint, std::forward<arg_t>(k));
 }
 
 template<typename container_t, typename arg_t, typename first_t, typename second_t>
 typename container_t::iterator call_emplace_hint_impl(container_t& c, typename container_t::const_iterator hint, arg_t&& k, std::pair<first_t, second_t> *){
-    //this is a map
+    // this is a map
     return c.emplace_hint(hint, k, std::forward<arg_t>(k));
 }
 
@@ -203,18 +213,17 @@ typename container_t::iterator call_emplace_hint(container_t& c, typename contai
     return call_emplace_hint_impl(c, hint, std::forward<arg_t>(k), selector);
 }
 }
-template<typename T, typename do_check_element_state>
-void test_emplace_insert(){
+template<typename T, typename do_check_element_state, typename V>
+void test_emplace_insert(V v1, V v2){
     typedef T container_t;
-
     container_t cont;
 
-    std::pair<typename container_t::iterator, bool> ins = emplace_helpers::call_emplace(cont, 1);
-    ASSERT(ins.second == true && Value<container_t>::get(*(ins.first)) == 1, "Element 1 has not been inserted properly");
+    std::pair<typename container_t::iterator, bool> ins = emplace_helpers::call_emplace(cont, v1);
+    ASSERT(ins.second == true && Value<container_t>::compare(ins.first, v1), "Element 1 has not been inserted properly");
     ASSERT_VALUE_STATE(do_check_element_state(),Harness::StateTrackableBase::DirectInitialized,*ins.first);
 
-    typename container_t::iterator it2 = emplace_helpers::call_emplace_hint(cont, ins.first, 2);
-    ASSERT(Value<container_t>::get(*(it2)) == 2, "Element 2 has not been inserted properly");
+    typename container_t::iterator it2 = emplace_helpers::call_emplace_hint(cont, ins.first, v2);
+    ASSERT(Value<container_t>::compare(it2, v2), "Element 2 has not been inserted properly");
     ASSERT_VALUE_STATE(do_check_element_state(),Harness::StateTrackableBase::DirectInitialized,*it2);
 }
 #endif //__TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
@@ -246,9 +255,9 @@ void test_basic(const char * str, do_check_element_state)
     ASSERT(ins.second == true && Value<T>::get(*(ins.first)) == 1, "Element 1 has not been inserted properly");
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
-    test_rvalue_insert<T,do_check_element_state>();
+    test_rvalue_insert<T,do_check_element_state>(1,2);
 #if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
-    test_emplace_insert<T,do_check_element_state>();
+    test_emplace_insert<T,do_check_element_state>(1,2);
 #endif // __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
 #endif // __TBB_CPP11_RVALUE_REF_PRESENT
 
@@ -545,7 +554,7 @@ struct ParallelTraverseBody: NoAssign {
     {}
     void operator()( const RangeType& range ) const {
         for( typename RangeType::iterator i = range.begin(); i!=range.end(); ++i ) {
-            int k = Value<ContainerType>::key(*i);
+            int k = static_cast<int>(Value<ContainerType>::key(*i));
             ASSERT( k == Value<ContainerType>::get(*i), NULL );
             ASSERT( 0<=k && k<n, NULL );
             array[k]++;
@@ -686,6 +695,17 @@ public:
 };
 
 #if __TBB_CPP11_SMART_POINTERS_PRESENT
+// For the sake of simplified testing, make unique_ptr implicitly convertible to/from the pointer
+namespace test {
+    template<typename T>
+    class unique_ptr : public std::unique_ptr<T> {
+    public:
+        typedef typename std::unique_ptr<T>::pointer pointer;
+        unique_ptr( pointer p ) : std::unique_ptr<T>(p) {}
+        operator pointer() const { return this->get(); }
+    };
+}
+
 namespace tbb {
     template<> class tbb_hash< std::shared_ptr<int> > {
     public:
@@ -702,6 +722,14 @@ namespace tbb {
     template<> class tbb_hash< const std::weak_ptr<int> > {
     public:
         size_t operator()( const std::weak_ptr<int>& key ) const { return tbb_hasher( *key.lock( ) ); }
+    };
+    template<> class tbb_hash< test::unique_ptr<int> > {
+    public:
+        size_t operator()( const test::unique_ptr<int>& key ) const { return tbb_hasher( *key ); }
+    };
+    template<> class tbb_hash< const test::unique_ptr<int> > {
+    public:
+        size_t operator()( const test::unique_ptr<int>& key ) const { return tbb_hasher( *key ); }
     };
 }
 #endif /* __TBB_CPP11_SMART_POINTERS_PRESENT */
@@ -781,13 +809,14 @@ struct unordered_move_traits_base {
 };
 
 template<typename container_traits>
-void test_rvalue_ref_support(const char* /*container_name*/){
+void test_rvalue_ref_support(const char* container_name){
     TestMoveConstructor<container_traits>();
     TestMoveAssignOperator<container_traits>();
 #if TBB_USE_EXCEPTIONS
     TestExceptionSafetyGuaranteesMoveConstructorWithUnEqualAllocatorMemoryFailure<container_traits>();
     TestExceptionSafetyGuaranteesMoveConstructorWithUnEqualAllocatorExceptionInElementCtor<container_traits>();
 #endif //TBB_USE_EXCEPTIONS
+    REMARK("passed -- %s move support tests\n", container_name);
 }
 #endif //__TBB_CPP11_RVALUE_REF_PRESENT
 

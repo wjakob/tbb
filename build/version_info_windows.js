@@ -1,20 +1,20 @@
-// Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+// Copyright (c) 2005-2016 Intel Corporation
 //
-// This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-// you can redistribute it and/or modify it under the terms of the GNU General Public License
-// version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-// distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-// implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// See  the GNU General Public License for more details.   You should have received a copy of
-// the  GNU General Public License along with Threading Building Blocks; if not, write to the
-// Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// As a special exception,  you may use this file  as part of a free software library without
-// restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-// functions from this file, or you compile this file and link it with other files to produce
-// an executable,  this file does not by itself cause the resulting executable to be covered
-// by the GNU General Public License. This exception does not however invalidate any other
-// reasons why the executable file might be covered by the GNU General Public License.
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+//
+//
+//
 
 var WshShell = WScript.CreateObject("WScript.Shell");
 
@@ -40,7 +40,13 @@ WScript.echo( "#N \": BUILD_OS\\t\\t" +
 
 if ( WScript.Arguments(0).toLowerCase().match("gcc") ) {
     tmpExec = WshShell.Exec(WScript.Arguments(0) + " --version");
-    WScript.echo( "#N \": BUILD_GCC\\t" + 
+    WScript.echo( "#N \": BUILD_GCC\\t\\t" + 
+                  tmpExec.StdOut.ReadLine() + 
+                  "\" ENDL \\" );
+
+} else if ( WScript.Arguments(0).toLowerCase().match("clang") ) {
+    tmpExec = WshShell.Exec(WScript.Arguments(0) + " --version");
+    WScript.echo( "#N \": BUILD_CLANG\\t" + 
                   tmpExec.StdOut.ReadLine() + 
                   "\" ENDL \\" );
 
@@ -87,42 +93,3 @@ WScript.echo( "#define __TBB_DATETIME \"" + date.toUTCString() + "\"" );
 WScript.echo( "#define __TBB_VERSION_YMD " + date.getUTCFullYear() + ", " + 
               (date.getUTCMonth() > 8 ? (date.getUTCMonth()+1):("0"+(date.getUTCMonth()+1))) + 
               (date.getUTCDate() > 9 ? date.getUTCDate():("0"+date.getUTCDate())) );
-
-
-/*
-
-Original strings
-
-#define __TBB_VERSION_STRINGS \
-"TBB: BUILD_HOST\t\tvpolin-mobl1 (ia32)" ENDL \
-"TBB: BUILD_OS\t\tMicrosoft Windows XP [Version 5.1.2600]" ENDL \
-"TBB: BUILD_CL\t\tMicrosoft (R) 32-bit C/C++ Optimizing Compiler Version 13.10.3077 for 80x86" ENDL \
-"TBB: BUILD_COMPILER\tIntel(R) C++ Compiler for 32-bit applications, Version 9.1 Build 20070109Z Package ID: W_CC_C_9.1.034 " ENDL \
-"TBB: BUILD_TARGET\t" ENDL \
-"TBB: BUILD_COMMAND\t" ENDL \
-
-#define __TBB_DATETIME "Mon Jun 4 10:16:07 UTC 2007"
-#define __TBB_VERSION_YMD 2007, 0604
-
-
-
-# The script must be run from two directory levels below this level.
-x='"TBB: '
-y='" ENDL \'
-echo "#define __TBB_VERSION_STRINGS \\"
-echo $x "BUILD_HOST\t\t"`hostname`" ("`../../arch.exe`")"$y
-echo $x "BUILD_OS\t\t"`../../win_version.bat|grep -i 'Version'`$y
-echo >empty.cpp
-echo $x "BUILD_CL\t\t"`cl -c empty.cpp 2>&1 | grep -i Version`$y
-echo $x "BUILD_COMPILER\t"`icl -c empty.cpp 2>&1 | grep -i Version`$y
-echo $x "BUILD_TARGET\t"$TBB_ARCH$y
-echo $x "BUILD_COMMAND\t"$*$y
-echo ""
-# A workaround for MKS 8.6 where `date -u` crashes.
-date -u > date.tmp
-echo "#define __TBB_DATETIME \""`cat date.tmp`"\""
-echo "#define __TBB_VERSION_YMD "`date '+%Y, %m%d'`
-rm empty.cpp
-rm empty.obj
-rm date.tmp
-*/

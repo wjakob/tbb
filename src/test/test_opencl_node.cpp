@@ -1,24 +1,26 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #define TBB_PREVIEW_FLOW_GRAPH_NODES 1
+#define TBB_PREVIEW_FLOW_GRAPH_FEATURES 1
+
 #include "tbb/tbb_config.h"
 
 // The old versions of MSVC 2013 fail to compile the test with fatal error
@@ -56,23 +58,26 @@ std::initializer_list<T> make_initializer_list( std::initializer_list<T> il ) { 
 #define BROKEN_INITIALIZER_LIST_DEDUCTION(...) __VA_ARGS__
 #endif
 
+#include "harness.h"
+
 #include <mutex>
 std::once_flag tbbRootFlag;
 char *tbbRoot = NULL;
-std::string PathToFile( const std::string& fileName ) {
-    std::call_once( tbbRootFlag, [] { tbbRoot = getenv( "tbb_root" ); } );
+std::string PathToFile(const std::string& fileName) {
+    std::call_once(tbbRootFlag, [] { tbbRoot = Harness::GetEnv("tbb_root"); });
     std::string prefix = tbbRoot ? tbbRoot : "../..";
     return prefix + "/src/test/" + fileName;
 }
 
-#include "harness.h"
+typedef tbb::flow::opencl_range OCLRange;
 
 void TestArgumentPassing() {
     REMARK( "TestArgumentPassing: " );
     opencl_graph g;
 
-    opencl_node <tuple<opencl_buffer<int>, opencl_buffer<int>, std::list<char>>> k( g, PathToFile( "test_opencl_node.cl" ), "TestArgumentPassing" );
-    split_node <tuple<opencl_buffer<int>, opencl_buffer<int>, std::list<char>>> s( g );
+    opencl_node <tuple<opencl_buffer<int>, opencl_buffer<int>, OCLRange>> k( g,
+        opencl_program<>( g, PathToFile( "test_opencl_node.cl" ) ).get_kernel( "TestArgumentPassing" ) );
+    split_node <tuple<opencl_buffer<int>, opencl_buffer<int>, OCLRange>> s( g );
 
     make_edge( output_port<0>( s ), input_port<0>( k ) );
     make_edge( output_port<1>( s ), input_port<1>( k ) );
@@ -84,11 +89,11 @@ void TestArgumentPassing() {
     const int err_size = 128;
     opencl_buffer<char> err( g, err_size );
 
-    std::list<char> l;
+    OCLRange l;
 
     *err.data() = 0; ASSERT( err.data() != std::string( "Done" ), NULL );
     std::fill( b1.begin(), b1.end(), 1 );
-    k.set_ndranges( { N }, { 16 } );
+    k.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }), BROKEN_INITIALIZER_LIST_DEDUCTION({ 16 }) } );
     k.set_args( port_ref<0, 1>(), /* stride_x */ 1, /* stride_y */ 0, /* stride_z */ 0, /* dim */ 1, err, err_size );
     s.try_put( std::tie( b1, b2, l ) );
     g.wait_for_all();
@@ -103,7 +108,8 @@ void TestArgumentPassing() {
     std::fill( b1.begin(), b1.end(), 2 );
     int stride_x = 1;
     k.set_args( port_ref<0>(), BROKEN_FUNCTION_POINTER_DEDUCTION( port_ref<1, 1> ), stride_x, /* stride_y */ 1024, /* stride_z */ 0, /* dim */ 2, err, err_size );
-    k.set_ndranges( { 1024, 1024 }, { 16, min( (int)maxSizes[1], 16 ) } );
+    k.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ 1024, 1024 }),
+                   BROKEN_INITIALIZER_LIST_DEDUCTION({ 16, min( (int)maxSizes[1], 16 ) }) } );
     s.try_put( std::tie( b1, b2, l ) );
     g.wait_for_all();
     ASSERT( err.data() == std::string( "Done" ), "Validation has failed" );
@@ -122,8 +128,9 @@ void TestArgumentPassing() {
     int stride_z = 64 * 64;
     ASSERT( stride_z * 64 < N, NULL );
     k.set_args( port_ref<0>(), BROKEN_FUNCTION_POINTER_DEDUCTION( port_ref<1> ), /* stride_x */ 1, /* stride_y */ 64, /* stride_z */ stride_z, /* dim */ 3, err, err_size );
-    k.set_ndranges( { 64, 64, 64 }, { 4, min( (int)maxSizes[1], 4 ), min( (int)maxSizes[2], 4 ) } );
-    s.try_put( std::make_tuple( b1, b2, std::list<char>() ) );
+    k.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ 64, 64, 64 }),
+                   BROKEN_INITIALIZER_LIST_DEDUCTION({ 4, min( (int)maxSizes[1], 4 ), min( (int)maxSizes[2], 4 ) }) } );
+    s.try_put( std::make_tuple( b1, b2, OCLRange() ) );
     g.wait_for_all();
     ASSERT( err.data() == std::string( "Done" ), "Validation has failed" );
     ASSERT( std::all_of( b2.begin(), b2.begin() + stride_z * 64, []( int c ) { return c == 4; } ), "Validation has failed" );
@@ -133,10 +140,10 @@ void TestArgumentPassing() {
     std::fill( b1.begin(), b1.end(), 5 );
     ASSERT( 2 * 64 * 64 < N, NULL );
     k.set_args( port_ref<0, 1>(), /* stride_x */ 2, /* stride_y */ 2 * 64, /* stride_z */ 2 * 64 * 64, /* dim */ 3, err, err_size );
-    k.set_ndranges( BROKEN_FUNCTION_POINTER_DEDUCTION( port_ref<2> ), BROKEN_INITIALIZER_LIST_DEDUCTION( { 4, min( (int)maxSizes[1], 4 ), min( (int)maxSizes[2], 4 ) } ) );
-    l.push_back( 64 ); l.push_back( 64 ); l.push_back( 64 );
+    k.set_range( BROKEN_FUNCTION_POINTER_DEDUCTION( port_ref<2> ) );
+    l = { BROKEN_INITIALIZER_LIST_DEDUCTION({ 64, 64, 64 }),
+          BROKEN_INITIALIZER_LIST_DEDUCTION({ 4, min( (int)maxSizes[1], 4 ), min( (int)maxSizes[2], 4 ) }) };
     s.try_put( std::make_tuple( b1, b2, l ) );
-    l.front() = 0; // Nothing should be changed
     g.wait_for_all();
     ASSERT( err.data() == std::string( "Done" ), "Validation has failed" );
     auto it = b2.begin();
@@ -147,7 +154,7 @@ void TestArgumentPassing() {
     *err.data() = 0; ASSERT( err.data() != std::string( "Done" ), NULL );
     std::fill( b1.begin(), b1.end(), 6 );
     k.set_args( port_ref<0, 1>(), /* stride_x */ 1, /* stride_y */ 1024, /* stride_z */ 0, /* dim */ 2, err, err_size );
-    k.set_ndranges( std::deque<int>( { 1024, 1024 } ) );
+    k.set_range( std::deque<int>( { 1024, 1024 } ) );
     s.try_put( std::make_tuple( b1, b2, l ) );
     g.wait_for_all();
     ASSERT( err.data() == std::string( "Done" ), "Validation has failed" );
@@ -171,11 +178,12 @@ void SimpleDependencyTest() {
         i2[i] = v2[i] = float( 2 * i );
     }
 
-    opencl_node <tuple<opencl_buffer<float>, opencl_buffer<float>>> k1( g, PathToFile( "test_opencl_node.cl" ), "Sum" );
-    k1.set_ndranges( { N }, { 16 } );
+    opencl_program<> p( g, PathToFile("test_opencl_node.cl") ) ;
+    opencl_node <tuple<opencl_buffer<float>, opencl_buffer<float>>> k1( g, p.get_kernel( "Sum" ) );
+    k1.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }), BROKEN_INITIALIZER_LIST_DEDUCTION({ 16 }) } );
 
-    opencl_node <tuple<opencl_buffer<float>, opencl_buffer<float>>> k2( g, PathToFile( "test_opencl_node.cl" ), "Sqr" );
-    k2.set_ndranges( { N }, { 16 } );
+    opencl_node <tuple<opencl_buffer<float>, opencl_buffer<float>>> k2( g, p.get_kernel( "Sqr" ) );
+    k2.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }), BROKEN_INITIALIZER_LIST_DEDUCTION({ 16 }) } );
 
     make_edge( output_port<1>( k1 ), input_port<0>( k2 ) );
 
@@ -215,9 +223,12 @@ public:
     device_selector( const device_selector& ) : my_state( COPY_INITIALIZED ) {}
     device_selector( device_selector&& ) : my_state( COPY_INITIALIZED ) {}
     ~device_selector() { my_state = DELETED; }
-    opencl_device operator()( const opencl_device_list &devices ) {
+
+    template <typename D>
+    opencl_device operator()( opencl_factory<D> &f ) {
         ASSERT( my_state == COPY_INITIALIZED, NULL );
-        return *devices.begin();
+        ASSERT( ! f.devices().empty(), NULL );
+        return *( f.devices().begin() );
     }
 };
 
@@ -230,8 +241,12 @@ void BroadcastTest() {
 
     const int numNodes = 4 * tbb::task_scheduler_init::default_num_threads();
     typedef opencl_node <tuple<opencl_buffer<cl_int>, opencl_buffer<cl_int>>> NodeType;
-    std::vector<NodeType> nodes( numNodes, NodeType( g, PathToFile( "test_opencl_node.cl" ), "BroadcastTest", device_selector() ) );
-    for ( std::vector<NodeType>::iterator it = nodes.begin(); it != nodes.end(); ++it ) it->set_ndranges( { N }, { 16 } );
+    std::vector<NodeType> nodes( numNodes, NodeType( g,
+        opencl_program<>( g, PathToFile("test_opencl_node.cl") ).get_kernel( "BroadcastTest" ),
+        device_selector() ) );
+
+    for ( std::vector<NodeType>::iterator it = nodes.begin(); it != nodes.end(); ++it )
+        it->set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }), BROKEN_INITIALIZER_LIST_DEDUCTION({ 16 }) } );
 
     broadcast_node<opencl_buffer<cl_int>> bc( g );
     for ( auto &x : nodes ) make_edge( bc, x );
@@ -261,14 +276,15 @@ void DiamondDependencyTest() {
     opencl_buffer<cl_int> b1( g, N ), b2( g, N );
 
     device_selector d;
-    opencl_node <tuple<opencl_buffer<cl_short>, cl_short>> k0( g, PathToFile( "test_opencl_node.cl" ), "DiamondDependencyTestFill", d );
-    k0.set_ndranges( { N } );
-    opencl_node <tuple<opencl_buffer<cl_short>, opencl_buffer<cl_int>>> k1( g, PathToFile( "test_opencl_node.cl" ), "DiamondDependencyTestSquare" );
-    k1.set_ndranges( { N } );
-    opencl_node <tuple<opencl_buffer<cl_short>, opencl_buffer<cl_int>>> k2( g, PathToFile( "test_opencl_node.cl" ), "DiamondDependencyTestCube" );
-    k2.set_ndranges( { N } );
-    opencl_node <tuple<opencl_buffer<cl_short>, opencl_buffer<cl_int>, opencl_buffer<cl_int>>> k3( g, PathToFile( "test_opencl_node.cl" ), "DiamondDependencyTestDivision" );
-    k3.set_ndranges( { N } );
+    opencl_program<> p( g, PathToFile("test_opencl_node.cl") );
+    opencl_node <tuple<opencl_buffer<cl_short>, cl_short>> k0( g, p.get_kernel( "DiamondDependencyTestFill" ), d );
+    k0.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
+    opencl_node <tuple<opencl_buffer<cl_short>, opencl_buffer<cl_int>>> k1( g, p.get_kernel( "DiamondDependencyTestSquare" ) );
+    k1.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
+    opencl_node <tuple<opencl_buffer<cl_short>, opencl_buffer<cl_int>>> k2( g, p.get_kernel( "DiamondDependencyTestCube" ) );
+    k2.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
+    opencl_node <tuple<opencl_buffer<cl_short>, opencl_buffer<cl_int>, opencl_buffer<cl_int>>> k3( g, p.get_kernel( "DiamondDependencyTestDivision" ) );
+    k3.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
 
     make_edge( output_port<0>( k0 ), input_port<0>( k1 ) );
     make_edge( output_port<0>( k0 ), input_port<0>( k2 ) );
@@ -302,8 +318,9 @@ void LoopTest() {
     std::fill( b1.begin(), b1.end(), 0 );
     std::fill( b2.begin(), b2.end(), 1 );
 
-    opencl_node <tuple<opencl_buffer<cl_long>, opencl_buffer<cl_long>>> k( g, PathToFile( "test_opencl_node.cl" ), "LoopTestIter" );
-    k.set_ndranges( { N } );
+    opencl_node <tuple<opencl_buffer<cl_long>, opencl_buffer<cl_long>>> k( g,
+        opencl_program<>( g, PathToFile("test_opencl_node.cl") ).get_kernel( "LoopTestIter" ) );
+    k.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
 
     make_edge( output_port<1>( k ), input_port<1>( k ) );
 
@@ -383,7 +400,8 @@ class ConcurrencyTestBody : NoAssign {
         ~RoundRobinDeviceSelector() {
             ASSERT( !num_checks, "Device Selector has not been called required number of times" );
         }
-        opencl_device operator()( opencl_device_list devices ) {
+        opencl_device operator()( Factory &f ) {
+            const opencl_device_list& devices = f.devices();
             ASSERT( filteredDevices.size() == devices.size(), "Incorrect list of devices" );
             std::vector<opencl_device>::const_iterator it = filteredDevices.cbegin();
             for ( opencl_device d : devices ) ASSERT( d == *it++, "Incorrect list of devices" );
@@ -410,13 +428,14 @@ public:
         const int numChecks = data->numChecks;
 
         typedef typename ConcurrencyTestBodyData<Factory>::NodeType NodeType;
-        NodeType *n1 = new NodeType( g, PathToFile( "test_opencl_node.cl" ), "ConcurrencyTestIter",
+        NodeType *n1 = new NodeType( g,
+            opencl_program<Factory>( f, PathToFile( "test_opencl_node.cl" ) ).get_kernel( "ConcurrencyTestIter" ),
             RoundRobinDeviceSelector( idx, numChecks, filteredDevices ), f );
         // n2 is used to test the copy constructor
         NodeType *n2 = new NodeType( *n1 );
         delete n1;
         data->nodes[idx] = n2;
-        n2->set_ndranges( { N } );
+        n2->set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
 
         data->barrier.wait();
 
@@ -480,9 +499,9 @@ public:
     }
 };
 
-const int concurrencyTestNumRepeats = 10;
+const int concurrencyTestNumRepeats = 5;
 
-template <typename Factory = interface8::default_opencl_factory>
+template <typename Factory = interface9::default_opencl_factory>
 void ConcurrencyTest( const std::vector<opencl_device> &filteredDevices ) {
     const int numThreads = min( tbb::task_scheduler_init::default_num_threads(), 8 );
     for ( int i = 0; i < concurrencyTestNumRepeats; ++i ) {
@@ -625,11 +644,9 @@ void SpirKernelTest() {
             i2[i] = v2[i] = float( 2 * i );
         }
 
-        opencl_node < tuple<opencl_buffer<float>, opencl_buffer<float> > > k1(
-            g,
-            { opencl_program_type::SPIR, path_to_file },
-            "custom_summer" );
-        k1.set_ndranges( { N } );
+        opencl_node < tuple<opencl_buffer<float>, opencl_buffer<float> > > k1( g,
+            opencl_program<>( g, opencl_program_type::SPIR, path_to_file ).get_kernel( "custom_summer" ) );
+        k1.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
 
         input_port<0>(k1).try_put( b1 );
         input_port<1>(k1).try_put( b2 );
@@ -678,9 +695,11 @@ void PrecompiledKernelTest() {
         i2[i] = v2[i] = float( 2 * i );
     }
 
-    opencl_program<> p(opencl_program_type::PRECOMPILED, PathToFile( "test_opencl_precompiled_kernel_gpu.clbin" ));
-    opencl_node < tuple<opencl_buffer<float>, opencl_buffer<float> > > k1( g, p, "custom_subtractor" );
-    k1.set_ndranges( { N } );
+    std::string path_to_file = PathToFile(std::string("test_opencl_precompiled_kernel_gpu_") + std::to_string((*it).address_bits()) + std::string(".ir"));
+
+    opencl_program<> p(g, opencl_program_type::PRECOMPILED, path_to_file);
+    opencl_node < tuple<opencl_buffer<float>, opencl_buffer<float> > > k1(g, p.get_kernel("custom_subtractor"));
+    k1.set_range({ BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) });
 
     input_port<0>(k1).try_put( b1 );
     input_port<1>(k1).try_put( b2 );
@@ -756,8 +775,9 @@ bool KeyMatchingTest() {
         bufFiller1( g, unlimited, []( const BufferWithKey<Key> &b ) { return GenerateRandomBuffer<Key>( b ); } ),
         bufFiller2 = bufFiller1;
 
-    opencl_node< tuple< BufferWithKey<Key>, BufferWithKey<Key> >, JP > k( g, PathToFile( "test_opencl_node.cl" ), "Mul" );
-    k.set_ndranges( { N } );
+    opencl_node< tuple< BufferWithKey<Key>, BufferWithKey<Key> >, JP > k( g,
+        opencl_program<>( g, PathToFile( "test_opencl_node.cl" ) ).get_kernel( "Mul" ) );
+    k.set_range( { BROKEN_INITIALIZER_LIST_DEDUCTION({ N }) } );
 
     bool success = true;
     function_node<BufferWithKey<Key>> checker( g, unlimited, [&success, N]( BufferWithKey<Key> b ) {

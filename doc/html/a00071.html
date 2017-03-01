@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::flow::interface8::key_from_policy&lt; key_matching&lt; Key &gt; &gt; Struct Template Reference</title>
+<title>tbb::improper_lock Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,29 +33,41 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><b>flow</b></li><li class="navelem"><b>interface8</b></li><li class="navelem"><a class="el" href="a00071.html">key_from_policy< key_matching< Key > ></a></li>  </ul>
+<li class="navelem"><a class="el" href="a00234.html">tbb</a></li><li class="navelem"><a class="el" href="a00071.html">improper_lock</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
-<a href="a00351.html">List of all members</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="a00315.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::flow::interface8::key_from_policy&lt; key_matching&lt; Key &gt; &gt; Struct Template Reference</div>  </div>
+<div class="title">tbb::improper_lock Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Exception for PPL locks.  
+ <a href="a00071.html#details">More...</a></p>
+
+<p><code>#include &lt;tbb_exception.h&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for tbb::improper_lock:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="a00071.png" usemap="#tbb::improper_lock_map" alt=""/>
+  <map id="tbb::improper_lock_map" name="tbb::improper_lock_map">
+</map>
+ </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a78b1493e9c95af404d1cdb149d74956e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a78b1493e9c95af404d1cdb149d74956e"></a>
-typedef Key&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
-<tr class="separator:a78b1493e9c95af404d1cdb149d74956e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3db53e8c718c4cba3b9c9523c7889831"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3db53e8c718c4cba3b9c9523c7889831"></a>
-typedef std::true_type&#160;</td><td class="memItemRight" valign="bottom"><b>is_key_matching</b></td></tr>
-<tr class="separator:a3db53e8c718c4cba3b9c9523c7889831"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a21c70e6c3868a93a7cd0e725d411da50"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21c70e6c3868a93a7cd0e725d411da50"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>what</b> () const __TBB_override  throw ()</td></tr>
+<tr class="separator:a21c70e6c3868a93a7cd0e725d411da50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
-<li>flow_graph_opencl_node.h</li>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Exception for PPL locks. </p>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
+<li>tbb_exception.h</li>
 </ul>
 </div><!-- contents -->
 <hr>

@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 /**
@@ -31,8 +31,46 @@
 #define TBB_PREVIEW_VARIADIC_PARALLEL_INVOKE 1
 #define TBB_PREVIEW_FLOW_GRAPH_NODES 1
 #define TBB_PREVIEW_GLOBAL_CONTROL 1
-#define TBB_PREVIEW_STATIC_PARTITIONER 1
 #endif
+
+#if __TBB_TEST_SECONDARY
+    // Test _DEBUG macro custom definitions.
+    #if TBB_USE_DEBUG
+        #ifdef _DEBUG
+            #undef _DEBUG
+        #endif /* _DEBUG */
+        // Check that empty value successfully enables the debug mode.
+        #define _DEBUG
+        static bool isDebugExpected = true;
+    #else
+        // Check that zero value does not enable the debug mode.
+        #define _DEBUG 0x0
+        static bool isDebugExpected = false;
+    #endif /* TBB_USE_DEBUG */
+    #define DO_TEST_DEBUG_MACRO 1
+#else
+    // Test default definitions of _DEBUG.
+    #if _DEBUG
+        static bool isDebugExpected = true;
+        #define DO_TEST_DEBUG_MACRO 1
+    #elif _MSC_VER
+        // for MSVC, _DEBUG not defined indicates a release mode.
+        static bool isDebugExpected = false;
+        #define DO_TEST_DEBUG_MACRO 1
+    #endif /* _DEBUG */
+#endif /* __TBB_TEST_SECONDARY */
+
+#if DO_TEST_DEBUG_MACRO
+// Reset TBB_USE_DEBUG defined in makefiles.
+#undef TBB_USE_DEBUG
+#endif /* DO_TEST_DEBUG_MACRO */
+#include "tbb/tbb_config.h"
+
+#if !TBB_USE_DEBUG && defined(_DEBUG)
+// TBB_USE_DEBUG is 0 but _DEBUG is defined, it means that _DEBUG is 0
+// MSVC C++ headers consider any definition of _DEBUG, including 0, as debug mode
+#undef _DEBUG
+#endif /* !TBB_USE_DEBUG && defined(_DEBUG) */
 
 #include "harness_defs.h"
 #if !(__TBB_TEST_SECONDARY && __TBB_CPP11_STD_PLACEHOLDERS_LINKAGE_BROKEN)
@@ -164,8 +202,10 @@ static void TestPreviewNames() {
 /* This mode is used to produce a secondary object file that is linked with
    the main one in order to detect "multiple definition" linker error.
 */
-void secondary()
+#include "harness_assert.h"
+bool Secondary()
 #else
+bool Secondary();
 int TestMain ()
 #endif
 {
@@ -263,17 +303,25 @@ int TestMain ()
 #if TBB_PREVIEW_GLOBAL_CONTROL
     TestTypeDefinitionPresence( global_control );
 #endif
-#if TBB_PREVIEW_STATIC_PARTITIONER
     TestFuncDefinitionPresence( parallel_for, (int, int, int, const Body1&, const tbb::static_partitioner&), void );
     TestFuncDefinitionPresence( parallel_reduce, (const tbb::blocked_range<int>&, Body2&, const tbb::static_partitioner&), void );
-#endif
 
 #if __TBB_CPF_BUILD
     TestPreviewNames();
 #endif
-#if !__TBB_TEST_SECONDARY
+#ifdef DO_TEST_DEBUG_MACRO
+#if TBB_USE_DEBUG
+    ASSERT( isDebugExpected, "Debug mode is observed while release mode is expected." );
+#else
+    ASSERT( !isDebugExpected, "Release mode is observed while debug mode is expected." );
+#endif /* TBB_USE_DEBUG */
+#endif /* DO_TEST_DEBUG_MACRO */
+#if __TBB_TEST_SECONDARY
+    return true;
+#else
     TestExceptionClassesExports();
+    Secondary();
     return Harness::Done;
-#endif
+#endif /* __TBB_TEST_SECONDARY */
 }
 #endif //!(__TBB_TEST_SECONDARY && __TBB_CPP11_STD_PLACEHOLDERS_LINKING_BROKEN)

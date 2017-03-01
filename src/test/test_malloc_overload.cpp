@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 
@@ -109,8 +109,8 @@ typedef unsigned __int64 uint64_t;
 #endif /* OS selection */
 
 #if _WIN32
-// On Windows, the trick with string "dependence on msvcpXX.dll" is necessary to create
-// dependence on msvcpXX.dll, for sake of a regression test.
+// On Windows, the trick with string "dependency on msvcpXX.dll" is necessary to create
+// dependency on msvcpXX.dll, for sake of a regression test.
 // On Linux, C++ RTL headers are undesirable because of breaking strict ANSI mode.
 #if defined(_MSC_VER) && _MSC_VER >= 1300 && _MSC_VER <= 1310 && !defined(__INTEL_COMPILER)
 /* Fixing compilation error reported by VS2003 for exception class
@@ -186,6 +186,11 @@ const uint32_t minLargeObjectSize = fittingSize5 + 1;
 
 static void scalableMallocCheckSize(void *object, size_t size)
 {
+#if __APPLE__ && __clang__ && __TBB_CLANG_VERSION >= 70300 && __TBB_CLANG_VERSION <= 80000
+// This prevents Clang 703.0.29 and later under OS X from throwing out the
+// calls to new & delete in CheckNewDeleteOverload().
+    static void *v = object;
+#endif
     ASSERT(object, NULL);
     if (size >= minLargeObjectSize) {
         LargeMemoryBlock *lmb = ((LargeObjectHdr*)object-1)->memoryBlock;
@@ -200,10 +205,6 @@ static void scalableMallocCheckSize(void *object, size_t size)
     ASSERT(size<8 || _aligned_msize(object,8,0) >= size, NULL);
 #endif
 }
-
-struct BigStruct {
-    char f[minLargeObjectSize];
-};
 
 void CheckStdFuncOverload(void *(*malloc_p)(size_t), void *(*calloc_p)(size_t, size_t),
                           void *(*realloc_p)(void *, size_t), void (*free_p)(void *))
@@ -307,12 +308,36 @@ void TestZoneOverload() {
 #define TestZoneOverload()
 #endif
 
+struct BigStruct {
+    char f[minLargeObjectSize];
+};
+
+void CheckNewDeleteOverload() {
+    BigStruct *s1, *s2, *s3, *s4;
+
+    s1 = new BigStruct;
+    scalableMallocCheckSize(s1, sizeof(BigStruct));
+    delete s1;
+
+    s2 = new BigStruct[10];
+    scalableMallocCheckSize(s2, 10*sizeof(BigStruct));
+    delete []s2;
+
+    s3 = new(std::nothrow) BigStruct;
+    scalableMallocCheckSize(s3, sizeof(BigStruct));
+    delete s3;
+
+    s4 = new(std::nothrow) BigStruct[2];
+    scalableMallocCheckSize(s4, 2*sizeof(BigStruct));
+    delete []s4;
+}
+
 int TestMain() {
     void *ptr, *ptr1;
 
 #if MALLOC_UNIXLIKE_OVERLOAD_ENABLED || MALLOC_ZONE_OVERLOAD_ENABLED
     ASSERT(dlsym(RTLD_DEFAULT, "scalable_malloc"),
-           "Lost dependence on malloc_proxy or LD_PRELOAD was not set?");
+           "Lost dependency on malloc_proxy or LD_PRELOAD was not set?");
 #endif
 
 /* On Windows, memory block size returned by _msize() is sometimes used
@@ -393,25 +418,10 @@ int TestMain() {
 #endif
     CheckFreeAligned();
 
-    BigStruct *s1 = new BigStruct;
-    scalableMallocCheckSize(s1, sizeof(BigStruct));
-    delete s1;
-
-    BigStruct *s2 = new BigStruct[10];
-    scalableMallocCheckSize(s2, 10*sizeof(BigStruct));
-    delete []s2;
-
-    BigStruct *s3 = new(std::nothrow) BigStruct;
-    scalableMallocCheckSize(s3, sizeof(BigStruct));
-    delete s3;
-
-    BigStruct *s4 = new(std::nothrow) BigStruct[2];
-    scalableMallocCheckSize(s4, 2*sizeof(BigStruct));
-    delete []s4;
-
+    CheckNewDeleteOverload();
 #if _WIN32
-    std::string stdstring = "dependence on msvcpXX.dll";
-    ASSERT(strcmp(stdstring.c_str(), "dependence on msvcpXX.dll") == 0, NULL);
+    std::string stdstring = "dependency on msvcpXX.dll";
+    ASSERT(strcmp(stdstring.c_str(), "dependency on msvcpXX.dll") == 0, NULL);
 #endif
     TestZoneOverload();
 

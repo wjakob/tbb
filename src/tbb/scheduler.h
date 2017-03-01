@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #ifndef _TBB_scheduler_H
@@ -47,6 +47,19 @@ struct nested_arena_context;
 #define EmptyTaskPool ((task**)0)
 #define LockedTaskPool ((task**)~(intptr_t)0)
 
+//! Bit-field representing properties of a sheduler
+struct scheduler_properties {
+    static const bool worker = false;
+    static const bool master = true;
+    //! Indicates that a scheduler acts as a master or a worker.
+    bool type : 1;
+    //! Indicates that a scheduler is on outermost level.
+    /**  Note that the explicit execute method will set this property. **/
+    bool outermost : 1;
+    //! Reserved bits
+    unsigned char : 6;
+};
+
 struct scheduler_state {
     //! Index of the arena slot the scheduler occupies now, or occupied last time.
     size_t my_arena_index; // TODO: make it unsigned and pair with my_affinity_id to fit into cache line
@@ -57,13 +70,8 @@ struct scheduler_state {
     //! The arena that I own (if master) or am servicing at the moment (if worker)
     arena* my_arena;
 
-    //! Innermost task whose task::execute() is running.
+    //! Innermost task whose task::execute() is running. A dummy task on the outermost level.
     task* my_innermost_running_task;
-
-    //! Task, in the context of which the current TBB dispatch loop is running.
-    /** Outside of or in the outermost dispatch loop (not in a nested call to
-        wait_for_all) it is my_dummy_task for master threads, and NULL for workers. **/
-    task* my_dispatching_task;
 
     mail_inbox my_inbox;
 
@@ -72,8 +80,11 @@ struct scheduler_state {
         TODO: how are id's being garbage collected?
         TODO: master thread may enter arena and leave and then reenter.
                 We want to give it the same affinity_id upon reentry, if practical.
+        TODO: investigate if it makes sense to merge this field into scheduler_properties.
       */
     affinity_id my_affinity_id;
+
+    scheduler_properties my_properties;
 
 #if __TBB_SCHEDULER_OBSERVER
     //! Last observer in the global observers list processed by this scheduler
@@ -93,7 +104,6 @@ struct scheduler_state {
     //! Pointer to market's (for workers) or current arena's (for the master) reload epoch counter.
     volatile uintptr_t *my_ref_reload_epoch;
 #endif /* __TBB_TASK_PRIORITY */
-    bool my_is_worker;
 };
 
 //! Work stealing task scheduler.
@@ -189,9 +199,8 @@ public: // almost every class in TBB uses generic_scheduler
     void leave_task_pool();
 
     //! Resets head and tail indices to 0, and leaves task pool
-    /** Argument specifies whether the task pool is currently locked by the owner
-        (via acquire_task_pool).**/
-    inline void reset_task_pool_and_leave ( bool locked );
+    /** The task pool must be locked by the owner (via acquire_task_pool).**/
+    inline void reset_task_pool_and_leave ();
 
     //! Locks victim's task pool, and returns pointer to it. The pointer can be NULL.
     /** Garbles victim_arena_slot->task_pool for the duration of the lock. **/
@@ -224,10 +233,21 @@ public: // almost every class in TBB uses generic_scheduler
 
     //! Get a task from the local pool.
     /** Called only by the pool owner.
-        Returns the pointer to the task or NULL if the pool is empty.
-        In the latter case compacts the pool. **/
-    task* get_task();
+        Returns the pointer to the task or NULL if a suitable task is not found.
+        Resets the pool if it is empty. **/
+    task* get_task( __TBB_ISOLATION_EXPR( isolation_tag isolation ) );
 
+    //! Get a task from the local pool at specified location T.
+    /** Returns the pointer to the task or NULL if the task cannot be executed,
+        e.g. proxy has been deallocated or isolation constraint is not met.
+        tasks_omitted tells if some tasks have been omitted.
+        Called only by the pool owner. The caller should guarantee that the
+        position T is not available for a thief. **/
+#if __TBB_TASK_ISOLATION
+    task* get_task( size_t T, isolation_tag isolation, bool& tasks_omitted );
+#else
+    task* get_task( size_t T );
+#endif /* __TBB_TASK_ISOLATION */
     //! Attempt to get a task from the mailbox.
     /** Gets a task only if it has not been executed by its sender or a thief
         that has stolen it from the sender's task pool. Otherwise returns NULL.
@@ -235,7 +255,7 @@ public: // almost every class in TBB uses generic_scheduler
         This method is intended to be used only by the thread extracting the proxy
         from its mailbox. (In contrast to local task pool, mailbox can be read only
         by its owner). **/
-    task* get_mailbox_task();
+    task* get_mailbox_task( __TBB_ISOLATION_EXPR( isolation_tag isolation ) );
 
     //! True if t is a task_proxy
     static bool is_proxy( const task& t ) {
@@ -243,7 +263,7 @@ public: // almost every class in TBB uses generic_scheduler
     }
 
     //! Steal task from another scheduler's ready pool.
-    task* steal_task( arena_slot& victim_arena_slot );
+    task* steal_task( __TBB_ISOLATION_ARG( arena_slot& victim_arena_slot, isolation_tag isolation ) );
 
     /** Initial size of the task deque sufficient to serve without reallocation
         4 nested parallel_for calls with iteration space of 65535 grains each. **/
@@ -280,18 +300,15 @@ public:
 #endif /* TBB_USE_ASSERT <= 1 */
 
     void attach_arena( arena*, size_t index, bool is_master );
-    void nested_arena_entry( arena*, size_t, nested_arena_context &, bool as_worker );
+    void nested_arena_entry( arena*, size_t, nested_arena_context &, bool );
     void nested_arena_exit( nested_arena_context & );
     void wait_until_empty();
 
-    /*override*/
-    void spawn( task& first, task*& next );
+    void spawn( task& first, task*& next ) __TBB_override;
 
-    /*override*/
-    void spawn_root_and_wait( task& first, task*& next );
+    void spawn_root_and_wait( task& first, task*& next ) __TBB_override;
 
-    /*override*/
-    void enqueue( task&, void* reserved );
+    void enqueue( task&, void* reserved ) __TBB_override;
 
     void local_spawn( task& first, task*& next );
     void local_spawn_root_and_wait( task& first, task*& next );
@@ -314,7 +331,10 @@ public:
     inline void deallocate_task( task& t );
 
     //! True if running on a worker thread, false otherwise.
-    inline bool is_worker();
+    inline bool is_worker() const;
+
+    //! True if the scheduler is on the outermost dispatch level.
+    inline bool outermost_level() const;
 
     //! True if the scheduler is on the outermost dispatch level in a master thread.
     /** Returns true when this scheduler instance is associated with an application
@@ -325,8 +345,8 @@ public:
     //! True if the scheduler is on the outermost dispatch level in a worker thread.
     inline bool worker_outermost_level () const;
 
-    //! Returns number of worker threads in the arena this thread belongs to.
-    unsigned number_of_workers_in_my_arena();
+    //! Returns the concurrency limit of the current arena.
+    unsigned max_threads_in_arena();
 
 #if __TBB_COUNT_TASK_NODES
     intptr_t get_task_node_count( bool count_arena_workers = false );
@@ -344,7 +364,7 @@ public:
 
     //! Try getting a task from other threads (via mailbox, stealing, FIFO queue, orphans adoption).
     /** Returns obtained task or NULL if all attempts fail. */
-    virtual task* receive_or_steal_task( __TBB_atomic reference_count& completion_ref_count ) = 0;
+    virtual task* receive_or_steal_task( __TBB_ISOLATION_ARG( __TBB_atomic reference_count& completion_ref_count, isolation_tag isolation ) ) = 0;
 
     //! Free a small task t that that was allocated by a different scheduler
     void free_nonlocal_small_task( task& t );
@@ -402,13 +422,17 @@ public:
 
     //! Searches offload area for top priority tasks and reloads found ones into primary task pool.
     /** Returns one of the found tasks or NULL. **/
-    task* reload_tasks ();
+    task* reload_tasks( __TBB_ISOLATION_EXPR( isolation_tag isolation ) );
 
-    task* reload_tasks ( task*& offloaded_tasks, task**& offloaded_task_list_link, intptr_t top_priority );
+    task* reload_tasks( task*& offloaded_tasks, task**& offloaded_task_list_link, __TBB_ISOLATION_ARG( intptr_t top_priority, isolation_tag isolation ) );
 
     //! Moves tasks with priority below the top one from primary task pool into offload area.
     /** Returns the next execution candidate task or NULL. **/
-    task* winnow_task_pool ();
+    task* winnow_task_pool ( __TBB_ISOLATION_EXPR( isolation_tag isolation ) );
+
+    //! Get a task from locked or empty pool in range [H0, T0). Releases or unlocks the task pool.
+    /** Returns the found task or NULL. **/
+    task *get_task_and_activate_task_pool( size_t H0 , __TBB_ISOLATION_ARG( size_t T0, isolation_tag isolation ) );
 
     //! Unconditionally moves the task into offload area.
     inline void offload_task ( task& t, intptr_t task_priority );
@@ -520,12 +544,16 @@ inline bool generic_scheduler::is_quiescent_local_task_pool_reset () const {
     return __TBB_load_relaxed(my_arena_slot->head) == 0 && __TBB_load_relaxed(my_arena_slot->tail) == 0;
 }
 
+inline bool generic_scheduler::outermost_level () const {
+    return my_properties.outermost;
+}
+
 inline bool generic_scheduler::master_outermost_level () const {
-    return my_dispatching_task == my_dummy_task;
+    return !is_worker() && outermost_level();
 }
 
 inline bool generic_scheduler::worker_outermost_level () const {
-    return !my_dispatching_task;
+    return is_worker() && outermost_level();
 }
 
 #if __TBB_TASK_GROUP_CONTEXT
@@ -540,13 +568,13 @@ inline void generic_scheduler::attach_mailbox( affinity_id id ) {
     my_affinity_id = id;
 }
 
-inline bool generic_scheduler::is_worker() {
-    return my_is_worker;
+inline bool generic_scheduler::is_worker() const {
+    return my_properties.type == scheduler_properties::worker;
 }
 
-inline unsigned generic_scheduler::number_of_workers_in_my_arena() {
+inline unsigned generic_scheduler::max_threads_in_arena() {
     __TBB_ASSERT(my_arena, NULL);
-    return my_arena->my_max_num_workers;
+    return my_arena->my_num_slots;
 }
 
 //! Return task object to the memory allocator.
@@ -569,9 +597,8 @@ inline intptr_t generic_scheduler::get_task_node_count( bool count_arena_workers
 }
 #endif /* __TBB_COUNT_TASK_NODES */
 
-inline void generic_scheduler::reset_task_pool_and_leave ( bool locked ) {
-    if ( !locked )
-        acquire_task_pool();
+inline void generic_scheduler::reset_task_pool_and_leave () {
+    __TBB_ASSERT( my_arena_slot->task_pool == LockedTaskPool, "Task pool must be locked when resetting task pool" );
     __TBB_store_relaxed( my_arena_slot->tail, 0 );
     __TBB_store_relaxed( my_arena_slot->head, 0 );
     leave_task_pool();
@@ -593,7 +620,7 @@ void generic_scheduler::commit_relocated_tasks ( size_t new_tail ) {
     __TBB_store_relaxed( my_arena_slot->head, 0 );
     // Tail is updated last to minimize probability of a thread making arena
     // snapshot being misguided into thinking that this task pool is empty.
-    __TBB_store_relaxed( my_arena_slot->tail, new_tail );
+    __TBB_store_release( my_arena_slot->tail, new_tail );
     release_task_pool();
 }
 
@@ -648,13 +675,14 @@ inline intptr_t generic_scheduler::effective_reference_priority () const {
     return !worker_outermost_level() ||
         (my_arena->my_num_workers_allotted < my_arena->num_workers_active()
 #if __TBB_ENQUEUE_ENFORCED_CONCURRENCY
-         && my_arena->my_mandatory_mode!=arena_base::global_mandatory
+         && my_arena->my_concurrency_mode!=arena_base::cm_enforced_global
 #endif
             ) ? *my_ref_top_priority : my_arena->my_top_priority;
 }
 
 inline void generic_scheduler::offload_task ( task& t, intptr_t /*priority*/ ) {
     GATHER_STATISTIC( ++my_counters.prio_tasks_offloaded );
+    __TBB_ASSERT( !is_proxy(t), "The proxy task cannot be offloaded" );
     __TBB_ASSERT( my_offloaded_task_list_tail_link && !*my_offloaded_task_list_tail_link, NULL );
 #if TBB_USE_ASSERT
     t.prefix().state = task::ready;

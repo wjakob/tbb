@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "dynamic_link.h"
@@ -70,7 +70,7 @@ executable and dynamic libraries.
 dynamic_link provides certain guarantees:
   1. Either all or none of the requested symbols are resolved. Moreover, if
   symbols are not resolved, the dynamic_link_descriptor table is not modified;
-  2. All returned symbols have secured life time: this means that none of them
+  2. All returned symbols have secured lifetime: this means that none of them
   can be invalidated until dynamic_unlink is called;
   3. Any loaded library is loaded only via the full path. The full path is that
   from which the runtime itself was loaded. (This is done to avoid security
@@ -84,7 +84,7 @@ soon as all of the symbols have been resolved.
     library and if it succeeds it resolves the symbols via that handle.
     b. On Linux: dynamic_link tries to search for the symbols in the global
     scope via the main program handle. If the symbols are present in the global
-    scope their life time is not guaranteed (since dynamic_link does not know
+    scope their lifetime is not guaranteed (since dynamic_link does not know
     anything about the library from which they are exported). Therefore it
     tries to "pin" the symbols by obtaining the library name and reopening it.
     dlopen may fail to reopen the library in two cases:
@@ -514,35 +514,33 @@ OPEN_INTERNAL_NAMESPACE
     dynamic_link_handle dynamic_load( const char* library, const dynamic_link_descriptor descriptors[], size_t required ) {
     ::tbb::internal::suppress_unused_warning( library, descriptors, required );
     #if __TBB_DYNAMIC_LOAD_ENABLED
-    #if _XBOX
-        return LoadLibrary (library);
-    #else /* _XBOX */
-        size_t const len = PATH_MAX + 1;
-        char path[ len ];
-        size_t rc = abs_path( library, path, len );
-        if ( 0 < rc && rc < len ) {
-    #if _WIN32
-            // Prevent Windows from displaying silly message boxes if it fails to load library
-            // (e.g. because of MS runtime problems - one of those crazy manifest related ones)
-            UINT prev_mode = SetErrorMode (SEM_FAILCRITICALERRORS);
-    #endif /* _WIN32 */
-            dynamic_link_handle library_handle = dlopen( path, RTLD_LAZY );
-    #if _WIN32
-            SetErrorMode (prev_mode);
-    #endif /* _WIN32 */
-            if( library_handle ) {
-                if( !resolve_symbols( library_handle, descriptors, required ) ) {
-                    // The loaded library does not contain all the expected entry points
-                    dynamic_unlink( library_handle );
-                    library_handle = NULL;
-                }
-            } else
-                DYNAMIC_LINK_WARNING( dl_lib_not_found, path, dlerror() );
-            return library_handle;
-        } else if ( rc>=len )
-                DYNAMIC_LINK_WARNING( dl_buff_too_small );
-                // rc == 0 means failing of init_ap_data so the warning has already been issued.
-    #endif /* _XBOX */
+
+    size_t const len = PATH_MAX + 1;
+    char path[ len ];
+    size_t rc = abs_path( library, path, len );
+    if ( 0 < rc && rc < len ) {
+#if _WIN32
+        // Prevent Windows from displaying silly message boxes if it fails to load library
+        // (e.g. because of MS runtime problems - one of those crazy manifest related ones)
+        UINT prev_mode = SetErrorMode (SEM_FAILCRITICALERRORS);
+#endif /* _WIN32 */
+        dynamic_link_handle library_handle = dlopen( path, RTLD_LAZY );
+#if _WIN32
+        SetErrorMode (prev_mode);
+#endif /* _WIN32 */
+        if( library_handle ) {
+            if( !resolve_symbols( library_handle, descriptors, required ) ) {
+                // The loaded library does not contain all the expected entry points
+                dynamic_unlink( library_handle );
+                library_handle = NULL;
+            }
+        } else
+            DYNAMIC_LINK_WARNING( dl_lib_not_found, path, dlerror() );
+        return library_handle;
+    } else if ( rc>=len )
+            DYNAMIC_LINK_WARNING( dl_buff_too_small );
+            // rc == 0 means failing of init_ap_data so the warning has already been issued.
+
     #endif /* __TBB_DYNAMIC_LOAD_ENABLED */
         return 0;
     }

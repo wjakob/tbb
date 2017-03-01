@@ -43,9 +43,12 @@ This directory contains the source code and unit tests for Intel&reg; Threading 
     <dt><tt>make tbb_strict=1 [(above options or targets)]</tt>
     <dd>Enables warnings as errors.
     <dt><tt>make examples/{target}</tt>
-    <dd>Invokes examples/Makefile with specified target.
+    <dd>Invokes examples/Makefile with specified target. Available in the open-source version only.
+        For the commercial version, you can download Intel TBB Samples at the <a href="https://software.intel.com/en-us/product-code-samples?topic=20828">Intel&reg; Software Product Samples and Tutorials</a> website.
+    <dt><tt>make python_{target} [compiler={icl, icc}]</tt>
+    <dd>Invokes Makefile with the specified target in <a href="../python/index.html">python</a> directory. E.g. 'python_install' target builds and installs the module into Python.
     <dt><tt>make clean_release clean_debug clean_examples</tt>
-    <dd>Removes release or debug build directories, or cleans all examples.
+    <dd>Removes release or debug build directories, or cleans all examples. The target <tt>clean_examples</tt> is available in the open-source version only.
     <dt><tt>make test_no_depends</tt>
     <dd>Equivalent to 'make test' but does not check for libraries updates.
     <dt><tt>make info</tt>

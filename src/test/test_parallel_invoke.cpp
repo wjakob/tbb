@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #if _MSC_VER && !defined(__INTEL_COMPILER)
@@ -84,7 +84,7 @@ TEST_FUNCTOR(9)
 #define INIT_TEST function_counter = 0;
 
 #define VALIDATE_INVOKE_RUN(number_of_args, test_type) \
-    ASSERT( (size_t)function_counter == (size_t)(1 << number_of_args) - 1, "parallel_invoke called with " #number_of_args " arguments didn't process all " #test_type);
+    ASSERT( size_t(function_counter) == (size_t(1) << number_of_args) - 1, "parallel_invoke called with " #number_of_args " arguments didn't process all " #test_type);
 
 // Calls parallel_invoke for different number of arguments
 // It can be called with and without user context
@@ -235,7 +235,7 @@ void TestExceptionHandling()
 {
     REMARK (__FUNCTION__);
     for( size_t n = 2; n <= 10; ++n ) {
-        for( exception_mask = 1; exception_mask < (size_t) (1 << n); ++exception_mask ) {
+        for( exception_mask = 1; exception_mask < (size_t(1) << n); ++exception_mask ) {
             ResetEhGlobals();
             TRY();
                 REMARK("Calling parallel_invoke, number of functions = %d, exception_mask = %d\n", n, exception_mask);
@@ -247,7 +247,7 @@ void TestExceptionHandling()
 }
 #endif /* TBB_USE_EXCEPTIONS */
 
-// Cancelation support test
+// Cancellation support test
 void function_to_cancel() {
     ++g_CurExecuted;
     CancellatorTask::WaitUntilReady();
@@ -266,7 +266,7 @@ class ParInvokeLauncherTask : public tbb::task
     tbb::task_group_context &my_ctx;
     void(*func_array[10])(void);
 
-    tbb::task* execute () {
+    tbb::task* execute () __TBB_override {
         func_array[g_functionToCancel] = &function_to_cancel;
         call_parallel_invoke(g_numFunctions, func_array[0], func_array[1], func_array[2], func_array[3],
             func_array[4], func_array[5], func_array[6], func_array[7], func_array[8], func_array[9], &my_ctx);

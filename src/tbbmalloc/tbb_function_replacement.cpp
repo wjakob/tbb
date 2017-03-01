@@ -1,21 +1,21 @@
 /*
-    Copyright 2005-2016 Intel Corporation.  All Rights Reserved.
+    Copyright (c) 2005-2016 Intel Corporation
 
-    This file is part of Threading Building Blocks. Threading Building Blocks is free software;
-    you can redistribute it and/or modify it under the terms of the GNU General Public License
-    version 2  as  published  by  the  Free Software Foundation.  Threading Building Blocks is
-    distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
-    implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-    See  the GNU General Public License for more details.   You should have received a copy of
-    the  GNU General Public License along with Threading Building Blocks; if not, write to the
-    Free Software Foundation, Inc.,  51 Franklin St,  Fifth Floor,  Boston,  MA 02110-1301 USA
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    As a special exception,  you may use this file  as part of a free software library without
-    restriction.  Specifically,  if other files instantiate templates  or use macros or inline
-    functions from this file, or you compile this file and link it with other files to produce
-    an executable,  this file does not by itself cause the resulting executable to be covered
-    by the GNU General Public License. This exception does not however invalidate any other
-    reasons why the executable file might be covered by the GNU General Public License.
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+
+
 */
 
 #include "tbb/tbb_config.h"
@@ -190,14 +190,13 @@ size_t compareStrings( const char *str1, const char *str2 )
    return str1Length;
 }
 
-// Check function prologue with know prologues from the dictionary
+// Check function prologue with known prologues from the dictionary
 // opcodes - dictionary
 // inpAddr - pointer to function prologue
 // Dictionary contains opcodes for several full asm instructions
 // + one opcode byte for the next asm instruction for safe address processing
-// RETURN: number of bytes for safe bytes replacement
-// (matched_pattern/2-1)
-UINT CheckOpcodes( const char ** opcodes, void *inpAddr )
+// RETURN: number of bytes for safe bytes replacement (matched_pattern/2-1)
+UINT CheckOpcodes( const char ** opcodes, void *inpAddr, bool abortOnError )
 {
     static size_t opcodesStringsCount = 0;
     static size_t maxOpcodesLength = 0;
@@ -230,10 +229,11 @@ UINT CheckOpcodes( const char ** opcodes, void *inpAddr )
         if( result )
             return (UINT)(result/2-1);
     }
-    // Impossibility to find opcodes in the dictionary is a serious issue,
-    // if we unable to call original function, that leads to leak or crash.
-    __TBB_ASSERT_RELEASE( false, "CheckOpcodes failed" );
-
+    if (abortOnError) {
+        // Impossibility to find opcodes in the dictionary is a serious issue,
+        // as if we unable to call original function, leak or crash is expected result.
+        __TBB_ASSERT_RELEASE( false, "CheckOpcodes failed" );
+    }
     return 0;
 }
 
@@ -252,16 +252,15 @@ static DWORD InsertTrampoline32(void *inpAddr, void *targetAddr, const char ** o
     UINT offset32;
     UCHAR *codePtr = (UCHAR *)inpAddr;
 
-    if ( opcodes == PROCESS_JMP ){ // expecting JMP relative instruction "e9 00 00 00 00"
-        __TBB_ASSERT(*(char*)inpAddr == 0xE9, NULL);
-        __TBB_ASSERT(storedAddr, NULL);
-        // This is special case when system function consists of single near jump,
-        // so instead of moving it somewhere we use the target of the jump as original function.
-        unsigned offsetInJmp = *((unsigned*)((char*)inpAddr + 1));
-        *storedAddr = (void*)((uintptr_t)inpAddr + offsetInJmp + SIZE_OF_RELJUMP);
-    }else if ( storedAddr ){ // If requested, store original function code
-        opcodesNumber = CheckOpcodes( opcodes, inpAddr );
-        if( opcodesNumber >= SIZE_OF_RELJUMP ){
+    if ( storedAddr ){ // If requested, store original function code
+        if ( *codePtr == 0xE9 ){ // JMP relative instruction
+            // For the special case when a system function consists of a single near jump,
+            // instead of moving it somewhere we use the target of the jump as the original function.
+            unsigned offsetInJmp = *(unsigned*)(codePtr + 1);
+            *storedAddr = (void*)(srcAddr + offsetInJmp + SIZE_OF_RELJUMP);
+        }else{
+            opcodesNumber = CheckOpcodes( opcodes, inpAddr, /*abortOnError=*/true );
+            __TBB_ASSERT_RELEASE( opcodesNumber >= SIZE_OF_RELJUMP, "Incorrect bytecode pattern?" );
             UINT_PTR strdAddr = memProvider.GetLocation(srcAddr);
             if (!strdAddr)
                 return 0;
@@ -276,9 +275,6 @@ static DWORD InsertTrampoline32(void *inpAddr, void *targetAddr, const char ** o
             offset32 = (UINT)((offset & 0xFFFFFFFF));
             *((UCHAR*)*storedAddr+opcodesNumber) = 0xE9;
             memcpy(((UCHAR*)*storedAddr+opcodesNumber+1), &offset32, sizeof(offset32));
-        }else{
-            // No matches found just do not store original calls
-            *storedAddr = NULL;
         }
     }
 
@@ -323,17 +319,15 @@ static DWORD InsertTrampoline64(void *inpAddr, void *targetAddr, const char ** o
     UINT_PTR *locPtr = (UINT_PTR *)Addrint2Ptr(location);
     *locPtr = tgtAddr;
 
-    // If requested, store original function code
-    if ( opcodes == PROCESS_JMP ){ // expecting JMP relative instruction "e9 00 00 00 00"
-        __TBB_ASSERT(*(char*)inpAddr == 0xE9, NULL);
-        __TBB_ASSERT(storedAddr, NULL);
-        // This is special case when system function consists of single near jump,
-        // so instead of moving it somewhere we use the target of the jump as original function.
-        unsigned offsetInJmp = *((unsigned*)((char*)inpAddr + 1));
-        *storedAddr = (void*)((uintptr_t)inpAddr + offsetInJmp + SIZE_OF_RELJUMP);
-    } else if( storedAddr ){
-        opcodesNumber = CheckOpcodes( opcodes, inpAddr );
-        if( opcodesNumber >= SIZE_OF_INDJUMP ){
+    if ( storedAddr ){ // If requested, store original function code
+        if ( *codePtr == 0xE9 ){ // JMP relative instruction
+            // For the special case when a system function consists of a single near jump,
+            // instead of moving it somewhere we use the target of the jump as the original function.
+            unsigned offsetInJmp = *(unsigned*)(codePtr + 1);
+            *storedAddr = (void*)(srcAddr + offsetInJmp + SIZE_OF_RELJUMP);
+        }else{
+            opcodesNumber = CheckOpcodes( opcodes, inpAddr, /*abortOnError=*/true );
+            __TBB_ASSERT_RELEASE( opcodesNumber >= SIZE_OF_INDJUMP, "Incorrect bytecode pattern?" );
             UINT_PTR strdAddr = memProvider.GetLocation(srcAddr);
             if (!strdAddr)
                 return 0;
@@ -348,9 +342,6 @@ static DWORD InsertTrampoline64(void *inpAddr, void *targetAddr, const char ** o
             offset32 = (UINT)((offset & 0xFFFFFFFF));
             *((UCHAR*)*storedAddr+opcodesNumber) = 0xE9;
             memcpy(((UCHAR*)*storedAddr+opcodesNumber+1), &offset32, sizeof(offset32));
-        }else{
-            // No matches found just do not store original calls
-            *storedAddr = NULL;
         }
     }
 
@@ -478,6 +469,14 @@ FRR_TYPE ReplaceFunctionW(const wchar_t *dllName, const char *funcName, FUNCPTR 
     }
 
     return FRR_OK;
+}
+
+bool IsPrologueKnown(HMODULE module, const char *funcName, const char **opcodes)
+{
+    FARPROC inpFunc = GetProcAddress(module, funcName);
+    if (!inpFunc)
+        return false;
+    return CheckOpcodes( opcodes, (void*)inpFunc, /*abortOnError=*/false ) != 0;
 }
 
 #endif /* !__TBB_WIN8UI_SUPPORT && defined(_WIN32) */

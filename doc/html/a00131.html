@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.4"/>
-<title>tbb::scalable_allocator&lt; void &gt; Class Template Reference</title>
+<title>tbb::null_mutex::scoped_lock Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -33,48 +33,50 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="a00237.html">tbb</a></li><li class="navelem"><a class="el" href="a00131.html">scalable_allocator< void ></a></li>  </ul>
+<li class="navelem"><a class="el" href="a00234.html">tbb</a></li><li class="navelem"><a class="el" href="a00084.html">null_mutex</a></li><li class="navelem"><a class="el" href="a00131.html">scoped_lock</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
-<a href="#pub-types">Public Types</a> &#124;
-<a href="a00296.html">List of all members</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="a00279.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">tbb::scalable_allocator&lt; void &gt; Class Template Reference<div class="ingroups"><a class="el" href="a00254.html">Memory Allocation</a></div></div>  </div>
+<div class="title">tbb::null_mutex::scoped_lock Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Analogous to std::allocator&lt;void&gt;, as defined in ISO C++ Standard, Section 20.4.1.  
+<p>Represents acquisition of a mutex.  
  <a href="a00131.html#details">More...</a></p>
 
-<p><code>#include &lt;scalable_allocator.h&gt;</code></p>
+<p><code>#include &lt;null_mutex.h&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for tbb::null_mutex::scoped_lock:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="a00131.png" usemap="#tbb::null_mutex::scoped_lock_map" alt=""/>
+  <map id="tbb::null_mutex::scoped_lock_map" name="tbb::null_mutex::scoped_lock_map">
+</map>
+ </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="a00118.html">rebind</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a4220fdea504929811e9c083da3ec24cd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4220fdea504929811e9c083da3ec24cd"></a>
-typedef void *&#160;</td><td class="memItemRight" valign="bottom"><b>pointer</b></td></tr>
-<tr class="separator:a4220fdea504929811e9c083da3ec24cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ae27d63cd7df1dc8d2a47c89aad8bba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ae27d63cd7df1dc8d2a47c89aad8bba"></a>
-typedef const void *&#160;</td><td class="memItemRight" valign="bottom"><b>const_pointer</b></td></tr>
-<tr class="separator:a2ae27d63cd7df1dc8d2a47c89aad8bba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a968aea700a5f30ad613a84a474b00ba4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a968aea700a5f30ad613a84a474b00ba4"></a>
-typedef void&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b></td></tr>
-<tr class="separator:a968aea700a5f30ad613a84a474b00ba4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:af71834d1fc4c7406595e9df5b43ab7bb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af71834d1fc4c7406595e9df5b43ab7bb"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>scoped_lock</b> (<a class="el" href="a00084.html">null_mutex</a> &amp;)</td></tr>
+<tr class="separator:af71834d1fc4c7406595e9df5b43ab7bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d541c92b1678a7dde6a45783a02160f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d541c92b1678a7dde6a45783a02160f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>acquire</b> (<a class="el" href="a00084.html">null_mutex</a> &amp;)</td></tr>
+<tr class="separator:a7d541c92b1678a7dde6a45783a02160f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5d4d5a4182091ea13fb5d38667f6449"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac5d4d5a4182091ea13fb5d38667f6449"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>try_acquire</b> (<a class="el" href="a00084.html">null_mutex</a> &amp;)</td></tr>
+<tr class="separator:ac5d4d5a4182091ea13fb5d38667f6449"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21f848f83dfa6504381e3da4de7a9e00"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21f848f83dfa6504381e3da4de7a9e00"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>release</b> ()</td></tr>
+<tr class="separator:a21f848f83dfa6504381e3da4de7a9e00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;&gt;<br/>
-class tbb::scalable_allocator&lt; void &gt;</h3>
-
-<p>Analogous to std::allocator&lt;void&gt;, as defined in ISO C++ Standard, Section 20.4.1. </p>
+<div class="textblock"><p>Represents acquisition of a mutex. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li><a class="el" href="a00216.html">scalable_allocator.h</a></li>
+<li>null_mutex.h</li>
 </ul>
 </div><!-- contents -->
 <hr>
