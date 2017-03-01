@@ -1,5 +1,7 @@
 ### Intel(R) Threading Building Blocks
 
+[![Stable release](https://img.shields.io/badge/version-2017_U3-green.svg)] (https://github.com/01org/tbb/releases/tag/2017_U3)
+[![Apache License Version 2.0](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Build Status](https://travis-ci.org/wjakob/tbb.svg?branch=master)](https://travis-ci.org/wjakob/tbb)
 [![Build status](https://ci.appveyor.com/api/projects/status/fvepmk5nxekq27r8?svg=true)](https://ci.appveyor.com/project/wjakob/tbb/branch/master)
 
