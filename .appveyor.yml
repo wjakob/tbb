@@ -19,5 +19,5 @@ build_script:
   - cd c:\projects\tbb
   - cmake -G "%CMAKE_PLATFORM%"
   - set MSBuildLogger="C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - cmake --build . --config %Configuration% --target tests -- /v:m /logger:%MSBuildLogger%
+  - cmake --build . --config %Configuration% -- /v:m /logger:%MSBuildLogger%
   - ctest -C %Configuration% --output-on-failure --timeout 500
