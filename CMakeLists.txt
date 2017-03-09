@@ -205,7 +205,7 @@ if (TBB_BUILD_STATIC)
   endif()
   
   if (UNIX AND NOT APPLE)
-    target_link_libraries(tbbmalloc PUBLIC pthread dl)
+    target_link_libraries(tbb_static PUBLIC pthread dl)
   endif()
 
   target_include_directories(tbb_static PUBLIC include)
