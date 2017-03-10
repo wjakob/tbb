@@ -203,6 +203,10 @@ if (TBB_BUILD_STATIC)
   if (MSVC)
     target_compile_definitions(tbb_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1)
   endif()
+
+  if (UNIX AND NOT APPLE)
+    target_link_libraries(tbb_static PUBLIC pthread dl)
+  endif()
 endif()
 
 if (TBB_BUILD_SHARED)
