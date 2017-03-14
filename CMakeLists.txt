@@ -239,6 +239,13 @@ endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # Quench a warning on GCC
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/governor.cpp COMPILE_FLAGS "-Wno-missing-field-initializers ")
+  if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+    # TBB segfaults on GCC6. The TBB people say it's a GCC bug [1]. The GCC people say it's a TBB bug [2].
+    # [1]: https://software.intel.com/en-us/forums/intel-threading-building-blocks/topic/641654
+    # [2]: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71388
+    # Both agree that the following flag is a good workaround:
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lifetime-dse")
+  endif ()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Quench a warning on Clang
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/itt_notify.cpp COMPILE_FLAGS "-Wno-varargs ")
