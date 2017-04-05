@@ -94,6 +94,9 @@ elseif(WIN32)
       set(CMAKE_CXX_FLAGS "/volatile:iso ${CMAKE_CXX_FLAGS}")
     endif ()
     set(CMAKE_CXX_FLAGS "/wd4267 /wd4800 /wd4146 /wd4244 /wd4577 /wd4018 ${CMAKE_CXX_FLAGS}")
+    if (NOT CMAKE_SIZEOF_VOID_P)
+       message(FATAL_ERROR "'CMAKE_SIZEOF_VOID_P' is undefined. Please delete your build directory rerun CMake again!")
+    endif()
 
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
       list(APPEND tbb_src src/tbb/intel64-masm/atomic_support.asm
