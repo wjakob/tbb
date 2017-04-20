@@ -5,6 +5,7 @@
 CMakeCache.txt
 CMakeFiles
 *.cmake
+crash*
 libtbb.dylib
 libtbb.so
 libtbb_static.a
@@ -17,3 +18,13 @@ libtbbmalloc_static.a
 tbb.def
 tbbmalloc.def
 version_string.ver
+#Ignore the build and release directories created with Makefile builds
+build/*_debug/
+build/*_release/
+
+# emacs backups
+*~
+.emacs.desktop
+# Mac resource files
+.DS_Store
+._*
