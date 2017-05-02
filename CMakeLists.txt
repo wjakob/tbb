@@ -18,6 +18,19 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
+if(NOT TBB_INSTALL_RUNTIME_DIR)
+  set(TBB_INSTALL_RUNTIME_DIR bin)
+endif()
+if(NOT TBB_INSTALL_LIBRARY_DIR)
+  set(TBB_INSTALL_LIBRARY_DIR lib)
+endif()
+if(NOT TBB_INSTALL_ARCHIVE_DIR)
+  set(TBB_INSTALL_ARCHIVE_DIR lib)
+endif()
+if(NOT TBB_INSTALL_INCLUDE_DIR)
+  set(TBB_INSTALL_INCLUDE_DIR include)
+endif()
+
 include_directories(include src src/rml/include ${CMAKE_CURRENT_BINARY_DIR})
 
 option(TBB_BUILD_SHARED          "Build TBB shared library" ON)
@@ -199,7 +212,7 @@ if (TBB_BUILD_STATIC)
   add_library(tbb_static STATIC ${tbb_src})
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb_static APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
-  install(TARGETS tbb_static ARCHIVE DESTINATION lib)
+  install(TARGETS tbb_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
   if (MSVC)
     target_compile_definitions(tbb_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1)
   endif()
@@ -224,9 +237,9 @@ if (TBB_BUILD_SHARED)
   endif()
 
   install(TARGETS tbb
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib
-          RUNTIME DESTINATION bin)
+          LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
+          ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
+          RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
   if (UNIX AND NOT APPLE)
     target_link_libraries(tbb PUBLIC pthread dl)
   endif()
@@ -256,7 +269,7 @@ if(TBB_BUILD_TBBMALLOC)
     if (MSVC)
       target_compile_definitions(tbbmalloc_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
     endif()
-    install(TARGETS tbbmalloc_static ARCHIVE DESTINATION lib)
+    install(TARGETS tbbmalloc_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
   endif()
 
   if (TBB_BUILD_SHARED)
@@ -275,9 +288,9 @@ if(TBB_BUILD_TBBMALLOC)
       target_compile_definitions(tbbmalloc PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
     endif()
     install(TARGETS tbbmalloc
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
+            LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
+            ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
+            RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
     if (UNIX AND NOT APPLE)
       target_link_libraries(tbbmalloc PUBLIC pthread dl)
     endif()
@@ -290,7 +303,7 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     add_library(tbbmalloc_proxy_static STATIC ${tbbmalloc_proxy_src})
     set_property(TARGET tbbmalloc_proxy_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_proxy_static APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
-    install(TARGETS tbbmalloc_proxy_static ARCHIVE DESTINATION lib)
+    install(TARGETS tbbmalloc_proxy_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
   endif()
 
   if (TBB_BUILD_SHARED)
@@ -299,16 +312,16 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     set_property(TARGET tbbmalloc_proxy APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     target_link_libraries(tbbmalloc_proxy tbbmalloc)
     install(TARGETS tbbmalloc_proxy
-            LIBRARY DESTINATION lib
-            ARCHIVE DESTINATION lib
-            RUNTIME DESTINATION bin)
+            LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
+            ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
+            RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
     if (UNIX AND NOT APPLE)
       target_link_libraries(tbbmalloc_proxy PUBLIC pthread dl)
     endif()
   endif()
 endif()
 
-install(DIRECTORY include/tbb DESTINATION include)
+install(DIRECTORY include/tbb DESTINATION ${TBB_INSTALL_INCLUDE_DIR})
 
 # version_string.ver
 if (UNIX)
