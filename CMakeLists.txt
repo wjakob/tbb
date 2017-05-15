@@ -1,7 +1,3 @@
-if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-  message(FATAL_ERROR "Please use a separate build directory")
-endif()
-
 cmake_minimum_required (VERSION 2.8.12 FATAL_ERROR)
 project (tbb CXX)
 
