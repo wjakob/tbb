@@ -18,6 +18,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
+set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "File name suffix for debug builds.")
+mark_as_advanced(CMAKE_DEBUG_POSTFIX)
+
 include_directories(include src src/rml/include ${CMAKE_CURRENT_BINARY_DIR})
 
 option(TBB_BUILD_SHARED          "Build TBB shared library" ON)
