@@ -206,10 +206,11 @@ if (TBB_BUILD_STATIC)
   add_library(tbb_static STATIC ${tbb_src})
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb_static APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
-  install(TARGETS tbb_static ARCHIVE DESTINATION lib)
   if (MSVC)
     target_compile_definitions(tbb_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1)
   endif()
+  target_include_directories(tbb_static PUBLIC $<INSTALL_INTERFACE:include>)
+  install(TARGETS tbb_static EXPORT tbb-targets ARCHIVE DESTINATION lib)
 
   if (UNIX AND NOT APPLE)
     target_link_libraries(tbb_static PUBLIC pthread dl)
@@ -230,6 +231,7 @@ if (TBB_BUILD_SHARED)
     set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,${CMAKE_CURRENT_BINARY_DIR}/tbb.def")
   endif()
 
+  target_include_directories(tbb PUBLIC $<INSTALL_INTERFACE:include>)
   install(TARGETS tbb
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib
@@ -263,7 +265,8 @@ if(TBB_BUILD_TBBMALLOC)
     if (MSVC)
       target_compile_definitions(tbbmalloc_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
     endif()
-    install(TARGETS tbbmalloc_static ARCHIVE DESTINATION lib)
+    target_include_directories(tbbmalloc_static PUBLIC $<INSTALL_INTERFACE:include>)
+    install(TARGETS tbbmalloc_static EXPORT tbb-targets ARCHIVE DESTINATION lib)
   endif()
 
   if (TBB_BUILD_SHARED)
@@ -281,10 +284,12 @@ if(TBB_BUILD_TBBMALLOC)
     if (MSVC)
       target_compile_definitions(tbbmalloc PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
     endif()
-    install(TARGETS tbbmalloc
+    target_include_directories(tbbmalloc PUBLIC $<INSTALL_INTERFACE:include>)
+    install(TARGETS tbbmalloc EXPORT tbb-targets
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
             RUNTIME DESTINATION bin)
+    target_include_directories(tbb_static PUBLIC $<INSTALL_INTERFACE:include>)
     if (UNIX AND NOT APPLE)
       target_link_libraries(tbbmalloc PUBLIC pthread dl)
     endif()
@@ -297,7 +302,8 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     add_library(tbbmalloc_proxy_static STATIC ${tbbmalloc_proxy_src})
     set_property(TARGET tbbmalloc_proxy_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_proxy_static APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
-    install(TARGETS tbbmalloc_proxy_static ARCHIVE DESTINATION lib)
+    target_include_directories(tbbmalloc_proxy_static PUBLIC $<INSTALL_INTERFACE:include>)
+    install(TARGETS tbbmalloc_proxy_static EXPORT tbb-targets ARCHIVE DESTINATION lib)
   endif()
 
   if (TBB_BUILD_SHARED)
@@ -305,7 +311,8 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     set_property(TARGET tbbmalloc_proxy APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_proxy APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     target_link_libraries(tbbmalloc_proxy tbbmalloc)
-    install(TARGETS tbbmalloc_proxy
+    target_include_directories(tbbmalloc_proxy PUBLIC $<INSTALL_INTERFACE:include>)
+    install(TARGETS tbbmalloc_proxy EXPORT tbb-targets
             LIBRARY DESTINATION lib
             ARCHIVE DESTINATION lib
             RUNTIME DESTINATION bin)
@@ -316,6 +323,16 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
 endif()
 
 install(DIRECTORY include/tbb DESTINATION include)
+
+set(TBB_CMAKE_PACKAGE_INSTALL_DIR "lib/cmake/tbb" CACHE PATH
+    "Installation directory for CMake package files")
+mark_as_advanced(TBB_CMAKE_PACKAGE_INSTALL_DIR)
+
+install(EXPORT tbb-targets
+        FILE tbb-targets.cmake NAMESPACE "tbb::"
+        DESTINATION ${TBB_CMAKE_PACKAGE_INSTALL_DIR})
+install(FILES "${CMAKE_SOURCE_DIR}/tbb-config.cmake"
+        DESTINATION ${TBB_CMAKE_PACKAGE_INSTALL_DIR})
 
 # version_string.ver
 if (UNIX)
