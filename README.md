@@ -30,3 +30,8 @@ and software information.
 
 Note: Intel, Thread Building Blocks, and TBB are either registered trademarks or
 trademarks of Intel Corporation in the United States and/or other countries.
+
+The CMake build contains the following additional/changed files that are not
+part of the regular release: ``build/mingw_cross_toolchain.cmake``,
+``build/version_string.ver.in``, ``.gitignore`` (modified), ``README.md`` (this
+file), and ``Makefile.old`` (renamed from ``Makefile``).
