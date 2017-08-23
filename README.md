@@ -16,7 +16,10 @@ easily incorporated into their build process using git submodules and a simple
 Currently, the CMake-based build can create shared and static versions of
 `libtbb`, `libtbbmalloc` and `libtbbmalloc_proxy` for the Intel `i386` and
 `x86_64` architectures on Windows (Visual Studio, MinGW), MacOS (clang) and
-Linux (gcc). Other combinations may work but have not been tested.
+Linux (gcc). The `armv7` and `aarch_64` architectures have been tested with GCC
+& Clang.
+
+Other combinations may work but have not been tested.
 
 See index.html for general directions and documentation regarding TBB.
 
