@@ -1,5 +1,5 @@
 version: 1.0.{build}
-os: Visual Studio 2015
+os: Visual Studio 2017
 clone_folder: C:\projects\tbb
 test: off
 configuration:
@@ -10,14 +10,14 @@ branches:
     - master
 environment:
   matrix:
-    - CMAKE_PLATFORM: "Visual Studio 14 2015"
-    - CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
+    - CMAKE_PLATFORM: "Visual Studio 15 2017"
+    - CMAKE_PLATFORM: "Visual Studio 15 2017 Win64"
 install:
   - cinstall: python
 build_script:
   - echo Running cmake...
   - cd c:\projects\tbb
-  - cmake -G "%CMAKE_PLATFORM%"
+  - cmake -G "%CMAKE_PLATFORM%" -DCMAKE_SUPPRESS_REGENERATION=1
   - set MSBuildLogger="C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - cmake --build . --config %Configuration% -- /v:m /logger:%MSBuildLogger%
   - ctest -C %Configuration% --output-on-failure --timeout 500
