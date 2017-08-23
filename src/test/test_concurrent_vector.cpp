@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2017 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -1223,7 +1223,7 @@ void TestExceptions() {
                         int i;
                         for(i = 1; ; ++i)
                             if(!victim[i].zero_bar()) break;
-                            else ASSERT(victim[i].bar() == (m == assign_ir)? i : initial_value_of_bar, NULL);
+                            else ASSERT(victim[i].bar() == (m == assign_ir? i : initial_value_of_bar), NULL);
                         for(; size_t(i) < size; ++i) ASSERT(!victim[i].zero_bar(), NULL);
                         ASSERT(size_t(i) == size, NULL);
                         break;

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2017 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -278,7 +278,7 @@ public: // almost every class in TBB uses generic_scheduler
     static generic_scheduler* create_master( arena* a );
 
     //! Perform necessary cleanup when a master thread stops using TBB.
-    void cleanup_master( bool needs_wait_workers );
+    bool cleanup_master( bool blocking_terminate );
 
     //! Initialize a scheduler for a worker thread.
     static generic_scheduler* create_worker( market& m, size_t index );
@@ -310,8 +310,8 @@ public:
 
     void enqueue( task&, void* reserved ) __TBB_override;
 
-    void local_spawn( task& first, task*& next );
-    void local_spawn_root_and_wait( task& first, task*& next );
+    void local_spawn( task* first, task*& next );
+    void local_spawn_root_and_wait( task* first, task*& next );
     virtual void local_wait_for_all( task& parent, task* child ) = 0;
 
     //! Destroy and deallocate this scheduler object

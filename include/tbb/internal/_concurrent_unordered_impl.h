@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2017 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -668,7 +668,6 @@ protected:
     typedef typename Traits::value_type value_type;
     typedef typename Traits::key_type key_type;
     typedef typename Traits::hash_compare hash_compare;
-    typedef typename Traits::value_compare value_compare;
     typedef typename Traits::allocator_type allocator_type;
     typedef typename hash_compare::hasher hasher;
     typedef typename hash_compare::key_equal key_equal;

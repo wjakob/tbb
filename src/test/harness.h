@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2017 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -745,11 +745,21 @@ public:
             x = x*a + 1;
             return r;
         }
-        FastRandom( unsigned seed ) {
+        explicit FastRandom( unsigned seed ) {
             x = seed;
             a = Primes[seed % (sizeof(Primes) / sizeof(Primes[0]))];
         }
     };
+    template<typename T>
+    class FastRandomBody {
+        FastRandom r;
+    public:
+        explicit FastRandomBody( unsigned seed ) : r(seed) {}
+        // Depending on the input type T the result distribution formed from this operator()
+        // might possess different characteristics than the original one used in FastRandom instance.
+        T operator()() { return T(r.get()); }
+    };
+
     int SetEnv( const char *envname, const char *envval ) {
         ASSERT( envname && envval, "Harness::SetEnv() requires two valid C strings" );
 #if __TBB_WIN8UI_SUPPORT
@@ -787,7 +797,7 @@ public:
     class DummyBody {
         int m_numIters;
     public:
-        DummyBody( int iters ) : m_numIters( iters ) {}
+        explicit DummyBody( int iters ) : m_numIters( iters ) {}
         void operator()( int ) const {
             for ( volatile int i = 0; i < m_numIters; ++i ) {}
         }

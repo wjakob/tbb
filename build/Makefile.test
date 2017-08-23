@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2016 Intel Corporation
+# Copyright (c) 2005-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,6 +71,7 @@ SCHEDULER_DIRECTLY_INCLUDED = test_task_leaks.$(TEST_EXT) \
 # Necessary to locate version_string.ver referenced from directly included tbb_misc.cpp
 INCLUDES += $(INCLUDE_KEY). $(INCLUDE_TEST_HEADERS)
 
+$(SCHEDULER_DIRECTLY_INCLUDED): CPLUS_FLAGS += $(DSE_KEY)
 $(SCHEDULER_DIRECTLY_INCLUDED): WARNING_KEY += $(WARNING_SUPPRESS)
 $(SCHEDULER_DIRECTLY_INCLUDED): LIBS += $(LIBDL)
 #tbb.lib must not be linked to scheduler white box tests in order to not violate ODR
@@ -100,12 +101,15 @@ $(TWICE_LINKED_TESTS): LINK_FILES+=$(@:.$(TEST_EXT)=_secondary.$(OBJ))
 test_dynamic_link%.$(TEST_EXT): LINK_TBB.LIB =
 test_dynamic_link.$(TEST_EXT): LIBS += $(LIBDL)
 
-TEST_BIG_OBJ = test_opencl_node.$(TEST_EXT) test_join_node.$(TEST_EXT) test_atomic.$(TEST_EXT)
-
-ifeq (windows_windows,$(tbb_os)_$(target))
-ifneq (gcc,$(compiler))
-$(TEST_BIG_OBJ): override CXXFLAGS += /bigobj
-endif
+# Resolving issue with the number of sections that an object file can contain
+ifneq (,$(BIGOBJ_KEY))
+TEST_BIGOBJ = test_opencl_node.$(TEST_EXT)      \
+    test_join_node.$(TEST_EXT)                  \
+    test_atomic.$(TEST_EXT)                     \
+    test_concurrent_unordered_set.$(TEST_EXT)   \
+    test_concurrent_unordered_map.$(TEST_EXT)   \
+    test_join_node.$(TEST_EXT)
+$(TEST_BIGOBJ): override CXXFLAGS += $(BIGOBJ_KEY)
 endif
 
 # TODO: remove repetition of .$(TEST_EXT) in the list bellow

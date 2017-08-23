@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2016 Intel Corporation
+# Copyright (c) 2005-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ endif
 CPLUS_FLAGS += -DUSE_PTHREAD
 
 ifneq (,$(codecov))
-    CPLUS_FLAGS += -prof-genx
+    CPLUS_FLAGS += -prof-gen=srcpos
 endif
 
 # ICC 14.0 and higher support usage of libc++, clang standard library

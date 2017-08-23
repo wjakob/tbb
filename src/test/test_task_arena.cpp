@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2017 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -1125,10 +1125,25 @@ void TestMultipleWaits() {
     }
 }
 //--------------------------------------------------//
+#define TBB_PREVIEW_GLOBAL_CONTROL 1
+#include "tbb/global_control.h"
+
+void TestSmallStackSize() {
+    tbb::task_scheduler_init init(tbb::task_scheduler_init::automatic,
+        tbb::global_control::active_value(tbb::global_control::thread_stack_size) / 2 );
+    // The test produces the warning (not a error) if fails. So the test is run many times
+    // to make the log annoying (to force to consider it as an error).
+    for (int i = 0; i < 100; ++i) {
+        tbb::task_arena a;
+        a.initialize();
+    }
+}
+//--------------------------------------------------//
 int TestMain () {
 #if __TBB_TASK_ISOLATION
     TestIsolatedExecute();
 #endif /* __TBB_TASK_ISOLATION */
+    TestSmallStackSize();
     // The test uses up to MaxThread workers (in arenas with no master thread),
     // so the runtime should be initialized appropriately.
     tbb::task_scheduler_init init_market_p_plus_one(MaxThread+1);

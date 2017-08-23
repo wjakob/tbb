@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2017 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -495,7 +495,7 @@ struct memory_locations {
 void TestMemoryLocaionsHelper(){
     const size_t test_sequence_len =  15;
     std::vector<char> source(test_sequence_len, 0);
-    std::generate_n(source.begin(), source.size(), std::rand);
+    std::generate_n(source.begin(), source.size(), Harness::FastRandomBody<char>(1));
 
     memory_locations source_memory_locations((source));
 

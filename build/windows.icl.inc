@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2016 Intel Corporation
+# Copyright (c) 2005-2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -81,6 +81,7 @@ DYLIB_KEY = /DLL
 EXPORT_KEY = /DEF:
 NODEFAULTLIB_KEY = /Zl
 NOINTRINSIC_KEY = /Oi-
+BIGOBJ_KEY = /bigobj
 
 
 ifneq (,$(codecov))

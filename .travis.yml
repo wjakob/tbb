@@ -1,4 +1,5 @@
 language: cpp
+dist: trusty
 sudo: false
 
 matrix:
@@ -11,9 +12,6 @@ matrix:
         - ctest -j2 --output-on-failure --timeout 500
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - kubuntu-backports
           packages:
             - g++-4.8
             - g++-4.8-multilib
@@ -32,8 +30,6 @@ matrix:
         - make -j2
       addons:
         apt:
-          sources:
-            - kubuntu-backports
           packages:
             - g++-mingw-w64-x86-64
             - gcc-mingw-w64-x86-64
@@ -46,8 +42,6 @@ matrix:
         - make -j2
       addons:
         apt:
-          sources:
-            - kubuntu-backports
           packages:
             - g++-mingw-w64-i686
             - gcc-mingw-w64-i686
