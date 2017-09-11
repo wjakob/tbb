@@ -108,7 +108,7 @@ if (UNIX)
     set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
   endif ()
 
-  check_cxx_compiler_flag ("-mrtm" SUPPORTS_MRTM)
+  check_cxx_compiler_flag ("-mrtm -Werror" SUPPORTS_MRTM)
   if (SUPPORTS_MRTM)
     set (CMAKE_CXX_FLAGS "-mrtm ${CMAKE_CXX_FLAGS}")
   endif ()
