@@ -355,13 +355,11 @@ endif()
 install(DIRECTORY include/tbb DESTINATION ${TBB_INSTALL_INCLUDE_DIR})
 
 # version_string.ver
-if (TBB_NO_DATE)
-  set (_configure_date "Unknown")
-elseif (UNIX)
+if (UNIX AND NOT TBB_NO_DATE)
   execute_process (COMMAND date "+%a, %d %b %Y %H:%M:%S %z"
                    OUTPUT_VARIABLE _configure_date
                    OUTPUT_STRIP_TRAILING_WHITESPACE)
-elseif (WIN32)
+elseif (WIN32 AND NOT TBB_NO_DATE)
   execute_process (COMMAND cmd " /C date /T"
                    OUTPUT_VARIABLE _configure_date
                    OUTPUT_STRIP_TRAILING_WHITESPACE)
