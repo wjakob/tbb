@@ -46,6 +46,7 @@ option(TBB_BUILD_TBBMALLOC       "Build TBB malloc library" ON)
 option(TBB_BUILD_TBBMALLOC_PROXY "Build TBB malloc proxy library" ON)
 option(TBB_BUILD_TESTS           "Build TBB tests and enable testing infrastructure" ON)
 option(TBB_CI_BUILD              "Is this a continuous integration build?" OFF)
+option(TBB_NO_DATE               "Do not save the configure date in the version string" OFF)
 
 if(APPLE)
   set(CMAKE_MACOSX_RPATH ON)
@@ -354,17 +355,19 @@ endif()
 install(DIRECTORY include/tbb DESTINATION ${TBB_INSTALL_INCLUDE_DIR})
 
 # version_string.ver
-if (UNIX)
+if (UNIX AND NOT TBB_NO_DATE)
   execute_process (COMMAND date "+%a, %d %b %Y %H:%M:%S %z"
                    OUTPUT_VARIABLE _configure_date
                    OUTPUT_STRIP_TRAILING_WHITESPACE)
-elseif (WIN32)
+elseif (WIN32 AND NOT TBB_NO_DATE)
   execute_process (COMMAND cmd " /C date /T"
                    OUTPUT_VARIABLE _configure_date
                    OUTPUT_STRIP_TRAILING_WHITESPACE)
 else ()
   set (_configure_date "Unknown")
 endif()
+set (TBB_CONFIG_DATE "${_configure_date}" CACHE STRING "First time that TBB was configured")
+set (_configure_date "${TBB_CONFIG_DATE}")
 include_directories (${CMAKE_BINARY_DIR})
 configure_file (build/version_string.ver.in version_string.ver @ONLY)
 
