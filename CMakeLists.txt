@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
 if (POLICY CMP0048)
   # cmake warns if loaded from a min-3.0-required parent dir, so silence the warning:
@@ -126,7 +126,6 @@ if (UNIX)
 
 elseif(WIN32)
   if (MSVC)
-    cmake_minimum_required (VERSION 3.1)
     enable_language(ASM_MASM)
     set(CMAKE_CXX_FLAGS "/GS- /Zc:wchar_t /Zc:forScope /DUSE_WINTHREAD ${CMAKE_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS "/D_CRT_SECURE_NO_DEPRECATE /D_WIN32_WINNT=0x0600 ${CMAKE_CXX_FLAGS}")
@@ -241,7 +240,7 @@ add_custom_target(tbb_def_files DEPENDS tbb.def tbbmalloc.def)
 # TBB library
 if (TBB_BUILD_STATIC)
   add_library(tbb_static STATIC ${tbb_src})
-  target_include_directories(tbb_static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  target_include_directories(tbb_static INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_DYNAMIC_LOAD_ENABLED=0")
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_SOURCE_DIRECTLY_INCLUDED=1")
@@ -258,7 +257,7 @@ endif()
 
 if (TBB_BUILD_SHARED)
   add_library(tbb SHARED ${tbb_src})
-  target_include_directories(tbb PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  target_include_directories(tbb INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
   set_property(TARGET tbb APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
   add_dependencies(tbb tbb_def_files)
