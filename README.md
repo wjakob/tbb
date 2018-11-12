@@ -1,11 +1,11 @@
 ### Intel(R) Threading Building Blocks
 
-[![Stable release](https://img.shields.io/badge/version-2017_U7-green.svg)](https://github.com/01org/tbb/releases/tag/2017_U7)
+[![Stable release](https://img.shields.io/badge/version-2019_U2-green.svg)](https://github.com/01org/tbb/releases/tag/2019_U2)
 [![Apache License Version 2.0](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Build Status](https://travis-ci.org/wjakob/tbb.svg?branch=master)](https://travis-ci.org/wjakob/tbb)
 [![Build status](https://ci.appveyor.com/api/projects/status/fvepmk5nxekq27r8?svg=true)](https://ci.appveyor.com/project/wjakob/tbb/branch/master)
 
-This is git repository is currently based on TBB 2017 Update 7 and will be
+This is git repository is currently based on TBB 2019 Update 2 and will be
 updated from time to time to track the most recent release. The only
 modification is the addition of a CMake-based build system.
 

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -32,6 +32,12 @@
 #pragma warning (push)
 #pragma warning (disable: 4752)
 #endif
+
+#if __TBB_GCC_WARNING_SUPPRESSION_PRESENT && __TBB_GCC_WARNING_IGNORED_ATTRIBUTES_PRESENT
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+#endif
+
 
 template<typename __Mvec>
 class ClassWithVectorType {
@@ -107,6 +113,10 @@ bool have_AVX() {
 #include <xmmintrin.h>
 #define HAVE_m128 1
 typedef ClassWithVectorType<__m128> ClassWithSSE;
+#endif
+
+#if __TBB_GCC_WARNING_SUPPRESSION_PRESENT && __TBB_GCC_WARNING_IGNORED_ATTRIBUTES_PRESENT
+#pragma GCC diagnostic pop
 #endif
 
 #if (_MSC_VER>=1600)

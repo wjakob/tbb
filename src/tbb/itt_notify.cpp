@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -59,9 +59,7 @@ int __TBB_load_ittnotify() {
       (__itt_group_id)(__itt_group_sync     // prepare/cancel/acquired/releasing
                        | __itt_group_thread // name threads
                        | __itt_group_stitch // stack stitching
-#if __TBB_CPF_BUILD
                        | __itt_group_structure
-#endif
                            ));
 }
 

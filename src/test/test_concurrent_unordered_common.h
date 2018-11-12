@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -146,13 +146,13 @@ void TestInitList( std::initializer_list<typename Table::value_type> il ) {
 }
 #endif //if __TBB_INITIALIZER_LISTS_PRESENT
 
-template<Harness::StateTrackableBase::State desired_state, typename T>
+template<Harness::StateTrackableBase::StateValue desired_state, typename T>
 void check_value_state(/* typename do_check_element_state =*/ tbb::internal::true_type, T const& t, const char* filename, int line )
 {
     ASSERT_CUSTOM(is_state_f<desired_state>()(t), "", filename, line);
 }
 
-template<Harness::StateTrackableBase::State desired_state, typename T>
+template<Harness::StateTrackableBase::StateValue desired_state, typename T>
 void check_value_state(/* typename do_check_element_state =*/ tbb::internal::false_type, T const&, const char* , int ) {/*do nothing*/}
 #define ASSERT_VALUE_STATE(do_check_element_state,state,value) check_value_state<state>(do_check_element_state,value,__FILE__,__LINE__)
 
@@ -635,7 +635,7 @@ void test_concurrent(const char *tablename, bool asymptotic = false) {
 
     if(!asymptotic) {
         AtomicByte* array = new AtomicByte[items];
-        memset( array, 0, items*sizeof(AtomicByte) );
+        memset( static_cast<void*>(array), 0, items*sizeof(AtomicByte) );
 
         typename T::range_type r = table.range();
         std::pair<intptr_t,intptr_t> p = CheckRecursiveRange<T,typename T::iterator>(r);
@@ -644,7 +644,7 @@ void test_concurrent(const char *tablename, bool asymptotic = false) {
         CheckRange( array, items, T::allow_multimapping, (nThreads - 1)/2 );
 
         const T &const_table = table;
-        memset( array, 0, items*sizeof(AtomicByte) );
+        memset( static_cast<void*>(array), 0, items*sizeof(AtomicByte) );
         typename T::const_range_type cr = const_table.range();
         ASSERT((nItemsInserted == CheckRecursiveRange<T,typename T::const_iterator>(cr).first), NULL);
         tbb::parallel_for( cr, ParallelTraverseBody<T, typename T::const_range_type>( array, items ));
@@ -909,12 +909,28 @@ void TypeTester( const std::list<typename Table::value_type> &lst ) {
     Table c1;
     c1.insert( lst.begin(), lst.end() );
     Examine<defCtorPresent>( c1, lst );
+
+    typename Table::size_type initial_bucket_number = 8;
+    typename Table::allocator_type allocator;
+    typename Table::hasher hasher;
 #if __TBB_INITIALIZER_LISTS_PRESENT && !__TBB_CPP11_INIT_LIST_TEMP_OBJS_LIFETIME_BROKEN
     // Constructor from an initializer_list.
     typename std::list<typename Table::value_type>::const_iterator it = lst.begin();
     Table c2( { *it++, *it++, *it++ } );
     c2.insert( it, lst.end( ) );
     Examine<defCtorPresent>( c2, lst );
+
+    it = lst.begin();
+    // Constructor from an initializer_list, default hasher and key equality and non-default allocator
+    Table c2_alloc( { *it++, *it++, *it++ }, initial_bucket_number, allocator);
+    c2_alloc.insert( it, lst.end() );
+    Examine<defCtorPresent>( c2_alloc, lst );
+
+    it = lst.begin();
+    // Constructor from an initializer_list, default key equality and non-default hasher and allocator
+    Table c2_hash_alloc( { *it++, *it++, *it++ }, initial_bucket_number, hasher, allocator );
+    c2_hash_alloc.insert( it, lst.end() );
+    Examine<defCtorPresent>( c2_hash_alloc, lst );
 #endif
     // Copying constructor.
     Table c3( c1 );
@@ -930,12 +946,32 @@ void TypeTester( const std::list<typename Table::value_type> &lst ) {
     Table c6( lst.size() );
     c6.insert( lst.begin(), lst.end() );
     Examine<defCtorPresent>( c6, lst );
+
+    // Construction empty table with n preallocated buckets, default hasher and key equality and non-default allocator
+    Table c6_alloc( lst.size(), allocator );
+    c6_alloc.insert( lst.begin(), lst.end() );
+    Examine<defCtorPresent>( c6_alloc, lst );
+
+    // Construction empty table with n preallocated buckets, default key equality and non-default hasher and allocator
+    Table c6_hash_alloc( lst.size(), hasher, allocator );
+    c6_hash_alloc.insert( lst.begin(), lst.end() );
+    Examine<defCtorPresent>( c6_hash_alloc, lst );
+
     TableDebugAlloc c7( lst.size( ) );
     c7.insert( lst.begin(), lst.end() );
     Examine<defCtorPresent>( c7, lst );
     // Construction with a copying iteration range and a given allocator instance.
     Table c8( c1.begin(), c1.end() );
     Examine<defCtorPresent>( c8, lst );
+
+    // Construction with a copying iteration range, default hasher and key equality and non-default allocator
+    Table c8_alloc( c1.begin(), c1.end(), initial_bucket_number, allocator );
+    Examine<defCtorPresent>( c8_alloc, lst );
+
+    // Construction with a copying iteration range, default key equality and non-default hasher and allocator
+    Table c8_hash_alloc( c1.begin(), c1.end(), initial_bucket_number, hasher, allocator );
+    Examine<defCtorPresent>( c8_hash_alloc, lst);
+
     typename TableDebugAlloc::allocator_type a;
     TableDebugAlloc c9( a );
     c9.insert( c7.begin(), c7.end() );

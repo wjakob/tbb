@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -582,9 +582,7 @@ inline task* generic_scheduler::prepare_for_spawning( task* t ) {
 #if __TBB_TASK_PRIORITY
         poison_pointer( proxy.prefix().context );
 #endif /* __TBB_TASK_PRIORITY */
-#if __TBB_TASK_ISOLATION
-        proxy.prefix().isolation = isolation;
-#endif /* __TBB_TASK_ISOLATION */
+        __TBB_ISOLATION_EXPR( proxy.prefix().isolation = isolation );
         ITT_NOTIFY( sync_releasing, proxy.outbox );
         // Mail the proxy - after this point t may be destroyed by another thread at any moment.
         proxy.outbox->push(&proxy);
@@ -669,11 +667,6 @@ void generic_scheduler::local_spawn_root_and_wait( task* first, task*& next ) {
     dummy.prefix().ref_count = n+1;
     if( n>1 )
         local_spawn( first->prefix().next, next );
-#if __TBB_TASK_ISOLATION
-    __TBB_ASSERT( first->prefix().isolation == no_isolation, NULL );
-    // Propagate the isolation to the task executed without spawn.
-    first->prefix().isolation = my_innermost_running_task->prefix().isolation;
-#endif /* __TBB_TASK_ISOLATION */
     local_wait_for_all( dummy, first );
 }
 
@@ -749,8 +742,7 @@ task *generic_scheduler::get_task_and_activate_task_pool( size_t H0, __TBB_ISOLA
 #if __TBB_TASK_ISOLATION
     // Now it is safe to call note_affinity because the task pool is restored.
     if ( tasks_omitted && my_innermost_running_task == t ) {
-        // my_innermost_running_task carries isolation of the current nested level.
-        __TBB_ASSERT( my_innermost_running_task, "A task can be omitted only when isolation is enabled." );
+        assert_task_valid( t );
         t->note_affinity( my_affinity_id );
     }
 #endif /* __TBB_TASK_ISOLATION */
@@ -1036,8 +1028,10 @@ inline task* generic_scheduler::get_task( __TBB_ISOLATION_EXPR( isolation_tag is
         }
 
         // Now it is safe to call note_affinity because the task pool is restored.
-        if ( my_innermost_running_task == result )
+        if ( my_innermost_running_task == result ) {
+            assert_task_valid( result );
             result->note_affinity( my_affinity_id );
+        }
     }
 #endif /* __TBB_TASK_ISOLATION */
     __TBB_ASSERT( (intptr_t)__TBB_load_relaxed( my_arena_slot->tail ) >= 0, NULL );

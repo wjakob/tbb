@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -217,6 +217,7 @@ private:
             update_allotment( my_arenas, my_total_demand, (int)my_num_workers_soft_limit );
     }
 
+    // TODO: consider to rewrite the code with is_arena_in_list function
     //! Returns next arena that needs more workers, or NULL.
     arena* arena_in_need (arena*) {
         if(__TBB_load_with_acquire(my_total_demand) <= 0)
@@ -234,9 +235,11 @@ private:
 
     void remove_arena_from_list ( arena& a );
 
-    arena* arena_in_need ( arena_list_type &arenas, arena *&next );
+    arena* arena_in_need ( arena_list_type &arenas, arena *hint );
 
     static int update_allotment ( arena_list_type& arenas, int total_demand, int max_workers );
+
+    bool is_arena_in_list( arena_list_type &arenas, arena *a );
 
 
     ////////////////////////////////////////////////////////////////////////////////

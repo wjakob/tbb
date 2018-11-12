@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -30,30 +30,18 @@
 #include "tbb_misc.h"
 #include "itt_notify.h"
 
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <cstring>
 #include <memory> //for uninitialized_fill_n
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 #if defined(_MSC_VER) && defined(_Wp64)
     // Workaround for overzealous compiler warnings in /Wp64 mode
     #pragma warning (disable: 4267)
 #endif
 
-using namespace std;
-
 namespace tbb {
 
 namespace internal {
-    class concurrent_vector_base_v3::helper :no_assign {
+class concurrent_vector_base_v3::helper :no_assign {
 public:
     //! memory page size
     static const size_type page_size = 4096;
@@ -207,7 +195,7 @@ public:
                 func( begin, n );
         }
     };
-};
+}; // class helper
 
 void concurrent_vector_base_v3::helper::extend_segment_table(concurrent_vector_base_v3 &v, concurrent_vector_base_v3::size_type start) {
     if( start > segment_size(pointers_per_short_table) ) start = segment_size(pointers_per_short_table);
@@ -347,11 +335,9 @@ concurrent_vector_base_v3::size_type concurrent_vector_base_v3::internal_capacit
 }
 
 void concurrent_vector_base_v3::internal_throw_exception(size_type t) const {
-    switch(t) {
-        case 0: throw_exception(eid_out_of_range);
-        case 1: throw_exception(eid_segment_range_error);
-        case 2: throw_exception(eid_index_range_error);
-    }
+    exception_id ids[] = { eid_out_of_range, eid_segment_range_error, eid_index_range_error };
+    __TBB_ASSERT(t < sizeof(ids) / sizeof(exception_id), NULL);
+    throw_exception(ids[t]);
 }
 
 void concurrent_vector_base_v3::internal_reserve( size_type n, size_type element_size, size_type max_size ) {

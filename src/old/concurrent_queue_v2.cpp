@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -31,8 +31,6 @@
 #endif
 
 #define RECORD_EVENTS 0
-
-using namespace std;
 
 namespace tbb {
 
@@ -210,7 +208,7 @@ concurrent_queue_base::concurrent_queue_base( size_t item_sz ) {
     __TBB_ASSERT( (size_t)&my_rep->head_counter % NFS_GetLineSize()==0, "alignment error" );
     __TBB_ASSERT( (size_t)&my_rep->tail_counter % NFS_GetLineSize()==0, "alignment error" );
     __TBB_ASSERT( (size_t)&my_rep->array % NFS_GetLineSize()==0, "alignment error" );
-    memset(my_rep,0,sizeof(concurrent_queue_rep));
+    std::memset(static_cast<void*>(my_rep),0,sizeof(concurrent_queue_rep));
     this->item_size = item_sz;
 }
 

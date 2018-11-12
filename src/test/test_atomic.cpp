@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -298,7 +298,8 @@ namespace initialization_tests {
         tbb::aligned_space<atomic_t> non_zeroed_storage;
         enum {fill_value = 0xFF };
         test_initialization_fixture(){
-            memset(non_zeroed_storage.begin(),fill_value,sizeof(non_zeroed_storage));
+            memset(static_cast<void*>(non_zeroed_storage.begin()),fill_value,
+                   sizeof(non_zeroed_storage));
             ASSERT( char(fill_value)==*(reinterpret_cast<char*>(non_zeroed_storage.begin()))
                     ,"failed to fill the storage; memset error?");
         }
@@ -1131,8 +1132,7 @@ public:
         ASSERT( raw_space<=reinterpret_cast<char*>(y), "y starts before raw_space" );
         ASSERT( reinterpret_cast<char*>(y+1) <= raw_space+sizeof(raw_space), "y starts after raw_space" );
         ASSERT( !(aligned ^ tbb::internal::is_aligned(y,sizeof(T))), "y is not aligned as it required" );
-        new (y) tbb::atomic<T> ();
-        return *y;
+        return *(new (y) tbb::atomic<T>());
     }
 };
 

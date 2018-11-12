@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -847,28 +847,27 @@ void TestMoveConstruction() {
 
 template<typename Iterator1, typename Iterator2>
 void TestIteratorAux( Iterator1 i, Iterator2 j, int size ) {
-    // Now test iteration
-    Iterator1 old_i;
+    Iterator1 old_i; // assigned at first iteration below
     for( int k=0; k<size; ++k ) {
         ASSERT( i!=j, NULL );
         ASSERT( !(i==j), NULL );
-        Foo f;
+        // Test "->"
+        ASSERT( k+1==i->serial, NULL );
         if( k&1 ) {
-            // Test pre-increment
-            f = *old_i++;
+            // Test post-increment
+            Foo f = *old_i++;
+            ASSERT( k+1==f.serial, NULL );
             // Test assignment
             i = old_i;
         } else {
-            // Test post-increment
-            f=*i++;
+            // Test pre-increment
             if( k<size-1 ) {
-                // Test "->"
-                ASSERT( k+2==i->serial, NULL );
-            }
+                Foo f = *++i;
+                ASSERT( k+2==f.serial, NULL );
+            } else ++i;
             // Test assignment
             old_i = i;
         }
-        ASSERT( k+1==f.serial, NULL );
     }
     ASSERT( !(i!=j), NULL );
     ASSERT( i==j, NULL );
@@ -1687,6 +1686,38 @@ void TestTypes() {
 #endif /* __TBB_CPP11_SMART_POINTERS_PRESENT */
 }
 
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+template <template <typename...> typename TQueue>
+void TestDeductionGuides() {
+    using ComplexType = const std::string*;
+    std::vector<ComplexType> v;
+
+    // check TQueue(InputIterator, InputIterator)
+    TQueue q1(v.begin(), v.end());
+    static_assert(std::is_same<decltype(q1), TQueue<ComplexType>>::value);
+
+    // check TQueue(InputIterator, InputIterator, Allocator)
+    TQueue q2(v.begin(), v.end(), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(q2), TQueue<ComplexType, std::allocator<ComplexType>>>::value);
+
+    // check TQueue(TQueue &)
+    TQueue q3(q1);
+    static_assert(std::is_same<decltype(q3), decltype(q1)>::value);
+
+    // check TQueue(TQueue &, Allocator)
+    TQueue q4(q2, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(q4), decltype(q2)>::value);
+
+    // check TQueue(TQueue &&)
+    TQueue q5(std::move(q1));
+    static_assert(std::is_same<decltype(q5), decltype(q1)>::value);
+
+    // check TQueue(TQueue &&, Allocator)
+    TQueue q6(std::move(q4), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(q6), decltype(q4)>::value);
+}
+#endif
+
 int TestMain () {
     TestEmptiness();
 
@@ -1720,6 +1751,11 @@ int TestMain () {
 #endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
 
     TestTypes();
+
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+    TestDeductionGuides<tbb::concurrent_queue>();
+    TestDeductionGuides<tbb::concurrent_bounded_queue>();
+#endif
 
     return Harness::Done;
 }

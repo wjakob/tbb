@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -29,22 +29,12 @@
 
 #include "../tbb_stddef.h"
 
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <iterator>
 #include <utility>      // Need std::pair
 #include <functional>   // Need std::equal_to (in ../concurrent_unordered_*.h)
 #include <string>       // For tbb_hasher
 #include <cstring>      // Need std::memset
 #include __TBB_STD_SWAP_HEADER
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 #include "../atomic.h"
 #include "../tbb_exception.h"
@@ -737,8 +727,10 @@ protected:
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
     concurrent_unordered_base(concurrent_unordered_base&& right)
-        : Traits(right.my_hash_compare), my_solist(right.get_allocator()), my_allocator(right.get_allocator())
+        : Traits(right.my_hash_compare), my_solist(right.get_allocator()), my_allocator(right.get_allocator()),
+          my_maximum_bucket_size(float(initial_bucket_load))
     {
+        my_number_of_buckets = initial_bucket_number;
         internal_init();
         swap(right);
     }
@@ -750,6 +742,8 @@ protected:
 
         internal_init();
         if (a == right.get_allocator()){
+            my_number_of_buckets = initial_bucket_number;
+            my_maximum_bucket_size = float(initial_bucket_load);
             this->swap(right);
         }else{
             my_maximum_bucket_size = right.my_maximum_bucket_size;
@@ -1209,8 +1203,8 @@ private:
 
     // Initialize the hash and keep the first bucket open
     void internal_init() {
-        // Allocate an array of segment pointers
-        memset(my_buckets, 0, pointers_per_table * sizeof(void *));
+        // Initialize the array of segment pointers
+        memset(my_buckets, 0, sizeof(my_buckets));
 
         // Initialize bucket 0
         raw_iterator dummy_node = my_solist.raw_begin();
@@ -1478,7 +1472,7 @@ private:
         if (my_buckets[segment] == NULL) {
             size_type sz = segment_size(segment);
             raw_iterator * new_segment = my_allocator.allocate(sz);
-            std::memset(new_segment, 0, sz*sizeof(raw_iterator));
+            std::memset(static_cast<void*>(new_segment), 0, sz*sizeof(raw_iterator));
 
             if (my_buckets[segment].compare_and_swap( new_segment, NULL) != NULL)
                 my_allocator.deallocate(new_segment, sz);

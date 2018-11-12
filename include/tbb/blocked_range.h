@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -25,6 +25,15 @@
 
 namespace tbb {
 
+namespace internal {
+
+// blocked_rangeNd_impl forward declaration in tbb::internal namespace to
+// name it as a friend for a tbb::blocked_range.
+template<typename Value, unsigned int N, typename>
+class blocked_rangeNd_impl;
+
+} // namespace internal
+
 /** \page range_req Requirements on range concept
     Class \c R implementing the concept of range must define:
     - \code R::R( const R& ); \endcode               Copy constructor
@@ -47,9 +56,11 @@ public:
     //! Type for size of a range
     typedef std::size_t size_type;
 
-    //! Construct range with default-constructed values for begin and end.
+#if __TBB_DEPRECATED_BLOCKED_RANGE_DEFAULT_CTOR
+    //! Construct range with default-constructed values for begin, end, and grainsize.
     /** Requires that Value have a default constructor. */
-    blocked_range() : my_end(), my_begin() {}
+    blocked_range() : my_end(), my_begin(), my_grainsize() {}
+#endif
 
     //! Construct range over half-open interval [begin,end), with the given grainsize.
     blocked_range( Value begin_, Value end_, size_type grainsize_=1 ) :
@@ -115,13 +126,12 @@ public:
 #endif /* __TBB_USE_PROPORTIONAL_SPLIT_IN_BLOCKED_RANGES */
 
 private:
-    /** NOTE: my_end MUST be declared before my_begin, otherwise the forking constructor will break. */
+    /** NOTE: my_end MUST be declared before my_begin, otherwise the splitting constructor will break. */
     Value my_end;
     Value my_begin;
     size_type my_grainsize;
 
-    //! Auxiliary function used by forking constructor.
-    /** Using this function lets us not require that Value support assignment or default construction. */
+    //! Auxiliary function used by the splitting constructor.
     static Value do_split( blocked_range& r, split )
     {
         __TBB_ASSERT( r.is_divisible(), "cannot split blocked_range that is not divisible" );
@@ -152,6 +162,9 @@ private:
 
     template<typename RowValue, typename ColValue, typename PageValue>
     friend class blocked_range3d;
+
+    template<typename DimValue, unsigned int N, typename>
+    friend class internal::blocked_rangeNd_impl;
 };
 
 } // namespace tbb

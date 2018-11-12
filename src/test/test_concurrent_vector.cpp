@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -927,19 +927,19 @@ void TestSerialGrowByWithMoveIterators(){
 namespace test_move_in_shrink_to_fit_helpers {
     struct dummy : Harness::StateTrackable<>{
         int i;
-        dummy(int an_i) __TBB_NOTHROW : Harness::StateTrackable<>(0), i(an_i) {}
+        dummy(int an_i) __TBB_NOEXCEPT(true) : Harness::StateTrackable<>(0), i(an_i) {}
 #if !__TBB_IMPLICIT_MOVE_PRESENT || __TBB_NOTHROW_MOVE_MEMBERS_IMPLICIT_GENERATION_BROKEN
-        dummy(const dummy &src) __TBB_NOTHROW : Harness::StateTrackable<>(src), i(src.i) {}
-        dummy(dummy &&src) __TBB_NOTHROW : Harness::StateTrackable<>(std::move(src)), i(src.i) {}
+        dummy(const dummy &src) __TBB_NOEXCEPT(true) : Harness::StateTrackable<>(src), i(src.i) {}
+        dummy(dummy &&src) __TBB_NOEXCEPT(true) : Harness::StateTrackable<>(std::move(src)), i(src.i) {}
 
-        dummy& operator=(dummy &&src) __TBB_NOTHROW {
+        dummy& operator=(dummy &&src) __TBB_NOEXCEPT(true) {
             Harness::StateTrackable<>::operator=(std::move(src));
             i = src.i;
             return *this;
         }
 
         //somehow magically this declaration make std::is_nothrow_move_constructible<pod>::value to works correctly on icc14+msvc2013
-        ~dummy() __TBB_NOTHROW {}
+        ~dummy() __TBB_NOEXCEPT(true) {}
 #endif //!__TBB_IMPLICIT_MOVE_PRESENT || __TBB_NOTHROW_MOVE_MEMBERS_IMPLICIT_GENERATION_BROKEN
         friend bool operator== (const dummy &lhs, const dummy &rhs){ return lhs.i == rhs.i; }
     };
@@ -972,19 +972,10 @@ void TestSerialMoveInShrinkToFit(){
 }
 #endif //__TBB_MOVE_IF_NOEXCEPT_PRESENT
 #endif //__TBB_CPP11_RVALUE_REF_PRESENT
-// Test the comparison operators
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
 
 #include <string>
 
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
-
+// Test the comparison operators
 void TestComparison() {
     std::string str[3]; str[0] = "abc";
     str[1].assign("cba");
@@ -1211,6 +1202,7 @@ void TestExceptions() {
                 switch(m) {
                 case reserve:
                     if(t) ASSERT(false, NULL);
+                    __TBB_fallthrough;
                 case assign_nt:
                 case assign_ir:
                     if(!t) {
@@ -1709,6 +1701,55 @@ void TestTypes() {
 #endif /* __TBB_CPP11_SMART_POINTERS_PRESENT */
 }
 
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+template <template <typename...> typename TVector>
+void TestDeductionGuides() {
+    using ComplexType = const std::string*;
+    std::vector<ComplexType> v;
+    std::string s = "s";
+    auto l = {ComplexType(&s), ComplexType(&s)};
+
+    // check TVector(InputIterator, InputIterator)
+    TVector v1(v.begin(), v.end());
+    static_assert(std::is_same<decltype(v1), TVector<ComplexType>>::value);
+
+    // check TVector(InputIterator, InputIterator, Alocator)
+    TVector v2(v.begin(), v.end(), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(v2),
+       TVector<ComplexType, std::allocator<ComplexType>>>::value);
+
+    // check TVector(std::initializer_list<T>)
+    TVector v3(l);
+    static_assert(std::is_same<decltype(v3),
+        TVector<ComplexType>>::value);
+
+    // check TVector(std::initializer_list, Alocator)
+    TVector v4(l, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(v4), TVector<ComplexType, std::allocator<ComplexType>>>::value);
+
+    // check TVector(TVector&)
+    TVector v5(v1);
+    static_assert(std::is_same<decltype(v5), TVector<ComplexType>>::value);
+
+    // check TVector(TVector&, Allocator)
+    TVector v6(v5, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(v6), TVector<ComplexType, std::allocator<ComplexType>>>::value);
+
+    // check TVector(TVector&&)
+    TVector v7(std::move(v1));
+    static_assert(std::is_same<decltype(v7), decltype(v1)>::value);
+
+    // check TVector(TVector&&, Allocator)
+    TVector v8(std::move(v5), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(v8), TVector<ComplexType, std::allocator<ComplexType>>>::value);
+
+    // check TVector(TVector&, Allocator)
+    TVector v9(v1, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(v9), TVector<ComplexType, std::allocator<ComplexType>>>::value);
+
+}
+#endif
+
 int TestMain () {
     if( MinThread<1 ) {
         REPORT("ERROR: MinThread=%d, but must be at least 1\n",MinThread); MinThread = 1;
@@ -1788,6 +1829,9 @@ int TestMain () {
 #endif /*__TBB_CPP11_RVALUE_REF_PRESENT */
 #endif /* TBB_USE_EXCEPTIONS */
     TestTypes();
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+    TestDeductionGuides<tbb::concurrent_vector>();
+#endif
     ASSERT( !FooCount, NULL );
     REMARK("sizeof(concurrent_vector<int>) == %d\n", (int)sizeof(tbb::concurrent_vector<int>));
     return Harness::Done;

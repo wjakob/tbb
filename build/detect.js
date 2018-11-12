@@ -1,4 +1,4 @@
-// Copyright (c) 2005-2017 Intel Corporation
+// Copyright (c) 2005-2018 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -123,7 +123,10 @@ function doWork() {
         } else if (mapContext.match(vc120)) {
             WScript.Echo("vc12");
         } else if (mapContext.match(vc140)) {
-            WScript.Echo("vc14");
+            if (WshShell.ExpandEnvironmentStrings("%VisualStudioVersion%") == "15.0")
+                WScript.Echo("vc14.1");
+            else
+                WScript.Echo("vc14");
         } else {
             WScript.Echo("unknown");
         }
@@ -132,6 +135,7 @@ function doWork() {
 
     if (WScript.Arguments(0) == "/minversion") {
         var compilerVersion;
+        var compilerUpdate;
         if (WScript.Arguments(1) == "cl") {
             compilerVersion = clVersion.match(/Compiler Version ([0-9.]+)\s/mi)[1];
             // compilerVersion is in xx.xx.xxxxx.xx format, i.e. a string.
@@ -143,13 +147,20 @@ function doWork() {
             var defs = readAllFromFile("detect.map");
             // In #define __INTEL_COMPILER XXYY, XX is the major ICL version, YY is minor
             compilerVersion = defs.match(/__INTEL_COMPILER[ \t]*([0-9]+).*$/mi)[1] / 100;
+            compilerUpdate = defs.match(/__INTEL_COMPILER_UPDATE[ \t]*([0-9]+).*$/mi)[1];
             // compiler version is a number; it compares well with another major.minor
             // version number, where major has one, two, and perhaps more digits (9.1, 11, etc).
         }
-        if (compilerVersion >= WScript.Arguments(2)) {
-            WScript.Echo("ok");
-        } else {
+        var requestedVersion = WScript.Arguments(2);
+        var requestedUpdate = 0;
+        if (WScript.Arguments.Count() > 3)
+            requestedUpdate = WScript.Arguments(3);
+        if (compilerVersion < requestedVersion) {
             WScript.Echo("fail");
+        } else if (compilerVersion == requestedVersion && compilerUpdate < requestedUpdate) {
+            WScript.Echo("fail");
+        } else {
+            WScript.Echo("ok");
         }
         return;
     }

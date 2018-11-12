@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2017 Intel Corporation
+# Copyright (c) 2005-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,10 +38,10 @@ ndk_version:= $(firstword $(subst /, ,$(ndk_version)))
 ndk_version:= $(firstword $(subst \, ,$(ndk_version)))
 
 ifeq (clang,$(compiler))
-	ifneq (,$(findstring $(ndk_version),r13 r13b r14 r14b))
-	TBB_RTL :=llvm-libc++
+	ifeq (,$(findstring $(ndk_version),ifeq (,$(findstring $(ndk_version),$(foreach v, 7 8 9 10 11 12,r$(v) r$(v)b r$(v)c r$(v)d r$(v)e)))))
+		TBB_RTL :=llvm-libc++
 	else
-	TBB_RTL :=llvm-libc++/libcxx
+		TBB_RTL :=llvm-libc++/libcxx
 	endif
 	TBB_RTL_LIB :=llvm-libc++
 	TBB_RTL_FILE :=libc++_shared.so

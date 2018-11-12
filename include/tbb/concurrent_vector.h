@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -31,19 +31,8 @@
 #include <new>
 #include <cstring>   // for memset()
 #include __TBB_STD_SWAP_HEADER
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <algorithm>
 #include <iterator>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 #if _MSC_VER==1500 && !__INTEL_COMPILER
     // VS2008/VC9 seems to have an issue; limits pull in math.h
@@ -85,7 +74,7 @@ namespace internal {
     //! Exception helper function
     template<typename T>
     void handle_unconstructed_elements(T* array, size_t n_of_elements){
-        std::memset( array, 0, n_of_elements * sizeof( T ) );
+        std::memset( static_cast<void*>(array), 0, n_of_elements * sizeof( T ) );
     }
 
     //! Base class of concurrent vector implementation.
@@ -1167,6 +1156,25 @@ private:
     };
 };
 
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+// Deduction guide for the constructor from two iterators
+template<typename I,
+         typename T = typename std::iterator_traits<I>::value_type,
+         typename A = cache_aligned_allocator<T>
+> concurrent_vector(I, I, const A& = A())
+-> concurrent_vector<T, A>;
+
+// Deduction guide for the constructor from a vector and allocator
+template<typename T, typename A1, typename A2>
+concurrent_vector(const concurrent_vector<T, A1> &, const A2 &)
+-> concurrent_vector<T, A2>;
+
+// Deduction guide for the constructor from an initializer_list
+template<typename T, typename A = cache_aligned_allocator<T>
+> concurrent_vector(std::initializer_list<T>, const A& = A())
+-> concurrent_vector<T, A>;
+#endif /* __TBB_CPP17_DEDUCTION_GUIDES_PRESENT */
+
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
 #pragma warning (push)
 #pragma warning (disable: 4701) // potentially uninitialized local variable "old"
@@ -1304,8 +1312,8 @@ void concurrent_vector<T, A>::move_array_if_noexcept( void* dst, const void* src
 template<typename T, class A>
 template<typename I>
 void concurrent_vector<T, A>::copy_range( void* dst, const void* p_type_erased_iterator, size_type n ){
-    I & iterator ((*const_cast<I*>(static_cast<const I*>(p_type_erased_iterator))));
-    internal_loop_guide loop(n, dst); loop.iterate(iterator);
+    internal_loop_guide loop(n, dst);
+    loop.iterate( *(static_cast<I*>(const_cast<void*>(p_type_erased_iterator))) );
 }
 
 template<typename T, class A>

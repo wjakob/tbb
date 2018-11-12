@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ public:
 class MemoryPool;
 class ExtMemoryPool;
 
-class BlockI {
+struct BlockI {
     intptr_t     blockState[2];
 };
 
@@ -189,6 +189,7 @@ static void scalableMallocCheckSize(void *object, size_t size)
 #if __clang__
 // This prevents Clang from throwing out the calls to new & delete in CheckNewDeleteOverload().
     static void *v = object;
+    Harness::suppress_unused_warning(v);
 #endif
     ASSERT(object, NULL);
     if (size >= minLargeObjectSize) {
@@ -307,6 +308,16 @@ void TestZoneOverload() {
 #define TestZoneOverload()
 #endif
 
+#if _WIN32
+// regression test: certain MSVC runtime functions use "public" allocation functions
+// but internal free routines, causing crashes if tbbmalloc_proxy does not intercept the latter.
+void TestRuntimeRoutines() {
+    system("rem should be a safe command to call");
+}
+#else
+#define TestRuntimeRoutines()
+#endif
+
 struct BigStruct {
     char f[minLargeObjectSize];
 };
@@ -332,7 +343,7 @@ void CheckNewDeleteOverload() {
 }
 
 int TestMain() {
-    void *ptr, *ptr1;
+    void *ptr = NULL;
 
 #if MALLOC_UNIXLIKE_OVERLOAD_ENABLED || MALLOC_ZONE_OVERLOAD_ENABLED
     ASSERT(dlsym(RTLD_DEFAULT, "scalable_malloc"),
@@ -363,8 +374,9 @@ int TestMain() {
 
 #if __TBB_POSIX_MEMALIGN_PRESENT
     int ret = posix_memalign(&ptr, 1024, 3*minLargeObjectSize);
+    ASSERT(0 == ret, NULL);
     scalableMallocCheckSize(ptr, 3*minLargeObjectSize);
-    ASSERT(0==ret && is_aligned(ptr, 1024), NULL);
+    ASSERT(is_aligned(ptr, 1024), NULL);
     free(ptr);
 #endif
 
@@ -404,7 +416,7 @@ int TestMain() {
     ASSERT(is_aligned(ptr, 16), NULL);
 
     // Testing of workaround for vs "is power of 2 pow N" bug that accepts zeros
-    ptr1 = _aligned_malloc(minLargeObjectSize, 0);
+    void* ptr1 = _aligned_malloc(minLargeObjectSize, 0);
     scalableMallocCheckSize(ptr, minLargeObjectSize);
     ASSERT(is_aligned(ptr, sizeof(void*)), NULL);
     _aligned_free(ptr1);
@@ -418,11 +430,13 @@ int TestMain() {
     CheckFreeAligned();
 
     CheckNewDeleteOverload();
+
 #if _WIN32
     std::string stdstring = "dependency on msvcpXX.dll";
     ASSERT(strcmp(stdstring.c_str(), "dependency on msvcpXX.dll") == 0, NULL);
 #endif
     TestZoneOverload();
+    TestRuntimeRoutines();
 
     return Harness::Done;
 }

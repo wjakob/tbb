@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2017 Intel Corporation
+# Copyright (c) 2005-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,10 +68,22 @@ ifeq (0, $(dynamic_load))
 endif
 
 # Paths to the NDK prebuilt tools and libraries
-CPLUS_FLAGS    += --sysroot=$(SYSROOT)
+ifeq (,$(findstring $(ndk_version), $(foreach v, 7 8 9 10 11 12 13 14 15,r$(v) r$(v)b r$(v)c r$(v)d r$(v)e)))
+    # Since Android* NDK r16 another sysroot and isystem paths have to be specified
+    CPLUS_FLAGS += --sysroot=$(NDK_ROOT)/sysroot -isystem $(NDK_ROOT)/sysroot/usr/include/$(TRIPLE)
+    # Android* version flag required since r16
+    CPLUS_FLAGS += -D__ANDROID_API__=$(API_LEVEL)
+else
+    CPLUS_FLAGS += --sysroot=$(SYSROOT)
+endif
+
+# Library sysroot flag
 LIB_LINK_FLAGS += --sysroot=$(SYSROOT)
+# Flag for test executables
+LINK_FLAGS     += --sysroot=$(SYSROOT)
+
 LIBS           = -L$(CPLUS_LIB_PATH) -lc++_shared
-ifneq (,$(findstring $(ndk_version),r12 r12b r13 r13b r14 r14b))
+ifeq (,$(findstring $(ndk_version),$(foreach v, 7 8 9 10 11,r$(v) r$(v)b r$(v)c r$(v)d r$(v)e)))
     LIBS +=  -lc++abi
     ifeq (arm,$(arch))
         LIBS += -lunwind 

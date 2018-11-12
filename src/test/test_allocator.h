@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -161,7 +161,7 @@ void TestBasic( A& a ) {
     a.deallocate(p,1);
 
 #if TBB_USE_EXCEPTIONS
-    size_t too_big = (~size_t(0) - 1024*1024)/sizeof(T);
+    volatile size_t too_big = (~size_t(0) - 1024*1024)/sizeof(T);
     bool exception_caught = false;
     typename A::pointer p1 = NULL;
     try {
@@ -171,7 +171,7 @@ void TestBasic( A& a ) {
         DisableStderr disableStderr;
 #endif
         p1 = a.allocate(too_big);
-    } catch ( std::bad_alloc ) {
+    } catch ( std::bad_alloc& ) {
         exception_caught = true;
     }
     ASSERT( exception_caught, "allocate expected to throw bad_alloc" );

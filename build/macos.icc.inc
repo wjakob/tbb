@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2017 Intel Corporation
+# Copyright (c) 2005-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 #
 #
 
-CPLUS = icpc
-CONLY = icc
+CPLUS ?= icpc
+CONLY ?= icc
 COMPILE_ONLY = -c -MMD
 PREPROC_ONLY = -E -x c++
 INCLUDE_KEY = -I
@@ -58,19 +58,19 @@ else
     CPLUS_FLAGS = -g -O0 -DTBB_USE_DEBUG
 endif
 
-CPLUS_FLAGS += -DUSE_PTHREAD
+ITT_NOTIFY = -DDO_ITT_NOTIFY
+CPLUS_FLAGS += -DUSE_PTHREAD $(ITT_NOTIFY)
 
 ifneq (,$(codecov))
     CPLUS_FLAGS += -prof-gen=srcpos
 endif
 
 # ICC 14.0 and higher support usage of libc++, clang standard library
-# Extending minimal deployment version of official binaries to unsupported 10.8
-# per customer requests. TODO: make a dedicated variable for this
+MACOSX_DEPLOYMENT_TARGET ?= 10.11
 ifneq (,$(shell icc -dumpversion | egrep  "^1[4-9]\."))
 ifneq (,$(stdlib))
-    CPLUS_FLAGS    += -stdlib=$(stdlib) -mmacosx-version-min=10.8
-    LIB_LINK_FLAGS += -stdlib=$(stdlib) -mmacosx-version-min=10.8
+    CPLUS_FLAGS    += -stdlib=$(stdlib) -mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)
+    LIB_LINK_FLAGS += -stdlib=$(stdlib) -mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)
 endif
 endif
 

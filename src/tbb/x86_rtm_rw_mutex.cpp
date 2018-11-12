@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ void x86_rtm_rw_mutex::internal_release(x86_rtm_rw_mutex::scoped_lock& s) {
             }
 #endif
             __TBB_machine_end_transaction();
-            s.my_scoped_lock.internal_set_mutex(NULL);
+            s.my_scoped_lock.mutex = NULL;
         }
         break;
     case RTM_real_reader:
@@ -94,6 +94,7 @@ void x86_rtm_rw_mutex::internal_release(x86_rtm_rw_mutex::scoped_lock& s) {
         break;
     case RTM_not_in_mutex:
         __TBB_ASSERT(false, "RTM_not_in_mutex, but in release");
+        break;
     default:
         __TBB_ASSERT(false, "invalid transaction_state");
     }
@@ -126,7 +127,9 @@ void x86_rtm_rw_mutex::internal_acquire_writer(x86_rtm_rw_mutex::scoped_lock& s,
                 }
 #endif
                 s.transaction_state = RTM_transacting_writer;
-                s.my_scoped_lock.internal_set_mutex(this);  // need mutex for release()
+                // Don not wrap the following assignment to a function,
+                // because it can abort the transaction in debug. Need mutex for release().
+                s.my_scoped_lock.mutex = this;
                 return;  // successfully started speculation
             }
             ++num_retries;
@@ -169,7 +172,9 @@ void x86_rtm_rw_mutex::internal_acquire_reader(x86_rtm_rw_mutex::scoped_lock& s,
                 }
 #endif
                 s.transaction_state = RTM_transacting_reader;
-                s.my_scoped_lock.internal_set_mutex(this);  // need mutex for release()
+                // Don not wrap the following assignment to a function,
+                // because it can abort the transaction in debug. Need mutex for release().
+                s.my_scoped_lock.mutex = this;
                 return;  // successfully started speculation
             }
             // fallback path

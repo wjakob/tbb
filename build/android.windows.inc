@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2017 Intel Corporation
+# Copyright (c) 2005-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,3 +73,6 @@ DLL = so
 
 TEST_LAUNCHER=
 run_cmd ?= -sh $(tbb_root)/build/android.linux.launcher.sh $(largs)
+export UNIXMODE = 1
+# Clang for Android* uses the INCLUDE variable (instead of CPATH)
+export USE_INCLUDE_ENV = 1

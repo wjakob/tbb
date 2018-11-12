@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2017 Intel Corporation
+# Copyright (c) 2005-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 #
 #
 
-CPLUS = clang++
-CONLY = clang
+CPLUS ?= clang++
+CONLY ?= clang
 COMPILE_ONLY = -c -MMD
 PREPROC_ONLY = -E -x c++
 INCLUDE_KEY = -I
@@ -44,10 +44,10 @@ else
     CPLUS_FLAGS = -g -O0 -DTBB_USE_DEBUG
 endif
 
-CPLUS_FLAGS += -DUSE_PTHREAD
+CPLUS_FLAGS += -DUSE_PTHREAD $(ITT_NOTIFY)
 
 # For Clang, we add the option to support RTM intrinsics *iff* xtest is found in <immintrin.h>
-ifneq (,$(shell grep xtest `echo "\#include<immintrin.h>" | clang -E -M - 2>&1 | grep immintrin.h` 2>/dev/null))
+ifneq (,$(shell grep xtest `echo "\#include<immintrin.h>" | $(CONLY) -E -M - 2>&1 | grep immintrin.h` 2>/dev/null))
     RTM_KEY = -mrtm
 endif
 
@@ -57,12 +57,14 @@ ifneq (,$(stdlib))
 endif
 
 ifeq (intel64,$(arch))
+    ITT_NOTIFY = -DDO_ITT_NOTIFY
     CPLUS_FLAGS += -m64 $(RTM_KEY)
     LINK_FLAGS += -m64
     LIB_LINK_FLAGS += -m64
 endif
 
 ifeq (ia32,$(arch))
+    ITT_NOTIFY = -DDO_ITT_NOTIFY
     CPLUS_FLAGS += -m32 $(RTM_KEY)
     LINK_FLAGS += -m32
     LIB_LINK_FLAGS += -m32

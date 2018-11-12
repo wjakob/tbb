@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ public:
     static generic_scheduler* init_scheduler_weak();
 
     //! Processes scheduler termination request (possibly nested) in a master thread
-    static bool terminate_scheduler( generic_scheduler* s, const task_scheduler_init *tsi_ptr, bool blocking );
+    static bool terminate_scheduler( generic_scheduler* s, bool blocking );
 
     //! Register TBB scheduler instance in thread-local storage.
     static void sign_on( generic_scheduler* s );

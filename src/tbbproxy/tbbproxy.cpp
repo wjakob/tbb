@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -95,12 +95,13 @@ static void _say( char const * format, va_list args ) {
         va_end( _args );
     #endif
     char * buf = reinterpret_cast< char * >( malloc( len + 1 ) );
-    if ( buf == NULL ) {
-        abort();
-    } // if
-    vsnprintf( buf, len + 1, format, args );
-    fprintf( stderr, "TBB: %s\n", buf );
-    free( buf );
+    if ( buf != NULL ) {
+        vsnprintf( buf, len + 1, format, args );
+        fprintf( stderr, "TBB: %s\n", buf );
+        free( buf );
+    } else {
+        fprintf( stderr, "TBB: Not enough memory for message: %s\n", format );
+    }
 } // _say
 
 
@@ -519,6 +520,8 @@ static tbb::runtime_loader::error_code load( tbb::runtime_loader::error_mode mod
             free( buffer );
             buflen = len;
             buffer = (char*)malloc( buflen );
+            if( !buffer )
+                return error( mode, tbb::runtime_loader::ec_no_lib, "Not enough memory." );
         }
         cat_file( path[i], tbb_dll_name, buffer, buflen );
         __TBB_ASSERT(strstr(buffer,tbb_dll_name), "Name concatenation error");

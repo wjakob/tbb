@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -216,9 +216,9 @@ task* custom_scheduler<SchedulerTraits>::receive_or_steal_task( __TBB_ISOLATION_
             GATHER_STATISTIC( ++my_counters.mails_received );
         }
         // Check if there are tasks in starvation-resistant stream.
-        // Only allowed at the outermost dispatch level.
-        else if ( outermost_dispatch_level && !my_arena->my_task_stream.empty(p)
-                  && (t = my_arena->my_task_stream.pop( p, my_arena_slot->hint_for_pop)) ) {
+        // Only allowed at the outermost dispatch level without isolation.
+        else if (__TBB_ISOLATION_EXPR(isolation == no_isolation &&) outermost_dispatch_level &&
+            !my_arena->my_task_stream.empty(p) && (t = my_arena->my_task_stream.pop( p, my_arena_slot->hint_for_pop)) ) {
             ITT_NOTIFY(sync_acquired, &my_arena->my_task_stream);
             // just proceed with the obtained task
         }
@@ -422,9 +422,17 @@ void custom_scheduler<SchedulerTraits>::local_wait_for_all( task& parent, task* 
 #endif /* __TBB_TASK_PRIORITY */
     }
 
-    cpu_ctl_env_helper cpu_ctl_helper;
-    if ( t )
-        cpu_ctl_helper.set_env( __TBB_CONTEXT_ARG1(t->prefix().context) );
+    context_guard_helper</*report_tasks=*/SchedulerTraits::itt_possible> context_guard;
+    if ( t ) {
+        context_guard.set_ctx( __TBB_CONTEXT_ARG1(t->prefix().context) );
+#if __TBB_TASK_ISOLATION
+        if ( isolation != no_isolation ) {
+            __TBB_ASSERT( t->prefix().isolation == no_isolation, NULL );
+            // Propagate the isolation to the task executed without spawn.
+            t->prefix().isolation = isolation;
+        }
+#endif /* __TBB_TASK_ISOLATION */
+    }
 
 #if TBB_USE_EXCEPTIONS
     // Infinite safeguard EH loop
@@ -522,6 +530,7 @@ void custom_scheduler<SchedulerTraits>::local_wait_for_all( task& parent, task* 
                         if( s )
                             tally_completion_of_predecessor( *s, __TBB_ISOLATION_ARG( t_next, t->prefix().isolation ) );
                         free_task<no_hint>( *t );
+                        poison_pointer( my_innermost_running_task );
                         assert_task_pool_valid();
                         break;
                     }
@@ -529,6 +538,7 @@ void custom_scheduler<SchedulerTraits>::local_wait_for_all( task& parent, task* 
                     case task::recycle: // set by recycle_as_safe_continuation()
                         t->prefix().state = task::allocated;
 #if __TBB_RECYCLE_TO_ENQUEUE
+                        __TBB_fallthrough;
                     case task::to_enqueue: // set by recycle_to_enqueue()
 #endif
                         __TBB_ASSERT( t_next != t, "a task returned from method execute() can not be recycled in another way" );
@@ -581,7 +591,7 @@ void custom_scheduler<SchedulerTraits>::local_wait_for_all( task& parent, task* 
 
             if ( !t ) break;
 
-            cpu_ctl_helper.set_env( __TBB_CONTEXT_ARG1(t->prefix().context) );
+            context_guard.set_ctx( __TBB_CONTEXT_ARG1(t->prefix().context) );
         }; // end of local task pool retrieval loop
 
 #if __TBB_TASK_PRIORITY
@@ -615,7 +625,7 @@ stealing_ground:
         // The user can capture another the FPU settings to the context so the
         // cached data in the helper can be out-of-date and we cannot do fast
         // check.
-        cpu_ctl_helper.set_env( __TBB_CONTEXT_ARG1(t->prefix().context) );
+        context_guard.set_ctx( __TBB_CONTEXT_ARG1(t->prefix().context) );
     } // end of infinite stealing loop
 #if TBB_USE_EXCEPTIONS
     __TBB_ASSERT( false, "Must never get here" );
@@ -679,7 +689,7 @@ done:
             // On Windows, FPU control settings changed in the helper destructor are not visible
             // outside a catch block. So restore the default settings manually before rethrowing
             // the exception.
-            cpu_ctl_helper.restore_default();
+            context_guard.restore_default();
             TbbRethrowException( pe );
         }
     }

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -78,6 +78,7 @@ public:
     }
 };
 
+#if TBB_USE_EXCEPTIONS
 class my_throwing_type : public my_data_type {
 public:
     static int throw_flag;
@@ -87,10 +88,10 @@ public:
         priority = src.priority;
     }
 };
-
 int my_throwing_type::throw_flag = 0;
 
 typedef concurrent_priority_queue<my_throwing_type, my_less > cpq_ex_test_type;
+#endif
 
 #if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT && __TBB_CPP11_RVALUE_REF_PRESENT
 const size_t push_selector_variants = 3;
@@ -387,6 +388,7 @@ void TestParallelPushPop(int nThreads, T t_max, T t_min, C /*compare*/) {
 }
 
 void TestExceptions() {
+#if TBB_USE_EXCEPTIONS
     const size_t TOO_LARGE_SZ = 1000000000;
     my_throwing_type elem;
 
@@ -502,6 +504,7 @@ void TestExceptions() {
     }
     REMARK("Push exceptions testing complete.\n");
 #endif
+#endif // TBB_USE_EXCEPTIONS
 }
 
 template <typename T, typename C>
@@ -1060,6 +1063,50 @@ void TestTypes() {
 #endif /* __TBB_CPP11_SMART_POINTERS_PRESENT */
 }
 
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+template <template <typename...>typename TQueue>
+void TestDeductionGuides() {
+    using ComplexType = const std::string*;
+    std::string s("s");
+    std::vector<ComplexType> v;
+    auto l = {ComplexType(&s), ComplexType(&s) };
+
+    // check TQueue(InputIterator, InputIterator)
+    TQueue q1(v.begin(), v.end());
+    static_assert(std::is_same<decltype(q1), TQueue<ComplexType>>::value);
+
+    // check TQueue(InputIterator, InputIterator, Allocator)
+    TQueue q2(v.begin(), v.end(), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(q2), TQueue<ComplexType, std::less<ComplexType>,
+        std::allocator<ComplexType>>>::value);
+
+    // check TQueue(std::initializer_list)
+    TQueue q3(l);
+    static_assert(std::is_same<decltype(q3), TQueue<ComplexType>>::value);
+
+    // check TQueue(std::initializer_list, Allocator)
+    TQueue q4(l, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(q4), TQueue<ComplexType, std::less<ComplexType>,
+        std::allocator<ComplexType>>>::value);
+
+    // check TQueue(TQueue &)
+    TQueue q5(q1);
+    static_assert(std::is_same<decltype(q5), decltype(q5)>::value);
+
+    // check TQueue(TQueue &, Allocator)
+    TQueue q6(q4, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(q6), decltype(q4)>::value);
+
+    // check TQueue(TQueue &&)
+    TQueue q7(std::move(q1));
+    static_assert(std::is_same<decltype(q7), decltype(q1)>::value);
+
+    // check TQueue(TQueue &&, Allocator)
+    TQueue q8(std::move(q4), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(q8), decltype(q4)>::value);
+}
+#endif
+
 int TestMain() {
     if (MinThread < 1)
         MinThread = 1;
@@ -1072,6 +1119,10 @@ int TestMain() {
 #endif
 
     TestTypes();
+
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+    TestDeductionGuides<tbb::concurrent_priority_queue>();
+#endif
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
     TestgMoveConstructor();

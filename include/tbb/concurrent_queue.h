@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -176,6 +176,15 @@ public:
     const_iterator unsafe_begin() const {return const_iterator(*this);}
     const_iterator unsafe_end() const {return const_iterator();}
 } ;
+
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+// Deduction guide for the constructor from two iterators
+template<typename InputIterator,
+         typename T = typename std::iterator_traits<InputIterator>::value_type,
+         typename A = cache_aligned_allocator<T>
+> concurrent_queue(InputIterator, InputIterator, const A& = A())
+-> concurrent_queue<T, A>;
+#endif /* __TBB_CPP17_DEDUCTION_GUIDES_PRESENT */
 
 template<typename T, class A>
 concurrent_queue<T,A>::~concurrent_queue() {
@@ -438,6 +447,15 @@ public:
     const_iterator unsafe_end() const {return const_iterator();}
 
 };
+
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+// guide for concurrent_bounded_queue(InputIterator, InputIterator, ...)
+template<typename InputIterator,
+         typename T = typename std::iterator_traits<InputIterator>::value_type,
+         typename A = cache_aligned_allocator<T>
+> concurrent_bounded_queue(InputIterator, InputIterator, const A& = A())
+-> concurrent_bounded_queue<T, A>;
+#endif /* __TBB_CPP17_DEDUCTION_GUIDES_PRESENT */
 
 template<typename T, class A>
 concurrent_bounded_queue<T,A>::~concurrent_bounded_queue() {

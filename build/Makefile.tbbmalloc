@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2017 Intel Corporation
+# Copyright (c) 2005-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,11 +51,11 @@ ORIG_LINK_MALLOC.LIB:=$(LINK_MALLOC.LIB)
 MALLOC_CPLUS.OBJ = backend.$(OBJ) large_objects.$(OBJ) backref.$(OBJ)  tbbmalloc.$(OBJ)
 MALLOC.OBJ := $(MALLOC_CPLUS.OBJ) $(MALLOC_ASM.OBJ) itt_notify_malloc.$(OBJ) frontend.$(OBJ)
 PROXY.OBJ := proxy.$(OBJ) tbb_function_replacement.$(OBJ)
-M_CPLUS_FLAGS := $(subst $(WARNING_KEY),,$(M_CPLUS_FLAGS)) $(DEFINE_KEY)__TBBMALLOC_BUILD=1
+M_CPLUS_FLAGS += $(DEFINE_KEY)__TBBMALLOC_BUILD=1
 M_INCLUDES := $(INCLUDES) $(INCLUDE_KEY)$(MALLOC_ROOT) $(INCLUDE_KEY)$(MALLOC_SOURCE_ROOT)
 
 # Suppress superfluous warnings for TBBMalloc compilation
-$(MALLOC.OBJ): M_CPLUS_FLAGS += $(WARNING_SUPPRESS)
+$(MALLOC.OBJ): M_CPLUS_FLAGS := $(subst $(WARNING_KEY),,$(M_CPLUS_FLAGS)) $(WARNING_SUPPRESS)
 # Suppress superfluous warnings for TBBMalloc proxy compilation
 $(PROXY.OBJ): CPLUS_FLAGS += $(WARNING_SUPPRESS)
 
@@ -83,7 +83,7 @@ $(MALLOC.DLL): tbbmalloc.def
 endif
 
 $(MALLOC.DLL) $(MALLOCPROXY.DLL): CPLUS_FLAGS += $(SDL_FLAGS)
-$(MALLOC.DLL) $(MALLOCPROXY.DLL): M_CPLUS_FLAGS += $(SLD_FLAGS)
+$(MALLOC.DLL) $(MALLOCPROXY.DLL): M_CPLUS_FLAGS += $(SDL_FLAGS)
 $(MALLOC.DLL): BUILDING_LIBRARY = $(MALLOC.DLL)
 $(MALLOC.DLL): $(MALLOC.OBJ) $(MALLOC.RES) $(MALLOC_NO_VERSION.DLL)
 	$(subst $(CPLUS),$(CONLY),$(LIB_LINK_CMD)) $(LIB_OUTPUT_KEY)$(MALLOC.DLL) $(MALLOC.OBJ) $(MALLOC.RES) $(LIB_LINK_LIBS) $(MALLOC_LINK_FLAGS)
@@ -138,15 +138,23 @@ MALLOC_TESTS = test_ScalableAllocator.$(TEST_EXT) \
                test_malloc_pure_c.$(TEST_EXT) \
                test_malloc_whitebox.$(TEST_EXT) \
                test_malloc_used_by_lib.$(TEST_EXT) \
-               test_malloc_lib_unload.$(TEST_EXT)
+               test_malloc_lib_unload.$(TEST_EXT) \
+               test_malloc_shutdown_hang.$(TEST_EXT)
 ifneq (,$(MALLOCPROXY.DLL))
 MALLOC_TESTS += test_malloc_overload.$(TEST_EXT) \
                 test_malloc_overload_proxy.$(TEST_EXT) \
-                test_malloc_atexit.$(TEST_EXT)
+                test_malloc_atexit.$(TEST_EXT) \
+                test_malloc_new_handler.$(TEST_EXT)
 endif
 # -----------------------------------------------------
 
 # ------------ Set test specific variables ------------
+# TODO: implement accurate warning suppression for tests to unify with Makefile.test.
+$(MALLOC_TESTS): CPLUS_FLAGS += $(TEST_WARNING_KEY) $(if $(no_exceptions),$(DEFINE_KEY)__TBB_TEST_NO_EXCEPTIONS=1)
+$(MALLOC_TESTS): M_CPLUS_FLAGS += $(TEST_WARNING_KEY) $(if $(no_exceptions),$(DEFINE_KEY)__TBB_TEST_NO_EXCEPTIONS=1)
+$(MALLOC_TESTS): INCLUDES += $(INCLUDE_TEST_HEADERS)
+$(MALLOC_TESTS): M_INCLUDES += $(INCLUDE_TEST_HEADERS)
+
 ifeq (windows.gcc,$(tbb_os).$(compiler))
 test_malloc_overload.$(TEST_EXT): LIBS += $(MALLOCPROXY.LIB)
 endif
@@ -155,13 +163,14 @@ MALLOC_M_CPLUS_TESTS =    test_malloc_whitebox.$(TEST_EXT) test_malloc_lib_unloa
         test_malloc_used_by_lib.$(TEST_EXT)
 MALLOC_NO_LIB_TESTS =     test_malloc_whitebox.$(TEST_EXT) test_malloc_lib_unload.$(TEST_EXT) \
         test_malloc_used_by_lib.$(TEST_EXT) test_malloc_overload.$(TEST_EXT)
-MALLOC_LINK_PROXY_TESTS = test_malloc_overload_proxy.$(TEST_EXT)
+MALLOC_LINK_PROXY_TESTS = test_malloc_overload_proxy.$(TEST_EXT) test_malloc_new_handler.$(TEST_EXT)
 MALLOC_ADD_DLL_TESTS =    test_malloc_lib_unload.$(TEST_EXT) test_malloc_used_by_lib.$(TEST_EXT) \
         test_malloc_atexit.$(TEST_EXT)
+MALLOC_SUPPRESS_WARNINGS =  test_malloc_whitebox.$(TEST_EXT) test_malloc_pure_c.$(TEST_EXT)
 
-# TODO: implement accurate warning suppression for tests to unify with Makefile.test.
-
-$(MALLOC_M_CPLUS_TESTS): CPLUS_FLAGS=$(M_CPLUS_FLAGS)
+$(MALLOC_SUPPRESS_WARNINGS): WARNING_KEY=
+$(MALLOC_SUPPRESS_WARNINGS): TEST_WARNING_KEY=
+$(MALLOC_M_CPLUS_TESTS): CPLUS_FLAGS:=$(M_CPLUS_FLAGS)
 $(MALLOC_M_CPLUS_TESTS): INCLUDES=$(M_INCLUDES)
 $(MALLOC_NO_LIB_TESTS): LINK_MALLOC.LIB=
 $(MALLOC_NO_LIB_TESTS): LINK_FLAGS+=$(LIBDL)
@@ -171,12 +180,12 @@ $(MALLOC_ADD_DLL_TESTS): %.$(TEST_EXT): %_dll.$(DLL)
 $(MALLOC_ADD_DLL_TESTS): TEST_LIBS+=$(@:.$(TEST_EXT)=_dll.$(LIBEXT))
 endif
 
-test_malloc_over%.$(TEST_EXT): CPLUS_FLAGS=$(subst /MT,/MD,$(M_CPLUS_FLAGS))
+test_malloc_over%.$(TEST_EXT): CPLUS_FLAGS:=$(subst /MT,/MD,$(M_CPLUS_FLAGS))
 test_malloc_over%.$(TEST_EXT): INCLUDES=$(M_INCLUDES)
 test_malloc_overload_proxy.$(TEST_EXT): LINK_FLAGS+=$(LIBDL)
 
-test_malloc_atexit_dll.$(DLL): CPLUS_FLAGS=$(subst /MT,/MD,$(M_CPLUS_FLAGS))
-test_malloc_atexit.$(TEST_EXT): CPLUS_FLAGS=$(subst /MT,/MD,$(M_CPLUS_FLAGS))
+test_malloc_atexit_dll.$(DLL): CPLUS_FLAGS:=$(subst /MT,/MD,$(M_CPLUS_FLAGS))
+test_malloc_atexit.$(TEST_EXT): CPLUS_FLAGS:=$(subst /MT,/MD,$(M_CPLUS_FLAGS))
 test_malloc_atexit.$(TEST_EXT): LINK_FLAGS+=$(LIBDL)
 # on Ubuntu 11.10 linker called with --as-needed, so dependency on libtbbmalloc_proxy
 # is not created, and malloc overload via linking with -ltbbmalloc_proxy is not working.
@@ -198,12 +207,23 @@ test_malloc_whitebox.$(TEST_EXT): LINK_FILES+=$(MALLOC_ASM.OBJ)
 
 # Some _dll targets need to restore variables since they are changed by parent
 # target-specific rule of its .exe targets
-test_malloc_lib_unload_dll.$(DLL): CPLUS_FLAGS=$(ORIG_CPLUS_FLAGS)
-test_malloc_lib_unload_dll.$(DLL): INCLUDES=$(ORIG_INCLUDES)
+test_malloc_lib_unload_dll.$(DLL): CPLUS_FLAGS=$(ORIG_CPLUS_FLAGS) $(if $(no_exceptions),$(DEFINE_KEY)__TBB_TEST_NO_EXCEPTIONS=1)
+test_malloc_lib_unload_dll.$(DLL): INCLUDES=$(ORIG_INCLUDES) $(INCLUDE_TEST_HEADERS)
 
-test_malloc_used_by_lib_dll.$(DLL): CPLUS_FLAGS=$(subst /MT,/LD,$(M_CPLUS_FLAGS))
+test_malloc_used_by_lib_dll.$(DLL): CPLUS_FLAGS:=$(subst /MT,/LD,$(M_CPLUS_FLAGS))
 test_malloc_used_by_lib_dll.$(DLL): LINK_FILES+=$(ORIG_LINK_MALLOC.LIB)
 test_malloc_used_by_lib_dll.$(DLL): LIBDL=
+
+# The test needs both tbb and tbbmalloc.
+# For static build LINK_TBB.LIB is resolved in tbb.a static lib name (Linux), which cannot be found (dynamic tbb is used only).
+# In order to link properly, have to define LINK_TBB.LIB ourselves except for Windows where linkage with *.lib file expected.
+ifdef extra_inc
+ifneq ($(tbb_os),windows)
+DYNAMIC_TBB_LIB=$(LIBPREF)tbb$(CPF_SUFFIX)$(DEBUG_SUFFIX).$(DLL)
+endif
+endif
+test_malloc_shutdown_hang.$(TEST_EXT): LINK_FILES += $(if $(DYNAMIC_TBB_LIB), $(DYNAMIC_TBB_LIB), $(LINK_TBB.LIB))
+
 # -----------------------------------------------------
 
 # ---- The list of TBBMalloc test running commands ----
@@ -216,6 +236,7 @@ ifneq (,$(MALLOCPROXY.DLL))
 	$(run_cmd) ./test_malloc_atexit.$(TEST_EXT) $(args)
 	$(run_cmd) $(TEST_LAUNCHER) -l $(MALLOCPROXY.DLL) ./test_malloc_overload.$(TEST_EXT) $(args)
 	$(run_cmd) $(TEST_LAUNCHER) ./test_malloc_overload_proxy.$(TEST_EXT) $(args)
+	$(run_cmd) $(TEST_LAUNCHER) ./test_malloc_new_handler.$(TEST_EXT) $(args)
 endif
 	$(run_cmd) $(TEST_LAUNCHER) ./test_malloc_lib_unload.$(TEST_EXT) $(args)
 	$(run_cmd) $(TEST_LAUNCHER) ./test_malloc_used_by_lib.$(TEST_EXT)
@@ -226,6 +247,7 @@ endif
 	$(run_cmd) ./test_malloc_regression.$(TEST_EXT) $(args)
 	$(run_cmd) ./test_malloc_init_shutdown.$(TEST_EXT) $(args)
 	$(run_cmd) ./test_malloc_pure_c.$(TEST_EXT) $(args)
+	$(run_cmd) ./test_malloc_shutdown_hang.$(TEST_EXT)
 # -----------------------------------------------------
 
 #------------------------------------------------------

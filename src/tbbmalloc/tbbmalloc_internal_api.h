@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ typedef enum {
 } AllocationModeInternalParam;
 
 void MallocInitializeITT();
-void __TBB_mallocProcessShutdownNotification();
+void __TBB_mallocProcessShutdownNotification(bool);
 #if _WIN32||_WIN64
 void __TBB_mallocThreadShutdownNotification();
 #endif

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@
 #include "tbb/atomic.h"
 #include "harness.h"
 #include "harness_cpu.h"
-#include <deque>
 
 #if defined(_MSC_VER) && defined(_Wp64)
     // Workaround for overzealous compiler warnings in /Wp64 mode
@@ -290,6 +289,7 @@ struct set_to {
 
 #include "test_range_based_for.h"
 #include <functional>
+#include <deque>
 
 void range_do_test() {
     using namespace range_based_for_support_tests;
@@ -330,33 +330,22 @@ void range_do_test() {
 }
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
-struct Movable {
-    Movable() : alive(true), addtofeed(true) {}
-    Movable(bool addtofeed_) : alive(true), addtofeed(addtofeed_) {}
-    Movable(Movable&& other) {
-        ASSERT(other.alive, "Moving from a dead object");
-        alive = true;
-        addtofeed = other.addtofeed;
-        other.alive = false;
-    }
-    Movable& operator=(Movable&& other) {
-        ASSERT(alive, "Assignment to a dead object");
-        ASSERT(other.alive, "Assignment of a dead object");
-        other.alive = false;
-        return *this;
-    }
-    Movable(const Movable&) { REPORT("Error: copy ctor prefered.\n"); }
-    Movable& operator=(const Movable&) { REPORT("Error: copy assing operator prefered.\n"); return *this; }
-    ~Movable() { alive = false; }
-    volatile bool alive;
-    bool addtofeed;
-};
-
-struct MoveOnly : Movable, NoCopy {
-    MoveOnly() : Movable() {}
-    MoveOnly(bool addtofeed_) : Movable(addtofeed_) {}
-    MoveOnly(MoveOnly&& other): Movable(std::move(other)) {}
-};
+namespace TestMoveSem {
+    struct MovePreferable : Movable {
+        MovePreferable() : Movable(), addtofeed(true) {}
+        MovePreferable(bool addtofeed_) : Movable(), addtofeed(addtofeed_) {}
+        MovePreferable(MovePreferable&& other) : Movable(std::move(other)), addtofeed(other.addtofeed) {};
+        // base class is explicitly initialized in the copy ctor to avoid -Wextra warnings
+        MovePreferable(const MovePreferable& other) : Movable(other) { REPORT("Error: copy ctor prefered.\n"); };
+        MovePreferable& operator=(const MovePreferable&) { REPORT("Error: copy assing operator prefered.\n"); return *this; }
+        bool addtofeed;
+    };
+    struct MoveOnly : MovePreferable, NoCopy {
+        MoveOnly() : MovePreferable() {}
+        MoveOnly(bool addtofeed_) : MovePreferable(addtofeed_) {}
+        MoveOnly(MoveOnly&& other) : MovePreferable(std::move(other)) {};
+    };
+}
 
 template<typename T>
 void RecordAndAdd(const T& in, tbb::parallel_do_feeder<T>& feeder) {
@@ -405,10 +394,10 @@ void DoTestMoveSemantics() {
 }
 
 void TestMoveSemantics() {
-    DoTestMoveSemantics<Movable>();
+    DoTestMoveSemantics<TestMoveSem::MovePreferable>();
 #if __TBB_CPP11_IS_COPY_CONSTRUCTIBLE_PRESENT && !__TBB_IS_COPY_CONSTRUCTIBLE_BROKEN
     //  parallel_do uses is_copy_constructible to support non-copyable types
-    DoTestMoveSemantics<MoveOnly>();
+    DoTestMoveSemantics<TestMoveSem::MoveOnly>();
 #endif
 }
 #else /* __TBB_CPP11_RVALUE_REF_PRESENT */

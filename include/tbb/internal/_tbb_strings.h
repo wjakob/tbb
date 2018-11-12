@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -65,3 +65,16 @@ TBB_STRING_RESOURCE(FLOW_NULL, "null")
 TBB_STRING_RESOURCE(FLOW_INDEXER_NODE, "indexer_node")
 TBB_STRING_RESOURCE(FLOW_COMPOSITE_NODE, "composite_node")
 TBB_STRING_RESOURCE(FLOW_ASYNC_NODE, "async_node")
+TBB_STRING_RESOURCE(FLOW_OPENCL_NODE, "opencl_node")
+TBB_STRING_RESOURCE(ALGORITHM, "tbb_algorithm")
+TBB_STRING_RESOURCE(PARALLEL_FOR, "tbb_parallel_for")
+TBB_STRING_RESOURCE(PARALLEL_DO, "tbb_parallel_do")
+TBB_STRING_RESOURCE(PARALLEL_INVOKE, "tbb_parallel_invoke")
+TBB_STRING_RESOURCE(PARALLEL_REDUCE, "tbb_parallel_reduce")
+TBB_STRING_RESOURCE(PARALLEL_SCAN, "tbb_parallel_scan")
+TBB_STRING_RESOURCE(PARALLEL_SORT, "tbb_parallel_sort")
+TBB_STRING_RESOURCE(CUSTOM_CTX, "tbb_custom")
+TBB_STRING_RESOURCE(FLOW_TASKS, "tbb_flow_graph")
+TBB_STRING_RESOURCE(PARALLEL_FOR_TASK, "tbb_parallel_for_task")
+// TODO: Drop following string prefix "fgt_" here and in FGA's collector
+TBB_STRING_RESOURCE(USER_EVENT, "fgt_user_event")

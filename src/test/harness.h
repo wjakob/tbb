@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -60,15 +60,7 @@ int TestMain ();
     #include <ucontext.h>
 #else /* !__SUNPRO_CC */
     #include <cstdlib>
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
     #include <cstring>
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 #endif /* !__SUNPRO_CC */
 
 #include <new>
@@ -318,7 +310,7 @@ static int MaxThread = HARNESS_DEFAULT_MAX_THREADS;
     A single number m is interpreted as if written m:m.
     The numbers must be non-negative.
     Clients often treat the value 0 as "run sequentially." */
-static void ParseCommandLine( int argc, char* argv[] ) {
+inline void ParseCommandLine( int argc, char* argv[] ) {
     if( !argc ) REPORT("Command line with 0 arguments\n");
     int i = 1;
     if( i<argc ) {
@@ -470,6 +462,45 @@ public:
     NoCopy() {}
 };
 
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+#include <utility>
+
+//! Base class for objects which support move ctors
+class Movable {
+public:
+    Movable() : alive(true) {}
+    void Reset() { alive = true; }
+    Movable(Movable&& other) {
+        ASSERT(other.alive, "Moving from a dead object");
+        alive = true;
+        other.alive = false;
+    }
+    Movable& operator=(Movable&& other) {
+        ASSERT(alive, "Assignment to a dead object");
+        ASSERT(other.alive, "Assignment of a dead object");
+        other.alive = false;
+        return *this;
+    }
+    Movable& operator=(const Movable& other) {
+        ASSERT(alive, "Assignment to a dead object");
+        ASSERT(other.alive, "Assignment of a dead object");
+        return *this;
+    }
+    Movable(const Movable& other) {
+        ASSERT(other.alive, "Const reference to a dead object");
+        alive = true;
+    }
+    ~Movable() { alive = false; }
+    volatile bool alive;
+};
+
+class MoveOnly : Movable, NoCopy {
+public:
+    MoveOnly() : Movable() {}
+    MoveOnly(MoveOnly&& other) : Movable( std::move(other) ) {}
+};
+#endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
+
 #if HARNESS_TBBMALLOC_THREAD_SHUTDOWN && __TBB_SOURCE_DIRECTLY_INCLUDED && (_WIN32||_WIN64)
 #include "../tbbmalloc/tbbmalloc_internal_api.h"
 #endif
@@ -508,8 +539,6 @@ public:
         // launched by make, the default stack size is set to the hard limit, and
         // calls to pthread_create fail with out-of-memory error.
         // Therefore we set the stack size explicitly (as for TBB worker threads).
-// TODO: make a single definition of MByte used by all tests.
-        const size_t MByte = 1024*1024;
 #if !defined(HARNESS_THREAD_STACK_SIZE)
 #if __i386__||__i386||__arm__
         const size_t stack_size = 1*MByte;

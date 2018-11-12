@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -35,21 +35,10 @@
 #endif /* OS specific */
 #include <memory>
 #include <new>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <cstdio>
 #include <stdexcept>
 #include <utility>
 #include __TBB_STD_SWAP_HEADER
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 #include "tbb/atomic.h"
 
@@ -138,7 +127,7 @@ public:
     //! Allocate space for n objects, starting on a cache/sector line.
     pointer allocate( size_type n, const void* =0) {
         size_t new_size = (my_data->my_allocated += n*sizeof(T));
-        __TBB_ASSERT(my_data->my_allocated <= my_data->my_size,"trying to allocate more than was reserved");
+        ASSERT(my_data->my_allocated <= my_data->my_size,"trying to allocate more than was reserved");
         char* result =  &(my_data->my_buffer[new_size - n*sizeof(T)]);
         return reinterpret_cast<pointer>(result);
     }
@@ -146,8 +135,8 @@ public:
     //! Free block of memory that starts on a cache line
     void deallocate( pointer p_arg, size_type n) {
         char* p = reinterpret_cast<char*>(p_arg);
-        __TBB_ASSERT(p >=my_data->my_buffer && p <= my_data->my_buffer + my_data->my_size, "trying to deallocate pointer not from arena ?");
-        __TBB_ASSERT(p + n*sizeof(T) <= my_data->my_buffer + my_data->my_size, "trying to deallocate incorrect number of items?");
+        ASSERT(p >=my_data->my_buffer && p <= my_data->my_buffer + my_data->my_size, "trying to deallocate pointer not from arena ?");
+        ASSERT(p + n*sizeof(T) <= my_data->my_buffer + my_data->my_size, "trying to deallocate incorrect number of items?");
         tbb::internal::suppress_unused_warning(p, n);
     }
 
@@ -526,7 +515,7 @@ public:
 
     pointer allocate(const size_type n, const void *hint = 0 ) {
         pointer ptr = base_allocator_type::allocate( n, hint );
-        std::memset( ptr, 0xE3E3E3E3, n * sizeof(value_type) );
+        std::memset( (void*)ptr, 0xE3E3E3E3, n * sizeof(value_type) );
         return ptr;
     }
 };

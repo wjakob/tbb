@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2017 Intel Corporation
+# Copyright (c) 2005-2018 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
 
 ####### Detections and Commands ###############################################
 
+CPLUS ?= xlc++_r
+CONLY ?= xlc_r
 COMPILE_ONLY = -c
 PREPROC_ONLY = -E -qsourcetype=c
 INCLUDE_KEY = -I
@@ -34,8 +36,6 @@ DYLIB_KEY = -qmkshrobj
 EXPORT_KEY = -Wl,--version-script,
 LIBDL = -ldl
 
-CPLUS = xlc++_r
-CONLY = xlc_r
 LIB_LINK_FLAGS = $(DYLIB_KEY) -Wl,-soname=$(BUILDING_LIBRARY)
 LIBS = -lpthread -lrt
 C_FLAGS = $(CPLUS_FLAGS)

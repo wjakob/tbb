@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -292,7 +292,7 @@ template<typename Props> void CacheBinFunctor<Props>::
                     num += 1;
 
                     STAT_increment(getThreadId(), ThreadCommonCounters, cacheLargeObj);
-                } while (( curr = curr->next ));
+                } while ((curr = curr->next) != NULL);
 
                 LargeMemoryBlock *tail = prev;
                 addToPutList(head, tail, num);
@@ -401,7 +401,7 @@ template<typename Props> void CacheBinFunctor<Props>::operator()(CacheBinOperati
         CacheBinOperation *opNext = opClean->next;
         prep.commitOperation( opClean );
 
-        while (( opClean = opNext )) {
+        while ((opClean = opNext) != NULL) {
             opNext = opClean->next;
             prep.commitOperation(opClean);
         }

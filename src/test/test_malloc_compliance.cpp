@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
 
 */
 
-const unsigned MByte = 1024*1024;
 bool __tbb_test_errno = false;
 
 #define __STDC_LIMIT_MACROS 1 // to get SIZE_MAX from stdint.h
@@ -37,6 +36,9 @@ int TestMain() {
 }
 #else /* __TBB_WIN8UI_SUPPORT	 */
 
+#include "harness_defs.h"
+#include "harness_report.h"
+
 #if _WIN32 || _WIN64
 /* _WIN32_WINNT should be defined at the very beginning,
    because other headers might include <windows.h>
@@ -45,7 +47,6 @@ int TestMain() {
 #define _WIN32_WINNT 0x0501
 #include "tbb/machine/windows_api.h"
 #include <stdio.h>
-#include "harness_report.h"
 
 #if _MSC_VER && defined(_MT) && defined(_DLL)
     #pragma comment(lib, "version.lib")  // to use GetFileVersionInfo*
@@ -82,7 +83,6 @@ void limitMem( size_t limit )
 #include <errno.h>
 #include <sys/types.h>  // uint64_t on FreeBSD, needed for rlim_t
 #include <stdint.h>     // SIZE_MAX
-#include "harness_report.h"
 
 void limitMem( size_t limit )
 {
@@ -131,17 +131,7 @@ extern "C" void *__cdecl _aligned_malloc(size_t,size_t);
 #endif
 #endif
 
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <vector>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 const int COUNT_ELEM = 25000;
 const size_t MAX_SIZE = 1000;

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 
 */
 
-#include "rml_tbb.h"
-#include "../server/thread_monitor.h"
+#include "../rml/include/rml_tbb.h"
+#include "../rml/server/thread_monitor.h"
 #include "tbb/atomic.h"
 #include "tbb/cache_aligned_allocator.h"
 #include "scheduler_common.h"
@@ -94,9 +94,8 @@ private:
 
 protected:
     private_worker( private_server& server, tbb_client& client, const size_t i ) :
-        my_server(server),
-        my_client(client),
-        my_index(i)
+        my_server(server), my_client(client), my_index(i),
+        my_thread_monitor(), my_handle(), my_next()
     {
         my_state = st_init;
     }
@@ -276,6 +275,7 @@ void private_worker::run() {
             // Check/set the invariant for sleeping
             if( my_state!=st_quit && my_server.try_insert_in_asleep_list(*this) ) {
                 my_thread_monitor.commit_wait(c);
+                __TBB_ASSERT( my_state==st_quit || !my_next, "Thread monitor missed a spurious wakeup?" );
                 my_server.propagate_chain_reaction();
             } else {
                 // Invariant broken
@@ -311,8 +311,10 @@ inline void private_worker::wake_or_launch() {
             release_handle(my_handle, governor::does_client_join_workers(my_client));
         }
     }
-    else
+    else {
+        __TBB_ASSERT( !my_next, "Should not wake a thread while it's still in asleep list" );
         my_thread_monitor.notify();
+    }
 }
 
 //------------------------------------------------------------------------
@@ -331,7 +333,6 @@ private_server::private_server( tbb_client& client ) :
 #endif /* TBB_USE_ASSERT */
     my_asleep_list_root = NULL;
     my_thread_array = tbb::cache_aligned_allocator<padded_private_worker>().allocate( my_n_thread );
-    memset( my_thread_array, 0, sizeof(private_worker)*my_n_thread );
     for( size_t i=0; i<my_n_thread; ++i ) {
         private_worker* t = new( &my_thread_array[i] ) padded_private_worker( *this, client, i );
         t->my_next = my_asleep_list_root;
@@ -392,8 +393,11 @@ void private_server::wake_some( int additional_slack ) {
         }
     }
 done:
-    while( w>wakee )
-        (*--w)->wake_or_launch();
+    while( w>wakee ) {
+        private_worker* ww = *--w;
+        ww->my_next = NULL;
+        ww->wake_or_launch();
+    }
 }
 
 void private_server::adjust_job_count_estimate( int delta ) {

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 
 #include "task.h"
 #include "tbb_exception.h"
+#include "internal/_template_helpers.h"
 
 #if __TBB_TASK_GROUP_CONTEXT
 
@@ -54,6 +55,9 @@ class task_handle : internal::no_assign {
     }
 public:
     task_handle( const F& f ) : my_func(f), my_state(0) {}
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+    task_handle( F&& f ) : my_func( std::move(f)), my_state(0) {}
+#endif
 
     void operator() () const { my_func(); }
 };
@@ -78,6 +82,16 @@ public:
 };
 
 class task_group_base : internal::no_copy {
+    class ref_count_guard : internal::no_copy {
+        task& my_task;
+    public:
+        ref_count_guard(task& t) : my_task(t) {
+            my_task.increment_ref_count();
+        }
+        ~ref_count_guard() {
+            my_task.decrement_ref_count();
+        }
+    };
 protected:
     empty_task* my_root;
     task_group_context my_context;
@@ -87,17 +101,21 @@ protected:
     template<typename F>
     task_group_status internal_run_and_wait( F& f ) {
         __TBB_TRY {
-            if ( !my_context.is_group_execution_cancelled() )
+            if ( !my_context.is_group_execution_cancelled() ) {
+                // We need to increase the reference count of the root task to notify waiters that
+                // this task group has some work in progress.
+                ref_count_guard guard(*my_root);
                 f();
+            }
         } __TBB_CATCH( ... ) {
             my_context.register_pending_exception();
         }
         return wait();
     }
 
-    template<typename F, typename Task>
-    void internal_run( F& f ) {
-        owner().spawn( *new( owner().allocate_additional_child_of(*my_root) ) Task(f) );
+    template<typename Task, typename F>
+    void internal_run( __TBB_FORWARDING_REF(F) f ) {
+        owner().spawn( *new( owner().allocate_additional_child_of(*my_root) ) Task( internal::forward<F>(f) ));
     }
 
 public:
@@ -110,7 +128,11 @@ public:
 
     ~task_group_base() __TBB_NOEXCEPT(false) {
         if( my_root->ref_count() > 1 ) {
+#if __TBB_CPP17_UNCAUGHT_EXCEPTIONS_PRESENT
+            bool stack_unwinding_in_progress = std::uncaught_exceptions() > 0;
+#else
             bool stack_unwinding_in_progress = std::uncaught_exception();
+#endif
             // Always attempt to do proper cleanup to avoid inevitable memory corruption
             // in case of missing wait (for the sake of better testability & debuggability)
             if ( !is_canceling() )
@@ -132,7 +154,7 @@ public:
 
     template<typename F>
     void run( task_handle<F>& h ) {
-        internal_run< task_handle<F>, internal::task_handle_task<F> >( h );
+        internal_run< internal::task_handle_task<F> >( h );
     }
 
     task_group_status wait() {
@@ -168,22 +190,30 @@ public:
 #if __SUNPRO_CC
     template<typename F>
     void run( task_handle<F>& h ) {
-        internal_run< task_handle<F>, internal::task_handle_task<F> >( h );
+        internal_run< internal::task_handle_task<F> >( h );
     }
 #else
     using task_group_base::run;
 #endif
 
+#if __TBB_CPP11_RVALUE_REF_PRESENT
     template<typename F>
-    void run( const F& f ) {
-        internal_run< const F, internal::function_task<F> >( f );
+    void run( F&& f ) {
+        internal_run< internal::function_task< typename internal::strip<F>::type > >( std::forward< F >(f) );
     }
+#else
+    template<typename F>
+    void run(const F& f) {
+        internal_run<internal::function_task<F> >(f);
+    }
+#endif
 
     template<typename F>
     task_group_status run_and_wait( const F& f ) {
         return internal_run_and_wait<const F>( f );
     }
 
+    // TODO: add task_handle rvalues support
     template<typename F>
     task_group_status run_and_wait( task_handle<F>& h ) {
       h.mark_scheduled();
@@ -193,6 +223,7 @@ public:
 
 class structured_task_group : public internal::task_group_base {
 public:
+    // TODO: add task_handle rvalues support
     template<typename F>
     task_group_status run_and_wait ( task_handle<F>& h ) {
         h.mark_scheduled();
@@ -211,10 +242,17 @@ bool is_current_task_group_canceling() {
     return task::self().is_cancelled();
 }
 
+#if __TBB_CPP11_RVALUE_REF_PRESENT
+template<class F>
+task_handle< typename internal::strip<F>::type > make_task( F&& f ) {
+    return task_handle< typename internal::strip<F>::type >( std::forward<F>(f) );
+}
+#else
 template<class F>
 task_handle<F> make_task( const F& f ) {
     return task_handle<F>( f );
 }
+#endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
 
 } // namespace tbb
 

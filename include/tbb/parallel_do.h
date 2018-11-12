@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -500,7 +500,7 @@ void parallel_do( Iterator first, Iterator last, const Body& body )
     if ( first == last )
         return;
 #if __TBB_TASK_GROUP_CONTEXT
-    task_group_context context;
+    task_group_context context(internal::PARALLEL_DO);
 #endif
     interface9::internal::select_parallel_do( first, last, body, &Body::operator()
 #if __TBB_TASK_GROUP_CONTEXT

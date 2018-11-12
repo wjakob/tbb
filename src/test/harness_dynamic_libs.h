@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -105,16 +105,22 @@ void CloseLibrary(LIBRARY_HANDLE lib)
 
 typedef void (*FunctionAddress)();
 
+template <typename FunctionPointer>
+void GetAddress(Harness::LIBRARY_HANDLE lib, const char *name, FunctionPointer& func)
+{
+#if _WIN32 || _WIN64
+    func = (FunctionPointer)(void*)GetProcAddress(lib, name);
+#else
+    func = (FunctionPointer)dlsym(lib, name);
+#endif
+    ASSERT(func, "Can't find required symbol in dynamic library");
+}
+
 FunctionAddress GetAddress(Harness::LIBRARY_HANDLE lib, const char *name)
 {
-    union { FunctionAddress func; void *symb; } converter;
-#if _WIN32 || _WIN64
-    converter.symb = (void*)GetProcAddress(lib, name);
-#else
-    converter.symb = (void*)dlsym(lib, name);
-#endif
-    ASSERT(converter.func, "Can't find required symbol in dynamic library");
-    return converter.func;
+    FunctionAddress func;
+    GetAddress(lib, name, func);
+    return func;
 }
 
 }  // namespace Harness

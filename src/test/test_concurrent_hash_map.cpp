@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@
 // Hence we include a few other headers before doing the abusive edit.
 #include "tbb/tbb_stddef.h" /* Defines runtime_warning */
 #include "harness_assert.h" /* Prerequisite for defining hooked_warning */
-#include "test_container_move_support.h"
 
 // The symbol internal::runtime_warning is normally an entry point into the TBB library.
 // Here for sake of testing, we define it to be hooked_warning, a routine peculiar to this unit test.
@@ -209,8 +208,6 @@ typedef local_counting_allocator<std::allocator<MyData> > MyAllocator;
 typedef tbb::concurrent_hash_map<MyKey,MyData,MyHashCompare,MyAllocator> MyTable;
 typedef tbb::concurrent_hash_map<MyKey,MyData2,MyHashCompare> MyTable2;
 typedef tbb::concurrent_hash_map<MyKey,MyData,YourHashCompare> YourTable;
-typedef tbb::concurrent_hash_map<MyKey,MyData,MyHashCompare,MyAllocator> MyTable;
-typedef tbb::concurrent_hash_map<MyKey,Foo,MyHashCompare> DataStateTrackedTable;
 
 template<typename MyTable>
 inline void CheckAllocator(MyTable &table, size_t expected_allocs, size_t expected_frees, bool exact = true) {
@@ -256,6 +253,9 @@ struct Insert {
 };
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
+#include "test_container_move_support.h"
+typedef tbb::concurrent_hash_map<MyKey,Foo,MyHashCompare> DataStateTrackedTable;
+
 struct RvalueInsert {
     static void apply( DataStateTrackedTable& table, int i ) {
         DataStateTrackedTable::accessor a;
@@ -508,13 +508,13 @@ void ParallelTraverseTable( MyTable& table, size_t n, size_t expected_size ) {
     ASSERT( table.size()==expected_size, NULL );
     AtomicByte* array = new AtomicByte[n];
 
-    memset( array, 0, n*sizeof(AtomicByte) );
+    memset( static_cast<void*>(array), 0, n*sizeof(AtomicByte) );
     MyTable::range_type r = table.range(10);
     tbb::parallel_for( r, ParallelTraverseBody<MyTable::range_type>( array, n ));
     Check( array, n, expected_size );
 
     const MyTable& const_table = table;
-    memset( array, 0, n*sizeof(AtomicByte) );
+    memset( static_cast<void*>(array), 0, n*sizeof(AtomicByte) );
     MyTable::const_range_type cr = const_table.range(10);
     tbb::parallel_for( cr, ParallelTraverseBody<MyTable::const_range_type>( array, n ));
     Check( array, n, expected_size );
@@ -930,6 +930,7 @@ void TestExceptions() {
                     ASSERT( MyDataCount==100, "data leak?" );
                     ASSERT( size>=100, NULL );
                     CheckAllocator(victim, 100+t, t);
+                    __TBB_fallthrough;
                 case ctor_copy:
                     CheckTable(src, 1000);
                     break;
@@ -1034,6 +1035,9 @@ public:
 #include <vector>
 #include <list>
 #include <algorithm>
+#if __TBB_CPP11_REFERENCE_WRAPPER_PRESENT
+#include <functional>
+#endif
 
 template <typename Table, typename Iterator, typename Range = typename Table::range_type>
 class test_range : NoAssign {
@@ -1199,12 +1203,16 @@ void Examine( Table c, const std::list<typename Table::value_type> &lst) {
     a.deallocate( ptr, 1 );
 }
 
+template<typename T>
+struct debug_hash_compare : tbb::tbb_hash_compare<T> {};
+
 template <bool default_construction_present, typename Value>
 void TypeTester( const std::list<Value> &lst ) {
     __TBB_ASSERT( lst.size() >= 5, "Array should have at least 5 elements" );
     typedef typename Value::first_type first_type;
     typedef typename Value::second_type second_type;
     typedef tbb::concurrent_hash_map<first_type,second_type> ch_map;
+    debug_hash_compare<first_type> compare;
     // Construct an empty hash map.
     ch_map c1;
     c1.insert( lst.begin(), lst.end() );
@@ -1212,34 +1220,55 @@ void TypeTester( const std::list<Value> &lst ) {
 #if __TBB_INITIALIZER_LISTS_PRESENT && !__TBB_CPP11_INIT_LIST_TEMP_OBJS_LIFETIME_BROKEN
     // Constructor from initializer_list.
     typename std::list<Value>::const_iterator it = lst.begin();
-    ch_map c2( {*it++, *it++, *it++} );
+    std::initializer_list<Value> il = { *it++, *it++, *it++ };
+    ch_map c2( il );
     c2.insert( it, lst.end() );
     Examine<default_construction_present>( c2, lst );
+
+    // Constructor from initializer_list and compare object
+    ch_map c3( il, compare);
+    c3.insert( it, lst.end() );
+    Examine<default_construction_present>( c3, lst );
+
+    // Constructor from initializer_list, compare object and allocator
+    ch_map c4( il, compare, typename ch_map::allocator_type());
+    c4.insert( it, lst.end());
+    Examine<default_construction_present>( c4, lst );
 #endif
     // Copying constructor.
-    ch_map c3(c1);
-    Examine<default_construction_present>( c3, lst );
+    ch_map c5(c1);
+    Examine<default_construction_present>( c5, lst );
     // Construct with non-default allocator
     typedef tbb::concurrent_hash_map< first_type,second_type,tbb::tbb_hash_compare<first_type>,debug_allocator<Value> > ch_map_debug_alloc;
-    ch_map_debug_alloc c4;
-    c4.insert( lst.begin(), lst.end() );
-    Examine<default_construction_present>( c4, lst );
-    // Copying constructor for vector with different allocator type.
-    ch_map_debug_alloc c5(c4);
-    Examine<default_construction_present>( c5, lst );
-    // Construction empty table with n preallocated buckets.
-    ch_map c6( lst.size() );
+    ch_map_debug_alloc c6;
     c6.insert( lst.begin(), lst.end() );
     Examine<default_construction_present>( c6, lst );
-    ch_map_debug_alloc c7( lst.size() );
-    c7.insert( lst.begin(), lst.end() );
+    // Copying constructor
+    ch_map_debug_alloc c7(c6);
     Examine<default_construction_present>( c7, lst );
-    // Construction with copying iteration range and given allocator instance.
-    ch_map c8( c1.begin(), c1.end() );
+    // Construction empty table with n preallocated buckets.
+    ch_map c8( lst.size() );
+    c8.insert( lst.begin(), lst.end() );
     Examine<default_construction_present>( c8, lst );
-    debug_allocator<Value> allocator;
-    ch_map_debug_alloc c9( lst.begin(), lst.end(), allocator );
+    ch_map_debug_alloc c9( lst.size() );
+    c9.insert( lst.begin(), lst.end() );
     Examine<default_construction_present>( c9, lst );
+    // Construction with copying iteration range.
+    ch_map c10( c1.begin(), c1.end() );
+    Examine<default_construction_present>( c10, lst );
+    // Construction with copying iteration range and given allocator instance.
+    debug_allocator<Value> allocator;
+    ch_map_debug_alloc c11( lst.begin(), lst.end(), allocator );
+    Examine<default_construction_present>( c11, lst );
+
+    typedef tbb::concurrent_hash_map< first_type,second_type,debug_hash_compare<first_type>,typename ch_map::allocator_type> ch_map_debug_hash;
+
+    // Constructor with two iterators and hash_compare
+    ch_map_debug_hash c12(c1.begin(), c1.end(), compare);
+    Examine<default_construction_present>( c12, lst );
+
+    ch_map_debug_hash c13(c1.begin(), c1.end(), compare, typename ch_map::allocator_type());
+    Examine<default_construction_present>( c13, lst );
 }
 
 #if __TBB_CPP11_SMART_POINTERS_PRESENT
@@ -1307,7 +1336,6 @@ void TestCPP11Types() {
 }
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
-#include "test_container_move_support.h"
 
 struct hash_map_move_traits : default_container_traits {
     enum{ expected_number_of_items_to_allocate_for_steal_move = 0 };
@@ -1358,6 +1386,39 @@ void TestMoveSupport(){
     REPORT("Known issue: tests for C++11 move semantics support are skipped.\n");
 }
 #endif //__TBB_CPP11_RVALUE_REF_PRESENT
+
+template<typename Key>
+struct non_default_constructible_hash_compare : tbb::tbb_hash_compare<Key> {
+    non_default_constructible_hash_compare() {
+        ASSERT(false, "Hash compare object must not default construct during the construction of hash_map with compare argument");
+    }
+
+    non_default_constructible_hash_compare(int) {}
+};
+
+void TestHashCompareConstructors() {
+    typedef int key_type;
+    typedef tbb::concurrent_hash_map<key_type, key_type, non_default_constructible_hash_compare<key_type> > map_type;
+
+    non_default_constructible_hash_compare<key_type> compare(0);
+    map_type::allocator_type allocator;
+
+    map_type map1(compare);
+    map_type map2(compare, allocator);
+
+    map_type map3(1, compare);
+    map_type map4(1, compare, allocator);
+
+    std::vector<map_type::value_type> reference_vector;
+    map_type map5(reference_vector.begin(), reference_vector.end(), compare);
+    map_type map6(reference_vector.begin(), reference_vector.end(), compare, allocator);
+
+#if __TBB_INITIALIZER_LISTS_PRESENT
+    map_type map7({}, compare);
+    map_type map8({}, compare, allocator);
+#endif
+}
+
 //------------------------------------------------------------------------
 // Test driver
 //------------------------------------------------------------------------
@@ -1416,6 +1477,7 @@ int TestMain () {
     }
 
     TestCPP11Types();
+    TestHashCompareConstructors();
 
     return Harness::Done;
 }

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -27,21 +27,21 @@
 
 namespace internal {
 
-    struct forwarding_base {
-        forwarding_base(graph &g) : graph_pointer(&g) {}
+    struct forwarding_base : tbb::internal::no_assign {
+        forwarding_base(graph &g) : graph_ref(g) {}
         virtual ~forwarding_base() {}
         // decrement_port_count may create a forwarding task.  If we cannot handle the task
         // ourselves, ask decrement_port_count to deal with it.
         virtual task * decrement_port_count(bool handle_task) = 0;
         virtual void increment_port_count() = 0;
         // moved here so input ports can queue tasks
-        graph* graph_pointer;
+        graph& graph_ref;
     };
 
     // specialization that lets us keep a copy of the current_key for building results.
     // KeyType can be a reference type.
     template<typename KeyType>
-    struct matching_forwarding_base :public forwarding_base {
+    struct matching_forwarding_base : public forwarding_base {
         typedef typename tbb::internal::strip<KeyType>::type current_key_type;
         matching_forwarding_base(graph &g) : forwarding_base(g) { }
         virtual task * increment_key_count(current_key_type const & /*t*/, bool /*handle_task*/) = 0; // {return NULL;}
@@ -126,7 +126,7 @@ namespace internal {
             tbb::flow::get<N-1>(my_input).reset_receiver(f);
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         template<typename InputTuple>
         static inline void extract_inputs(InputTuple &my_input) {
             join_helper<N-1>::extract_inputs(my_input);
@@ -200,7 +200,7 @@ namespace internal {
             tbb::flow::get<0>(my_input).reset_receiver(f);
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         template<typename InputTuple>
         static inline void extract_inputs(InputTuple &my_input) {
             tbb::flow::get<0>(my_input).extract_receiver();
@@ -214,14 +214,14 @@ namespace internal {
     public:
         typedef T input_type;
         typedef typename receiver<input_type>::predecessor_type predecessor_type;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         typedef typename receiver<input_type>::predecessor_list_type predecessor_list_type;
         typedef typename receiver<input_type>::built_predecessors_type built_predecessors_type;
 #endif
     private:
         // ----------- Aggregator ------------
         enum op_type { reg_pred, rem_pred, res_item, rel_res, con_res
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
             , add_blt_pred, del_blt_pred, blt_pred_cnt, blt_pred_cpy
 #endif
         };
@@ -234,7 +234,7 @@ namespace internal {
             union {
                 T *my_arg;
                 predecessor_type *my_pred;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
                 size_t cnt_val;
                 predecessor_list_type *plist;
 #endif
@@ -294,7 +294,7 @@ namespace internal {
                     my_predecessors.try_consume( );
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
                 case add_blt_pred:
                     my_predecessors.internal_add_built_predecessor(*(current->my_pred));
                     __TBB_store_with_release(current->status, SUCCEEDED);
@@ -311,7 +311,7 @@ namespace internal {
                     my_predecessors.copy_predecessors(*(current->plist));
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
-#endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
+#endif  /* TBB_DEPRECATED_FLOW_NODE_EXTRACTION */
                 }
             }
         }
@@ -322,6 +322,10 @@ namespace internal {
         template<typename X, typename Y> friend class internal::round_robin_cache;
         task *try_put_task( const T & ) __TBB_override {
             return NULL;
+        }
+
+        graph& graph_reference() __TBB_override {
+            return my_join->graph_ref;
         }
 
     public:
@@ -378,7 +382,7 @@ namespace internal {
             my_aggregator.execute(&op_data);
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         built_predecessors_type &built_predecessors() __TBB_override { return my_predecessors.built_predecessors(); }
         void internal_add_built_predecessor(predecessor_type &src) __TBB_override {
             reserving_port_operation op_data(src, add_blt_pred);
@@ -406,7 +410,7 @@ namespace internal {
             my_predecessors.built_predecessors().receiver_extract(*this);
         }
 
-#endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
+#endif  /* TBB_DEPRECATED_FLOW_NODE_EXTRACTION */
 
         void reset_receiver( reset_flags f) __TBB_override {
             if(f & rf_clear_edges) my_predecessors.clear();
@@ -429,7 +433,7 @@ namespace internal {
         typedef T input_type;
         typedef typename receiver<input_type>::predecessor_type predecessor_type;
         typedef queueing_port<T> class_type;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         typedef typename receiver<input_type>::built_predecessors_type built_predecessors_type;
         typedef typename receiver<input_type>::predecessor_list_type predecessor_list_type;
 #endif
@@ -437,7 +441,7 @@ namespace internal {
     // ----------- Aggregator ------------
     private:
         enum op_type { get__item, res_port, try__put_task
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
             , add_blt_pred, del_blt_pred, blt_pred_cnt, blt_pred_cpy
 #endif
         };
@@ -448,7 +452,7 @@ namespace internal {
             char type;
             T my_val;
             T *my_arg;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
             predecessor_type *pred;
             size_t cnt_val;
             predecessor_list_type *plist;
@@ -509,7 +513,7 @@ namespace internal {
                     }
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
                 case add_blt_pred:
                     my_built_predecessors.add_edge(*(current->pred));
                     __TBB_store_with_release(current->status, SUCCEEDED);
@@ -526,7 +530,7 @@ namespace internal {
                     my_built_predecessors.copy_edges(*(current->plist));
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
-#endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
+#endif  /* TBB_DEPRECATED_FLOW_NODE_EXTRACTION */
                 }
             }
         }
@@ -542,6 +546,10 @@ namespace internal {
             __TBB_ASSERT(op_data.status == SUCCEEDED || !op_data.bypass_t, "inconsistent return from aggregator");
             if(!op_data.bypass_t) return SUCCESSFULLY_ENQUEUED;
             return op_data.bypass_t;
+        }
+
+        graph& graph_reference() __TBB_override {
+            return my_join->graph_ref;
         }
 
     public:
@@ -577,7 +585,7 @@ namespace internal {
             return;
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         built_predecessors_type &built_predecessors() __TBB_override { return my_built_predecessors; }
 
         void internal_add_built_predecessor(predecessor_type &p) __TBB_override {
@@ -608,12 +616,12 @@ namespace internal {
             item_buffer<T>::reset();
             my_built_predecessors.receiver_extract(*this);
         }
-#endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
+#endif  /* TBB_DEPRECATED_FLOW_NODE_EXTRACTION */
 
         void reset_receiver(reset_flags f) __TBB_override {
             tbb::internal::suppress_unused_warning(f);
             item_buffer<T>::reset();
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
             if (f & rf_clear_edges)
                 my_built_predecessors.clear();
 #endif
@@ -621,7 +629,7 @@ namespace internal {
 
     private:
         forwarding_base *my_join;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         edge_container<predecessor_type> my_built_predecessors;
 #endif
     };  // queueing_port
@@ -659,7 +667,7 @@ namespace internal {
         typedef typename TraitsType::TtoK type_to_key_func_type;
         typedef typename TraitsType::KHash hash_compare_type;
         typedef hash_buffer< key_type, input_type, type_to_key_func_type, hash_compare_type > buffer_type;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         typedef typename receiver<input_type>::built_predecessors_type built_predecessors_type;
         typedef typename receiver<input_type>::predecessor_list_type predecessor_list_type;
 #endif
@@ -667,7 +675,7 @@ namespace internal {
 // ----------- Aggregator ------------
     private:
         enum op_type { try__put, get__item, res_port
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
            , add_blt_pred, del_blt_pred, blt_pred_cnt, blt_pred_cpy
 #endif
         };
@@ -678,7 +686,7 @@ namespace internal {
             char type;
             input_type my_val;
             input_type *my_arg;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
             predecessor_type *pred;
             size_t cnt_val;
             predecessor_list_type *plist;
@@ -721,7 +729,7 @@ namespace internal {
                     this->delete_with_key(my_join->current_key);
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
                 case add_blt_pred:
                     my_built_predecessors.add_edge(*(current->pred));
                     __TBB_store_with_release(current->status, SUCCEEDED);
@@ -759,6 +767,10 @@ namespace internal {
             return rtask;
         }
 
+        graph& graph_reference() __TBB_override {
+            return my_join->graph_ref;
+        }
+
     public:
 
         key_matching_port() : receiver<input_type>(), buffer_type() {
@@ -789,7 +801,7 @@ namespace internal {
             return op_data.status == SUCCEEDED;
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         built_predecessors_type &built_predecessors() __TBB_override { return my_built_predecessors; }
 
         void internal_add_built_predecessor(predecessor_type &p) __TBB_override {
@@ -825,7 +837,7 @@ namespace internal {
             return;
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         void extract_receiver() {
             buffer_type::reset();
             my_built_predecessors.receiver_extract(*this);
@@ -834,7 +846,7 @@ namespace internal {
         void reset_receiver(reset_flags f ) __TBB_override {
             tbb::internal::suppress_unused_warning(f);
             buffer_type::reset();
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
            if (f & rf_clear_edges)
               my_built_predecessors.clear();
 #endif
@@ -844,7 +856,7 @@ namespace internal {
         // my_join forwarding base used to count number of inputs that
         // received key.
         matching_forwarding_base<key_type> *my_join;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         edge_container<predecessor_type> my_built_predecessors;
 #endif
     };  // key_matching_port
@@ -871,7 +883,7 @@ namespace internal {
             join_helper<N>::set_join_node_pointer(my_inputs, this);
         }
 
-        join_node_FE(const join_node_FE& other) : forwarding_base(*(other.forwarding_base::graph_pointer)), my_node(NULL) {
+        join_node_FE(const join_node_FE& other) : forwarding_base((other.forwarding_base::graph_ref)), my_node(NULL) {
             ports_with_no_inputs = N;
             join_helper<N>::set_join_node_pointer(my_inputs, this);
         }
@@ -885,11 +897,11 @@ namespace internal {
         // if all input_ports have predecessors, spawn forward to try and consume tuples
         task * decrement_port_count(bool handle_task) __TBB_override {
             if(ports_with_no_inputs.fetch_and_decrement() == 1) {
-                if(this->graph_pointer->is_active()) {
-                    task *rtask = new ( task::allocate_additional_child_of( *(this->graph_pointer->root_task()) ) )
+                if(internal::is_graph_active(this->graph_ref)) {
+                    task *rtask = new ( task::allocate_additional_child_of( *(this->graph_ref.root_task()) ) )
                         forward_task_bypass<base_node_type>(*my_node);
                     if(!handle_task) return rtask;
-                    FLOW_SPAWN(*rtask);
+                    internal::spawn_in_graph_arena(this->graph_ref, *rtask);
                 }
             }
             return NULL;
@@ -905,7 +917,7 @@ namespace internal {
             join_helper<N>::reset_inputs(my_inputs, f);
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         void extract( ) {
             // called outside of parallel contexts
             ports_with_no_inputs = N;
@@ -949,7 +961,7 @@ namespace internal {
             join_helper<N>::set_join_node_pointer(my_inputs, this);
         }
 
-        join_node_FE(const join_node_FE& other) : forwarding_base(*(other.forwarding_base::graph_pointer)), my_node(NULL) {
+        join_node_FE(const join_node_FE& other) : forwarding_base((other.forwarding_base::graph_ref)), my_node(NULL) {
             ports_with_no_items = N;
             join_helper<N>::set_join_node_pointer(my_inputs, this);
         }
@@ -965,11 +977,11 @@ namespace internal {
         task * decrement_port_count(bool handle_task) __TBB_override
         {
             if(ports_with_no_items.fetch_and_decrement() == 1) {
-                if(this->graph_pointer->is_active()) {
-                    task *rtask = new ( task::allocate_additional_child_of( *(this->graph_pointer->root_task()) ) )
+                if(internal::is_graph_active(this->graph_ref)) {
+                    task *rtask = new ( task::allocate_additional_child_of( *(this->graph_ref.root_task()) ) )
                         forward_task_bypass <base_node_type>(*my_node);
                     if(!handle_task) return rtask;
-                    FLOW_SPAWN( *rtask);
+                    internal::spawn_in_graph_arena(this->graph_ref, *rtask);
                 }
             }
             return NULL;
@@ -986,7 +998,7 @@ namespace internal {
             join_helper<N>::reset_inputs(my_inputs, f );
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         void extract() {
             reset_port_count();
             join_helper<N>::extract_inputs(my_inputs);
@@ -1084,16 +1096,16 @@ namespace internal {
         task * fill_output_buffer(unref_key_type &t, bool should_enqueue, bool handle_task) {
             output_type l_out;
             task *rtask = NULL;
-            bool do_fwd = should_enqueue && this->buffer_empty() && this->graph_pointer->is_active();
+            bool do_fwd = should_enqueue && this->buffer_empty() && internal::is_graph_active(this->graph_ref);
             this->current_key = t;
             this->delete_with_key(this->current_key);   // remove the key
             if(join_helper<N>::get_items(my_inputs, l_out)) {  //  <== call back
                 this->push_back(l_out);
                 if(do_fwd) {  // we enqueue if receiving an item from predecessor, not if successor asks for item
-                    rtask = new ( task::allocate_additional_child_of( *(this->graph_pointer->root_task()) ) )
+                    rtask = new ( task::allocate_additional_child_of( *(this->graph_ref.root_task()) ) )
                         forward_task_bypass<base_node_type>(*my_node);
                     if(handle_task) {
-                        FLOW_SPAWN(*rtask);
+                        internal::spawn_in_graph_arena(this->graph_ref, *rtask);
                         rtask = NULL;
                     }
                     do_fwd = false;
@@ -1167,7 +1179,7 @@ namespace internal {
             this->set_key_func(cfb);
         }
 
-        join_node_FE(const join_node_FE& other) : forwarding_base_type(*(other.forwarding_base_type::graph_pointer)), key_to_count_buffer_type(),
+        join_node_FE(const join_node_FE& other) : forwarding_base_type((other.forwarding_base_type::graph_ref)), key_to_count_buffer_type(),
         output_buffer_type() {
             my_node = NULL;
             join_helper<N>::set_join_node_pointer(my_inputs, this);
@@ -1210,7 +1222,7 @@ namespace internal {
             output_buffer_type::reset();
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         void extract() {
             // called outside of parallel contexts
             join_helper<N>::extract_inputs(my_inputs);
@@ -1262,7 +1274,7 @@ namespace internal {
         using input_ports_type::try_to_make_tuple;
         using input_ports_type::tuple_accepted;
         using input_ports_type::tuple_rejected;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         typedef typename sender<output_type>::built_successors_type built_successors_type;
         typedef typename sender<output_type>::successor_list_type successor_list_type;
 #endif
@@ -1270,7 +1282,7 @@ namespace internal {
     private:
         // ----------- Aggregator ------------
         enum op_type { reg_succ, rem_succ, try__get, do_fwrd, do_fwrd_bypass
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
             , add_blt_succ, del_blt_succ, blt_succ_cnt, blt_succ_cpy
 #endif
         };
@@ -1283,7 +1295,7 @@ namespace internal {
             union {
                 output_type *my_arg;
                 successor_type *my_succ;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
                 size_t cnt_val;
                 successor_list_type *slist;
 #endif
@@ -1309,11 +1321,11 @@ namespace internal {
                 switch(current->type) {
                 case reg_succ: {
                         my_successors.register_successor(*(current->my_succ));
-                        if(tuple_build_may_succeed() && !forwarder_busy && this->graph_node::my_graph.is_active()) {
-                            task *rtask = new ( task::allocate_additional_child_of(*(this->graph_node::my_graph.root_task())) )
+                        if(tuple_build_may_succeed() && !forwarder_busy && internal::is_graph_active(my_graph)) {
+                            task *rtask = new ( task::allocate_additional_child_of(*(my_graph.root_task())) )
                                     forward_task_bypass
                                     <join_node_base<JP,InputTuple,OutputTuple> >(*this);
-                            FLOW_SPAWN(*rtask);
+                            internal::spawn_in_graph_arena(my_graph, *rtask);
                             forwarder_busy = true;
                         }
                         __TBB_store_with_release(current->status, SUCCEEDED);
@@ -1342,7 +1354,7 @@ namespace internal {
                                 build_succeeded = try_to_make_tuple(out);  // fetch front_end of queue
                                 if(build_succeeded) {
                                     task *new_task = my_successors.try_put_task(out);
-                                    last_task = combine_tasks(last_task, new_task);
+                                    last_task = combine_tasks(my_graph, last_task, new_task);
                                     if(new_task) {
                                         tuple_accepted();
                                     }
@@ -1358,7 +1370,7 @@ namespace internal {
                         forwarder_busy = false;
                     }
                     break;
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
                 case add_blt_succ:
                     my_successors.internal_add_built_successor(*(current->my_succ));
                     __TBB_store_with_release(current->status, SUCCEEDED);
@@ -1375,7 +1387,7 @@ namespace internal {
                     my_successors.copy_successors(*(current->slist));
                     __TBB_store_with_release(current->status, SUCCEEDED);
                     break;
-#endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
+#endif  /* TBB_DEPRECATED_FLOW_NODE_EXTRACTION */
                 }
             }
         }
@@ -1420,7 +1432,7 @@ namespace internal {
             return op_data.status == SUCCEEDED;
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         built_successors_type &built_successors() __TBB_override { return my_successors.built_successors(); }
 
         void internal_add_built_successor( successor_type &r) __TBB_override {
@@ -1444,9 +1456,9 @@ namespace internal {
             op_data.slist = &l;
             my_aggregator.execute(&op_data);
         }
-#endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
+#endif  /* TBB_DEPRECATED_FLOW_NODE_EXTRACTION */
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         void extract() __TBB_override {
             input_ports_type::extract();
             my_successors.built_successors().sender_extract(*this);

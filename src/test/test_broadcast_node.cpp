@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -19,9 +19,13 @@
 */
 
 #include "harness.h"
+
+#if __TBB_CPF_BUILD
+#define TBB_DEPRECATED_FLOW_NODE_EXTRACTION 1
+#endif
+
 #include "tbb/flow_graph.h"
 #include "tbb/task.h"
-
 #include "tbb/atomic.h"
 
 const int N = 1000;
@@ -43,10 +47,11 @@ template< typename T >
 class counting_array_receiver : public tbb::flow::receiver<T> {
 
     tbb::atomic<size_t> my_counters[N];
+    tbb::flow::graph& my_graph;
 
 public:
 
-    counting_array_receiver() {
+    counting_array_receiver(tbb::flow::graph& g) : my_graph(g) {
         for (int i = 0; i < N; ++i )
            my_counters[i] = 0;
     }
@@ -61,7 +66,11 @@ public:
         return const_cast<tbb::task *>(tbb::flow::internal::SUCCESSFULLY_ENQUEUED);
     }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    tbb::flow::graph& graph_reference() __TBB_override {
+        return my_graph;
+    }
+
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
     built_predecessors_type mbp;
     built_predecessors_type &built_predecessors() __TBB_override { return mbp; }
@@ -83,8 +92,8 @@ void test_serial_broadcasts() {
     tbb::flow::broadcast_node<T> b(g);
 
     for ( int num_receivers = 1; num_receivers < R; ++num_receivers ) {
-        counting_array_receiver<T> *receivers = new counting_array_receiver<T>[num_receivers];
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+        std::vector< counting_array_receiver<T> > receivers(num_receivers, counting_array_receiver<T>(g));
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         ASSERT(b.successor_count() == 0, NULL);
         ASSERT(b.predecessor_count() == 0, NULL);
         typename tbb::flow::broadcast_node<T>::successor_list_type my_succs;
@@ -98,7 +107,7 @@ void test_serial_broadcasts() {
         for ( int r = 0; r < num_receivers; ++r ) {
             tbb::flow::make_edge( b, receivers[r] );
         }
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         ASSERT( b.successor_count() == (size_t)num_receivers, NULL);
 #endif
 
@@ -114,10 +123,7 @@ void test_serial_broadcasts() {
         }
         ASSERT( b.try_put( (T)0 ), NULL );
         for ( int r = 0; r < num_receivers; ++r )
-            ASSERT( receivers[0][0] == 1, NULL ) ;
-
-        delete [] receivers;
-
+            ASSERT( receivers[0][0] == 1, NULL );
     }
 
 }
@@ -140,9 +146,9 @@ public:
 };
 
 template< typename T >
-void run_parallel_broadcasts(int p, tbb::flow::broadcast_node<T>& b) {
+void run_parallel_broadcasts(tbb::flow::graph& g, int p, tbb::flow::broadcast_node<T>& b) {
     for ( int num_receivers = 1; num_receivers < R; ++num_receivers ) {
-        counting_array_receiver<T> *receivers = new counting_array_receiver<T>[num_receivers];
+        std::vector< counting_array_receiver<T> > receivers(num_receivers, counting_array_receiver<T>(g));
 
         for ( int r = 0; r < num_receivers; ++r ) {
             tbb::flow::make_edge( b, receivers[r] );
@@ -158,10 +164,7 @@ void run_parallel_broadcasts(int p, tbb::flow::broadcast_node<T>& b) {
         }
         ASSERT( b.try_put( (T)0 ), NULL );
         for ( int r = 0; r < num_receivers; ++r )
-            ASSERT( (int)receivers[r][0] == p, NULL ) ;
-
-        delete [] receivers;
-
+            ASSERT( (int)receivers[r][0] == p, NULL );
     }
 }
 
@@ -170,11 +173,11 @@ void test_parallel_broadcasts(int p) {
 
     tbb::flow::graph g;
     tbb::flow::broadcast_node<T> b(g);
-    run_parallel_broadcasts(p, b);
+    run_parallel_broadcasts(g, p, b);
 
     // test copy constructor
     tbb::flow::broadcast_node<T> b_copy(b);
-    run_parallel_broadcasts(p, b_copy);
+    run_parallel_broadcasts(g, p, b_copy);
 }
 
 // broadcast_node does not allow successors to try_get from it (it does not allow
@@ -217,7 +220,7 @@ void test_resets() {
     ASSERT(!q0.try_get(j), "edge between nodes not removed");
 }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
 void test_extract() {
     int dont_care;
     tbb::flow::graph g;
@@ -315,7 +318,7 @@ void test_extract() {
     }
     ASSERT(!q0.try_get(dont_care), "extra message in queue");
 }
-#endif  // TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#endif  // TBB_DEPRECATED_FLOW_NODE_EXTRACTION
 
 int TestMain() {
     if( MinThread<1 ) {
@@ -335,7 +338,7 @@ int TestMain() {
 
    test_resets<int>();
    test_resets<float>();
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
    test_extract();
 #endif
 

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -66,7 +66,6 @@ namespace tbbmalloc_whitebox {
 #include "../tbbmalloc/tbbmalloc.cpp"
 
 const int LARGE_MEM_SIZES_NUM = 10;
-const size_t MByte = 1024*1024;
 
 class AllocInfo {
     int *p;
@@ -227,10 +226,10 @@ public:
             blocks.push_back(TestBlock(idx));
             setBackRef(blocks.back().idx, &blocks.back().data);
         }
-        for (int i=0; i<cnt; i++)
+        for (size_t i=0; i<cnt; i++)
             ASSERT((Block*)&blocks[i].data == getBackRef(blocks[i].idx), NULL);
-        for (int i=cnt-1; i>=0; i--)
-            removeBackRef(blocks[i].idx);
+        for (size_t i=cnt; i>0; i--)
+            removeBackRef(blocks[i-1].idx);
     }
 };
 
@@ -395,16 +394,16 @@ int putMallocMem(intptr_t /*pool_id*/, void *ptr, size_t bytes)
 }
 
 class StressLOCacheWork: NoAssign {
-    rml::MemoryPool *mallocPool;
+    rml::MemoryPool *my_mallocPool;
 public:
-    StressLOCacheWork(rml::MemoryPool *mallocPool) : mallocPool(mallocPool) {}
+    StressLOCacheWork(rml::MemoryPool *mallocPool) : my_mallocPool(mallocPool) {}
     void operator()(int) const {
         for (size_t sz=minLargeObjectSize; sz<1*1024*1024;
              sz+=LargeObjectCache::largeBlockCacheStep) {
-            void *ptr = pool_malloc(mallocPool, sz);
+            void *ptr = pool_malloc(my_mallocPool, sz);
             ASSERT(ptr, "Memory was not allocated");
             memset(ptr, sz, sz);
-            pool_free(mallocPool, ptr);
+            pool_free(my_mallocPool, ptr);
         }
     }
 };
@@ -769,7 +768,7 @@ void TestHeapLimit()
 
 void checkNoHugePages()
 {
-    ASSERT(!hugePages.enabled, "scalable_allocation_mode "
+    ASSERT(!hugePages.isEnabled, "scalable_allocation_mode "
            "must have priority over environment variable");
 }
 
@@ -1131,20 +1130,158 @@ void *findCacheLine(void *p) {
 void TestSlabAlignment() {
     const size_t min_sz = 8;
     const int space = 2*16*1024; // fill at least 2 slabs
-    void *ptrs[space / min_sz];  // the worst case is min_sz byte object
+    void *pointers[space / min_sz];  // the worst case is min_sz byte object
 
     for (size_t sz = min_sz; sz <= 64; sz *= 2) {
-        for (int i = 0; i < space/sz; i++) {
-            ptrs[i] = scalable_malloc(sz);
-            Block *block = (Block *)alignDown(ptrs[i], slabSize);
-            MALLOC_ASSERT(findCacheLine(&block->isFull) != findCacheLine(ptrs[i]),
+        for (size_t i = 0; i < space/sz; i++) {
+            pointers[i] = scalable_malloc(sz);
+            Block *block = (Block *)alignDown(pointers[i], slabSize);
+            MALLOC_ASSERT(findCacheLine(&block->isFull) != findCacheLine(pointers[i]),
                           "A user object must not share a cache line with slab control structures.");
             MALLOC_ASSERT(findCacheLine(&block->next) != findCacheLine(&block->nextPrivatizable),
                           "GlobalBlockFields and LocalBlockFields must be on different cache lines.");
         }
-        for (int i = 0; i < space/sz; i++)
-            scalable_free(ptrs[i]);
+        for (size_t i = 0; i < space/sz; i++)
+            scalable_free(pointers[i]);
     }
+}
+
+#include "harness_memory.h"
+
+// TODO: Consider adding Huge Pages support on macOS (special mmap flag).
+// Transparent Huge pages support could be enabled by different system parsing mechanism,
+// because there is no /proc/meminfo on macOS
+#if __linux__
+void TestTHP() {
+    // Get backend from default memory pool
+    rml::internal::Backend *backend = &(defaultMemPool->extMemPool.backend);
+
+    // Configure malloc to use huge pages
+    scalable_allocation_mode(USE_HUGE_PAGES, 1);
+    MALLOC_ASSERT(hugePages.isEnabled, "Huge pages should be enabled via scalable_allocation_mode");
+
+    const int HUGE_PAGE_SIZE = 2 * 1024 * 1024;
+
+    // allocCount transparent huge pages should be allocated
+    const int allocCount = 10;
+
+    // Allocate huge page aligned memory regions to track system
+    // counters for transparent huge pages
+    void*  allocPtrs[allocCount];
+
+    // Wait for the system to update process memory info files after other tests
+    Harness::Sleep(4000);
+
+    // Parse system info regarding current THP status
+    size_t currentSystemTHPCount = getSystemTHPCount();
+    size_t currentSystemTHPAllocatedSize = getSystemTHPAllocatedSize();
+
+    for (int i = 0; i < allocCount; i++) {
+        // Allocation size have to be aligned on page size
+        size_t allocSize = HUGE_PAGE_SIZE - (i * 1000);
+
+        // Map memory
+        allocPtrs[i] = backend->allocRawMem(allocSize);
+
+        MALLOC_ASSERT(allocPtrs[i], "Allocation not succeded.");
+        MALLOC_ASSERT(allocSize == HUGE_PAGE_SIZE,
+            "Allocation size have to be aligned on Huge Page size internaly.");
+
+        // First touch policy - no real pages allocated by OS without accessing the region
+        memset(allocPtrs[i], 1, allocSize);
+
+        MALLOC_ASSERT(isAligned(allocPtrs[i], HUGE_PAGE_SIZE),
+            "The pointer returned by scalable_malloc is not alligned on huge page size.");
+    }
+
+    // Wait for the system to update process memory info files after allocations
+    Harness::Sleep(4000);
+
+    // Generaly, kernel tries to allocate transparent huge pages, but sometimes it cannot do this
+    // (tested on SLES 11/12), so consider this system info checks as a remark.
+    // Also, some systems can allocate more memory then needed in background (tested on Ubuntu 14.04)
+    size_t newSystemTHPCount = getSystemTHPCount();
+    size_t newSystemTHPAllocatedSize = getSystemTHPAllocatedSize();
+    if ((newSystemTHPCount - currentSystemTHPCount) < allocCount
+            && (newSystemTHPAllocatedSize - currentSystemTHPAllocatedSize) / (2 * 1024) < allocCount) {
+        REPORT( "Warning: the system didn't allocate needed amount of THPs.\n" );
+    }
+
+    // Test memory unmap
+    for (int i = 0; i < allocCount; i++) {
+        MALLOC_ASSERT(backend->freeRawMem(allocPtrs[i], HUGE_PAGE_SIZE),
+                "Something went wrong during raw memory free");
+    }
+}
+#endif // __linux__
+
+inline size_t getStabilizedMemUsage() {
+    for (int i = 0; i < 3; i++) GetMemoryUsage();
+    return GetMemoryUsage();
+}
+
+inline void* reallocAndRetrieve(void* origPtr, size_t reallocSize, size_t& origBlockSize, size_t& reallocBlockSize) {
+    rml::internal::LargeMemoryBlock* origLmb = ((rml::internal::LargeObjectHdr *)origPtr - 1)->memoryBlock;
+    origBlockSize = origLmb->unalignedSize;
+
+    void* reallocPtr = rml::internal::reallocAligned(defaultMemPool, origPtr, reallocSize, 0);
+
+    // Retrieved reallocated block information
+    rml::internal::LargeMemoryBlock* reallocLmb = ((rml::internal::LargeObjectHdr *)reallocPtr - 1)->memoryBlock;
+    reallocBlockSize = reallocLmb->unalignedSize;
+
+    return reallocPtr;
+}
+
+void TestReallocDecreasing() {
+
+    /* Testing that actual reallocation happens for large objects that do not fit the backend cache
+       but decrease in size by a factor of >= 2. */
+
+    size_t startSize = 100 * 1024 * 1024;
+    size_t maxBinnedSize = defaultMemPool->extMemPool.backend.getMaxBinnedSize();
+    void*  origPtr = scalable_malloc(startSize);
+    void*  reallocPtr = NULL;
+
+    // Realloc on 1MB less size
+    size_t origBlockSize = 42;
+    size_t reallocBlockSize = 43;
+    reallocPtr = reallocAndRetrieve(origPtr, startSize - 1 * 1024 * 1024, origBlockSize, reallocBlockSize);
+    MALLOC_ASSERT(origBlockSize == reallocBlockSize, "Reallocated block size shouldn't change");
+    MALLOC_ASSERT(reallocPtr == origPtr, "Original pointer shouldn't change");
+
+    // Repeated decreasing reallocation while max cache bin size reached
+    size_t reallocSize = (startSize / 2) - 1000; // exact realloc
+    while(reallocSize > maxBinnedSize) {
+
+        // Prevent huge/large objects caching 
+        defaultMemPool->extMemPool.loc.cleanAll();
+        // Prevent local large object caching
+        TLSData *tls = defaultMemPool->getTLS(/*create=*/false);
+        tls->lloc.externalCleanup(&defaultMemPool->extMemPool);
+
+        size_t sysMemUsageBefore = getStabilizedMemUsage();
+        size_t totalMemSizeBefore = defaultMemPool->extMemPool.backend.getTotalMemSize();
+
+        reallocPtr = reallocAndRetrieve(origPtr, reallocSize, origBlockSize, reallocBlockSize);
+
+        MALLOC_ASSERT(origBlockSize > reallocBlockSize, "Reallocated block size should descrease.");
+
+        size_t sysMemUsageAfter = getStabilizedMemUsage();
+        size_t totalMemSizeAfter = defaultMemPool->extMemPool.backend.getTotalMemSize();
+
+        // Prevent false checking when backend caching occurred or could not read system memory usage info
+        if (totalMemSizeBefore > totalMemSizeAfter && sysMemUsageAfter != 0 && sysMemUsageBefore != 0) {
+            MALLOC_ASSERT(sysMemUsageBefore > sysMemUsageAfter, "Memory were not released");
+        }
+
+        origPtr = reallocPtr;
+        reallocSize = (reallocSize / 2) - 1000; // exact realloc
+    }
+    scalable_free(reallocPtr);
+
+    /* TODO: Decreasing reallocation of large objects that fit backend cache */
+    /* TODO: Small objects decreasing reallocation test */
 }
 
 int TestMain () {
@@ -1177,5 +1314,15 @@ int TestMain () {
     TestHeapLimit();
     TestLOC();
     TestSlabAlignment();
+    TestReallocDecreasing();
+
+#if __linux__
+    if (isTHPEnabledOnMachine()) {
+        TestTHP();
+    } else {
+        REMARK("Transparent Huge Pages is not supported on the system - skipped the test\n");
+    }
+#endif
     return Harness::Done;
 }
+

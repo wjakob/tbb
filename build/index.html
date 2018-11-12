@@ -41,7 +41,7 @@ To port Intel TBB to a new platform, operating system or architecture, see the <
 <H3>Software prerequisites:</H3>
 <OL>
 <LI>C++ compiler for the platform, operating system and architecture of interest.
-    Either the native compiler for your system, or, optionally, the appropriate Intel&reg; C++ compiler, may be used.
+    Either the native compiler for your system, or, optionally, the appropriate Intel&reg; C++ Compiler, may be used.
 <LI>GNU make utility. On Windows OS, if a UNIX* emulator is used to run GNU make,
     it should be able to run Windows OS utilities and commands. On Linux OS, macOS, etc.,
     shell commands issued by GNU make should execute in a Bourne or BASH compatible shell.
@@ -57,7 +57,7 @@ On systems that support both 64-bit and 32-bit libraries, these steps build the 
 </P>
 <OL>
 <LI>Change to the <A HREF="../index.html">top-level directory</A> of the installed software.
-<LI>If using the Intel&reg; C++ compiler, make sure the appropriate compiler is available in your PATH
+<LI>If using the Intel&reg; C++ Compiler, make sure the appropriate compiler is available in your PATH
     (e.g., by sourcing the appropriate iccvars script for the compiler to be used).
 <LI>Invoke GNU make using no arguments, for example, <TT>make</TT>.
 </OL>
@@ -68,7 +68,7 @@ or related systems that support both 64-bit and 32-bit libraries), perform the f
 </P>
 <OL>
 <LI>Change to the <A HREF="../index.html">top-level directory</A> of the installed software.
-<LI>If using the Intel&reg; C++ compiler, make sure the appropriate compiler is available in your PATH
+<LI>If using the Intel&reg; C++ Compiler, make sure the appropriate compiler is available in your PATH
     (e.g., by sourcing the appropriate iccvars script for the compiler to be used).
 <LI>Explicitly specify the architecture when invoking GNU make, e.g. <TT>make arch=ia32</TT>.
 </OL>
@@ -98,7 +98,7 @@ To perform different build and/or test operations, use the following steps.
 </P>
 <OL>
 <LI>Change to the <A HREF="../index.html">top-level directory</A> of the installed software.
-<LI>If using the Intel&reg; C++ compiler, make sure the appropriate compiler is available in your PATH
+<LI>If using the Intel&reg; C++ Compiler, make sure the appropriate compiler is available in your PATH
     (e.g., by sourcing the appropriate iccvars script for the compiler to be used).
 <LI>Invoke GNU make by using one or more of the following commands.
     <DL>
@@ -134,9 +134,9 @@ To perform different build and/or test operations, use the following steps.
     <DD>Build and run as above, but additionally specify the version of the C++ standard or dialect to be used by
       the compiler. The specified value of <TT>stdver</TT> will be used as a parameter to the appropriate
       compiler option (such as <TT>-std</TT>); the behavior in case of unsupported value is compiler-specific.
-    <DT><TT>make target_ui=win8ui [target_ui_mode=production] <B>[</B>(above options or targets)<B>]</B></TT>
-    <DD>Build and run as above, but use API that is compliant with Windows Store* applications. 
-    <TT>target_ui_mode=production</TT> is used to produce binaries that are compliant with Windows Store* application container. In later case they won't with Intel TBB unit tests but work only with Windows Store* applications. 
+    <DT><TT>make target_app=<B>{</B>win8ui, uwp, uwd<B>}</B> [target_mode=store] <B>[</B>(above options or targets)<B>]</B></TT>
+    <DD>Build and run as above, but use API that is compliant with Universal Windows* applications. Use <TT>win8ui</TT> option, if you want to use Intel TBB in Windows* 8 Universal application, <TT>uwp</TT> in case of Windows* 10 Universal Windows application and <TT>uwd</TT> for the usage inside Universal Windows* driver.
+    <TT>target_mode=store</TT> is used to produce binaries that are compliant with Windows Store* application container. In later case they won't work with Intel TBB unit tests but work only with Windows Store* applications.
     <DT><TT>ndk-build target=android <B>[</B>(above options or targets)<B>]</B></TT>
     <DD>Build and run as above, but build libraries for Android* OS by Android NDK that should be installed. Makefiles were tested with revision 8.
     <DT><TT>make arch=<B>{</B>ia32, intel64, ia64<B>}</B> <B>[</B>(above options or targets)<B>]</B></TT>
@@ -233,7 +233,7 @@ See the Makefile infrastructure files for examples.
 <HR>
 <A HREF="../index.html">Up to parent directory</A>
 <P></P>
-Copyright &copy; 2005-2017 Intel Corporation.  All Rights Reserved.
+Copyright &copy; 2005-2018 Intel Corporation.  All Rights Reserved.
 <P></P>
 Intel, the Intel logo and Itanium are trademarks of Intel Corporation or its subsidiaries in the U.S. and/or other countries.
 <p></p>

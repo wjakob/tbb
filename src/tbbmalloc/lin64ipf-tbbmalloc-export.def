@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2017 Intel Corporation
+    Copyright (c) 2005-2018 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -37,6 +37,9 @@ __TBB_malloc_safer_aligned_realloc;
 __TBB_malloc_safer_free;
 __TBB_malloc_safer_msize;
 __TBB_malloc_safer_realloc;
+/* For tbbmalloc proxy to use MallocMutex with new_handler feature */
+__TBB_machine_lockbyte;
+__TBB_machine_trylockbyte;
 
 /* memory pool stuff */
 _ZN3rml11pool_createElPKNS_13MemPoolPolicyE;
