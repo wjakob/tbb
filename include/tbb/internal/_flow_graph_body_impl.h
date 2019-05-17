@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2018 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB__flow_graph_body_impl_H
@@ -271,13 +267,20 @@ private:
 
 //! A task that calls a node's forward_task function
 template< typename NodeType >
-class forward_task_bypass : public task {
+class forward_task_bypass : public graph_task {
 
     NodeType &my_node;
 
 public:
 
-    forward_task_bypass( NodeType &n ) : my_node(n) {}
+    forward_task_bypass( NodeType &n
+#if __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES
+                         , node_priority_t node_priority = no_priority
+    ) : graph_task(node_priority),
+#else
+    ) :
+#endif
+    my_node(n) {}
 
     task *execute() __TBB_override {
         task * new_task = my_node.forward_task();
@@ -289,14 +292,21 @@ public:
 //! A task that calls a node's apply_body_bypass function, passing in an input of type Input
 //  return the task* unless it is SUCCESSFULLY_ENQUEUED, in which case return NULL
 template< typename NodeType, typename Input >
-class apply_body_task_bypass : public task {
+class apply_body_task_bypass : public graph_task {
 
     NodeType &my_node;
     Input my_input;
 
 public:
 
-    apply_body_task_bypass( NodeType &n, const Input &i ) : my_node(n), my_input(i) {}
+    apply_body_task_bypass( NodeType &n, const Input &i
+#if __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES
+                            , node_priority_t node_priority = no_priority
+    ) : graph_task(node_priority),
+#else
+    ) :
+#endif
+        my_node(n), my_input(i) {}
 
     task *execute() __TBB_override {
         task * next_task = my_node.apply_body_bypass( my_input );
@@ -307,7 +317,7 @@ public:
 
 //! A task that calls a node's apply_body_bypass function with no input
 template< typename NodeType >
-class source_task_bypass : public task {
+class source_task_bypass : public graph_task {
 
     NodeType &my_node;
 
@@ -349,7 +359,15 @@ public:
 
     typedef continue_msg input_type;
     typedef continue_msg output_type;
-    decrementer( int number_of_predecessors = 0 ) : continue_receiver( number_of_predecessors ) { }
+    decrementer( int number_of_predecessors = 0 )
+        : continue_receiver(
+            __TBB_FLOW_GRAPH_PRIORITY_ARG1(number_of_predecessors, tbb::flow::internal::no_priority)
+        )
+          // Since decrementer does not make use of possibly unconstructed owner inside its
+          // constructor, my_node can be directly initialized with 'this' pointer passed from the
+          // owner, hence making method 'set_owner' needless.
+        , my_node(NULL)
+    {}
     void set_owner( T *node ) { my_node = node; }
 };
 

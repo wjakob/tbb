@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2018 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,15 +12,9 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
-#define TBB_PREVIEW_LOCAL_OBSERVER 1
 #define __TBB_EXTRA_DEBUG 1
-#define TBB_PREVIEW_GLOBAL_CONTROL 1
 
 #include <stdexcept>
 #include <cstdlib>
@@ -1212,7 +1206,6 @@ void TestMultipleWaits() {
     }
 }
 //--------------------------------------------------//
-#define TBB_PREVIEW_GLOBAL_CONTROL 1
 #include "tbb/global_control.h"
 
 void TestSmallStackSize() {
@@ -1593,6 +1586,44 @@ void TestArenaWorkersMigration() {
     }
 }
 
+class CheckArenaNumThreads : public tbb::task {
+public:
+    static Harness::SpinBarrier m_barrier;
+
+    CheckArenaNumThreads(int nt, int rm):  num_threads(nt), reserved_for_masters(rm) {
+        m_barrier.initialize(2);
+    }
+
+    tbb::task* execute() __TBB_override {
+        ASSERT( tbb::this_task_arena::max_concurrency() == num_threads, "Wrong concurrency of current arena" );
+        ASSERT( tbb::this_task_arena::current_thread_index() >= reserved_for_masters, "Thread shouldn't attach to master's slots" );
+        m_barrier.wait();
+        return NULL;
+    }
+
+private:
+    const int num_threads;
+    const int reserved_for_masters;
+};
+
+Harness::SpinBarrier CheckArenaNumThreads::m_barrier;
+
+void TestTaskEnqueueInArena()
+{   
+    int pp[8]={3, 4, 5, 7, 8, 11, 13, 17};
+    for(int i = 0; i < 8; ++i)
+    {
+        int p = pp[i];
+        int reserved_for_masters = p - 1;
+        tbb::task_arena a(p, reserved_for_masters);
+        a.initialize();
+        CheckArenaNumThreads& t = *new( tbb::task::allocate_root() ) CheckArenaNumThreads(p, reserved_for_masters);
+        tbb::task::enqueue(t, a);
+        CheckArenaNumThreads::m_barrier.wait();
+        a.debug_wait_until_empty();
+    }
+}
+
 //--------------------------------------------------//
 
 int TestMain() {
@@ -1613,6 +1644,6 @@ int TestMain() {
     TestMoveSemantics();
     TestReturnValue();
     TestArenaWorkersMigration();
+    TestTaskEnqueueInArena();
     return Harness::Done;
 }
-

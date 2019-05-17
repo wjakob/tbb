@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2018 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "tbb/tbb_config.h"
@@ -64,7 +60,7 @@ bool __TBB_InitOnce::InitializationDone;
 
 #if DO_ITT_NOTIFY
     static bool ITT_Present;
-    static bool ITT_InitializationDone;
+    static atomic<bool> ITT_InitializationDone;
 #endif
 
 #if !(_WIN32||_WIN64) || __TBB_SOURCE_DIRECTLY_INCLUDED
@@ -161,8 +157,8 @@ static resource_string strings_for_itt[] = {
 #undef TBB_STRING_RESOURCE
 
 static __itt_string_handle *ITT_get_string_handle(int idx) {
-    __TBB_ASSERT(idx >= 0, NULL);
-    return idx < NUM_STRINGS ? strings_for_itt[idx].itt_str_handle : NULL;
+    __TBB_ASSERT( idx >= 0 && idx < NUM_STRINGS, "string handle out of valid range");
+    return (idx >= 0 && idx < NUM_STRINGS) ? strings_for_itt[idx].itt_str_handle : NULL;
 }
 
 static void ITT_init_domains() {
@@ -192,6 +188,8 @@ static void ITT_init() {
 /** Thread-unsafe lazy one-time initialization of tools interop.
     Used by both dummy handlers and general TBB one-time initialization routine. **/
 void ITT_DoUnsafeOneTimeInitialization () {
+    // Double check ITT_InitializationDone is necessary because the first check 
+    // in ITT_DoOneTimeInitialization is not guarded with the __TBB_InitOnce lock.
     if ( !ITT_InitializationDone ) {
         ITT_Present = (__TBB_load_ittnotify()!=0);
         if (ITT_Present) ITT_init();
@@ -204,9 +202,11 @@ void ITT_DoUnsafeOneTimeInitialization () {
     Used by dummy handlers only. **/
 extern "C"
 void ITT_DoOneTimeInitialization() {
-    __TBB_InitOnce::lock();
-    ITT_DoUnsafeOneTimeInitialization();
-    __TBB_InitOnce::unlock();
+    if ( !ITT_InitializationDone ) {
+        __TBB_InitOnce::lock();
+        ITT_DoUnsafeOneTimeInitialization();
+        __TBB_InitOnce::unlock();
+    }
 }
 #endif /* DO_ITT_NOTIFY */
 
@@ -478,8 +478,8 @@ class stack_size_control : public padded<control_storage> {
         return tbb::internal::ThreadStackSize;
     }
     virtual void apply_active() const __TBB_override {
-#if __TBB_WIN8UI_SUPPORT
-        __TBB_ASSERT( false, "For Windows Store* apps we must not set stack size" );
+#if __TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00)
+        __TBB_ASSERT( false, "For Windows 8 Store* apps we must not set stack size" );
 #endif
     }
 };
