@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2018 Intel Corporation
+# Copyright (c) 2005-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,10 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-#
-#
-#
 
 CPLUS ?= icpc
 CONLY ?= icc
@@ -66,7 +62,6 @@ ifneq (,$(codecov))
 endif
 
 # ICC 14.0 and higher support usage of libc++, clang standard library
-MACOSX_DEPLOYMENT_TARGET ?= 10.11
 ifneq (,$(shell icc -dumpversion | egrep  "^1[4-9]\."))
 ifneq (,$(stdlib))
     CPLUS_FLAGS    += -stdlib=$(stdlib) -mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)

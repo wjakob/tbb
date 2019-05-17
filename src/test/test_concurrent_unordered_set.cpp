@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2018 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #if _MSC_VER
@@ -128,7 +124,170 @@ void TestTypes( ) {
     REPORT( "Known issue: C++11 smart pointer tests are skipped.\n" );
 #endif /* __TBB_CPP11_SMART_POINTERS_PRESENT */
 }
+
+#if __TBB_UNORDERED_NODE_HANDLE_PRESENT
+
+void TestNodeHandling() {
+    tbb::concurrent_unordered_set<int> unordered_set;
+    for (int i =1; i< 5; i++)
+        unordered_set.insert(i);
+    node_handling::NodeHandlingTests(unordered_set, /*new key for test_data*/5);
+
+    tbb::concurrent_unordered_multiset<int> unordered_multiset;
+    for (int i =1; i< 5; i++)
+        unordered_multiset.insert(i);
+    unordered_multiset.insert(1);
+    unordered_multiset.insert(2);
+    node_handling::NodeHandlingTests(unordered_multiset, /*new key for test_data*/5);
+}
+
+void TestMerge(){
+    using Set = tbb::concurrent_unordered_set<int>;
+    using MultiSet = tbb::concurrent_unordered_multiset<int>;
+
+    Set set_for_merge1;
+    set_for_merge1.insert(1);
+    set_for_merge1.insert(2);
+    set_for_merge1.insert(3);
+    Set set_for_merge2;
+    set_for_merge2.insert(1);
+    set_for_merge2.insert(2);
+    set_for_merge2.insert(9);
+
+    MultiSet multiset_for_merge1;
+    multiset_for_merge1.insert(1);
+    multiset_for_merge1.insert(1);
+    multiset_for_merge1.insert(2);
+    multiset_for_merge1.insert(3);
+    multiset_for_merge1.insert(4);
+    MultiSet multiset_for_merge2;
+    multiset_for_merge2.insert(1);
+    multiset_for_merge2.insert(2);
+    multiset_for_merge2.insert(5);
+    multiset_for_merge2.insert(5);
+    multiset_for_merge2.insert(6);
+
+    node_handling::TestMergeTransposition(set_for_merge1, set_for_merge2,
+                                          multiset_for_merge1, multiset_for_merge2);
+
+    // Test merge with different hashers
+    tbb::concurrent_unordered_set<int, degenerate_hash<int>> degenerate_hash_set;
+    degenerate_hash_set.insert(1);
+    degenerate_hash_set.insert(2);
+    degenerate_hash_set.insert(9);
+
+    tbb::concurrent_unordered_multiset<int, degenerate_hash<int>> degenerate_hash_multiset;
+    degenerate_hash_multiset.insert(1);
+    degenerate_hash_multiset.insert(2);
+    degenerate_hash_multiset.insert(5);
+    degenerate_hash_multiset.insert(5);
+    degenerate_hash_multiset.insert(6);
+
+    node_handling::TestMergeOverloads(set_for_merge1, degenerate_hash_set);
+    node_handling::TestMergeOverloads(multiset_for_merge1, degenerate_hash_multiset);
+
+    int size = 100000;
+
+    Set set_for_merge3(size);
+    for (int i = 0; i<size; i++){
+        set_for_merge3.insert(i);
+    }
+    node_handling::TestConcurrentMerge(set_for_merge3);
+
+    MultiSet multiset_for_merge3(size/2);
+    for (int i = 0; i<size/2; i++){
+        multiset_for_merge3.insert(i);
+        multiset_for_merge3.insert(i);
+    }
+    node_handling::TestConcurrentMerge(multiset_for_merge3);
+}
+
+#endif/*__TBB_UNORDERED_NODE_HANDLE_PRESENT*/
+
 #endif // __TBB_TEST_SECONDARY
+
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+template <template <typename ...> typename TSet>
+void TestDeductionGuides() {
+    using ComplexType = const std::string *;
+    std::vector<ComplexType> v;
+    std::string s = "s";
+    auto l = { ComplexType(&s), ComplexType(&s)};
+
+    // check TSet(InputIterator,InputIterator)
+    TSet s1(v.begin(), v.end());
+    static_assert(std::is_same<decltype(s1), TSet<ComplexType>>::value);
+
+    // check TSet(InputIterator,InputIterator, size_t, Hasher)
+    TSet s2(v.begin(), v.end(), 5, std::hash<ComplexType>());
+    static_assert(std::is_same<decltype(s2), TSet<ComplexType, std::hash<ComplexType>>>::value);
+
+    // check TSet(InputIterator,InputIterator, size_t, Hasher, Equality)
+    TSet s3(v.begin(), v.end(), 5, std::hash<ComplexType>(), std::less<ComplexType>());
+    static_assert(std::is_same<decltype(s3), TSet<ComplexType, std::hash<ComplexType>,
+        std::less<ComplexType>>>::value);
+
+    // check TSet(InputIterator,InputIterator, size_t, Hasher, Equality, Allocator)
+    TSet s4(v.begin(), v.end(), 5, std::hash<ComplexType>(), std::less<ComplexType>(),
+        std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(s4), TSet<ComplexType, std::hash<ComplexType>,
+        std::less<ComplexType>, std::allocator<ComplexType>>>::value);
+
+    // check TSet(InputIterator,InputIterator, size_t, Allocator)
+    TSet s5(v.begin(), v.end(), 5, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(s5), TSet<ComplexType, tbb::tbb_hash<ComplexType>,
+        std::equal_to<ComplexType>, std::allocator<ComplexType>>>::value);
+
+    // check TSet(InputIterator,InputIterator, size_t, Hasher, Allocator)
+    TSet s6(v.begin(), v.end(), 5, std::hash<ComplexType>(), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(s6), TSet<ComplexType, std::hash<ComplexType>,
+        std::equal_to<ComplexType>, std::allocator<ComplexType>>>::value);
+
+    // check TSet(std::initializer_list)
+    TSet s7(l);
+    static_assert(std::is_same<decltype(s7), TSet<ComplexType>>::value);
+
+    // check TSet(std::initializer_list, size_t, Hasher)
+    TSet s8(l, 5, std::hash<ComplexType>());
+    static_assert(std::is_same<decltype(s8), TSet<ComplexType, std::hash<ComplexType>>>::value);
+
+    // check TSet(std::initializer_list, size_t, Hasher, Equality)
+    TSet s9(l, 5, std::hash<ComplexType>(), std::less<ComplexType>());
+    static_assert(std::is_same<decltype(s9), TSet<ComplexType, std::hash<ComplexType>,
+        std::less<ComplexType>>>::value);
+
+    // check TSet(std::initializer_list, size_t, Hasher, Equality, Allocator)
+    TSet s10(l, 5, std::hash<ComplexType>(), std::less<ComplexType>(), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(s10), TSet<ComplexType, std::hash<ComplexType>,
+        std::less<ComplexType>, std::allocator<ComplexType>>>::value);
+
+    // check TSet(std::initializer_list, size_t, Allocator)
+    TSet s11(l, 5, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(s11), TSet<ComplexType, tbb::tbb_hash<ComplexType>,
+        std::equal_to<ComplexType>, std::allocator<ComplexType>>>::value);
+
+    // check TSet(std::initializer_list, size_t, Hasher, Allocator)
+    TSet s12(l, 5, std::hash<ComplexType>(), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(s12), TSet<ComplexType, std::hash<ComplexType>,
+        std::equal_to<ComplexType>, std::allocator<ComplexType>>>::value);
+
+    // check TSet(TSet &)
+    TSet s13(s1);
+    static_assert(std::is_same<decltype(s13), decltype(s1)>::value);
+
+    // check TSet(TSet &, Allocator)
+    TSet s14(s5, std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(s14), decltype(s5)>::value);
+
+    // check TSet(TSet &&)
+    TSet s15(std::move(s1));
+    static_assert(std::is_same<decltype(s15), decltype(s1)>::value);
+
+    // check TSet(TSet &&, Allocator)
+    TSet s16(std::move(s5), std::allocator<ComplexType>());
+    static_assert(std::is_same<decltype(s16), decltype(s5)>::value);
+}
+#endif
 
 #if !__TBB_TEST_SECONDARY
 #define INITIALIZATION_TIME_TEST_NAMESPACE            initialization_time_test
@@ -196,6 +355,16 @@ int TestMain() {
 #endif /* __TBB_CPP11_RVALUE_REF_PRESENT */
 
     TestTypes();
+
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+    TestDeductionGuides<tbb::concurrent_unordered_set>();
+    TestDeductionGuides<tbb::concurrent_unordered_multiset>();
+#endif
+
+#if __TBB_UNORDERED_NODE_HANDLE_PRESENT
+    TestNodeHandling();
+    TestMerge();
+#endif /*__TBB_UNORDERED_NODE_HANDLE_PRESENT*/
 
     return Harness::Done;
 }
