@@ -17,7 +17,7 @@ install:
 build_script:
   - echo Running cmake...
   - cd c:\projects\tbb
-  - cmake -G "%CMAKE_PLATFORM%" -DCMAKE_SUPPRESS_REGENERATION=1 -DTBB_CI_BUILD=ON
+  - cmake -G "%CMAKE_PLATFORM%" -DCMAKE_SUPPRESS_REGENERATION=1 -DTBB_CI_BUILD=ON .
   - set MSBuildLogger="C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   - cmake --build . --config %Configuration% -- /v:m /logger:%MSBuildLogger%
   - ctest -C %Configuration% --output-on-failure --timeout 500
