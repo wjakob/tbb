@@ -421,7 +421,9 @@ if (TBB_BUILD_TESTS)
   tbb_add_test (aggregator)
   tbb_add_test (aligned_space)
   tbb_add_test (assembly)
-  tbb_add_test (async_msg)
+  if (NOT WIN32)
+    tbb_add_test (async_msg) # msvc64/debug timeouts
+  endif()
   tbb_add_test (async_node)
   # tbb_add_test (atomic) # msvc64/debug timeouts: Compile-time initialization fails for static tbb::atomic variables
   tbb_add_test (blocked_range2d)
@@ -441,7 +443,9 @@ if (TBB_BUILD_TESTS)
   tbb_add_test (concurrent_lru_cache)
   # tbb_add_test (concurrent_monitor) # too long
   # tbb_add_test (concurrent_priority_queue)
-  tbb_add_test (concurrent_queue)
+  if (NOT WIN32)
+    tbb_add_test (concurrent_queue) # msvc64/debug timeouts
+  endif()
   # tbb_add_test (concurrent_queue_whitebox)
   tbb_add_test (concurrent_unordered_map)
   # tbb_add_test (concurrent_unordered_set)
