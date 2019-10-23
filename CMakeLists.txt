@@ -274,6 +274,9 @@ if (TBB_BUILD_SHARED)
           LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
           ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
           RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
+  if (MSVC)
+    install(FILES $<TARGET_PDB_FILE:tbb> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+  endif()
   if (UNIX AND NOT APPLE)
     target_link_libraries(tbb PUBLIC pthread dl)
   endif()
@@ -327,6 +330,9 @@ if(TBB_BUILD_TBBMALLOC)
             LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
             ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
             RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
+    if (MSVC)
+      install(FILES $<TARGET_PDB_FILE:tbbmalloc> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+    endif()
     if (UNIX AND NOT APPLE)
       target_link_libraries(tbbmalloc PUBLIC pthread dl)
     endif()
@@ -353,6 +359,9 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
             LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
             ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
             RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
+    if (MSVC)
+      install(FILES $<TARGET_PDB_FILE:tbbmalloc_proxy> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+    endif()
     if (UNIX AND NOT APPLE)
       target_link_libraries(tbbmalloc_proxy PUBLIC pthread dl)
     endif()
