@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2016 Intel Corporation
+# Copyright (c) 2005-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,11 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-#
-#
-#
 
+CPLUS ?= pathCC
+CONLY ?= pathcc
 COMPILE_ONLY = -c -MMD
 PREPROC_ONLY = -E -x c++
 INCLUDE_KEY = -I
@@ -32,8 +30,6 @@ DYLIB_KEY = -shared
 EXPORT_KEY = -Wl,--version-script,
 LIBDL = -ldl
 
-CPLUS = pathCC
-CONLY = pathcc
 LIB_LINK_FLAGS = $(DYLIB_KEY) -Wl,-soname=$(BUILDING_LIBRARY)
 LIBS += -lstl -lpthread -lrt
 LINK_FLAGS = -Wl,-rpath-link=. -rdynamic

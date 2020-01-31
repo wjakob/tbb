@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,21 +12,17 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_tbb_stddef_H
 #define __TBB_tbb_stddef_H
 
 // Marketing-driven product version
-#define TBB_VERSION_MAJOR 2017
+#define TBB_VERSION_MAJOR 2019
 #define TBB_VERSION_MINOR 0
 
 // Engineering-focused interface version
-#define TBB_INTERFACE_VERSION 9103
+#define TBB_INTERFACE_VERSION 11006
 #define TBB_INTERFACE_VERSION_MAJOR TBB_INTERFACE_VERSION/1000
 
 // The oldest major interface version still supported
@@ -155,8 +151,8 @@ namespace tbb {
 
 #if TBB_USE_ASSERT
 
-    //! Assert that x is true.
-    /** If x is false, print assertion failure message.
+    //! Assert that predicate is true.
+    /** If predicate is false, print assertion failure message.
         If the comment argument is not NULL, it is printed as part of the failure message.
         The comment argument has no other effect. */
     #define __TBB_ASSERT(predicate,message) __TBB_ASSERT_RELEASE(predicate,message)
@@ -246,6 +242,14 @@ const size_t NFS_MaxLineSize = 128;
 #define __TBB_override // formal comment only
 #endif
 
+#if __TBB_CPP17_FALLTHROUGH_PRESENT
+#define __TBB_fallthrough [[fallthrough]]
+#elif __TBB_FALLTHROUGH_PRESENT
+#define __TBB_fallthrough __attribute__ ((fallthrough))
+#else
+#define __TBB_fallthrough
+#endif
+
 template<class T, size_t S, size_t R>
 struct padded_base : T {
     char pad[S - R];
@@ -278,7 +282,7 @@ void __TBB_EXPORTED_FUNC handle_perror( int error_code, const char* aux_info );
     inline bool __TBB_false() { return false; }
     #define __TBB_TRY
     #define __TBB_CATCH(e) if ( tbb::internal::__TBB_false() )
-    #define __TBB_THROW(e) ((void)0)
+    #define __TBB_THROW(e) tbb::internal::suppress_unused_warning(e)
     #define __TBB_RETHROW() ((void)0)
 #endif /* !TBB_USE_EXCEPTIONS */
 
@@ -423,16 +427,23 @@ private:
 // Following is a set of classes and functions typically used in compile-time "metaprogramming".
 // TODO: move all that to a separate header
 
-#if __TBB_ALLOCATOR_TRAITS_PRESENT
-#include <memory> //for allocator_traits
+#if __TBB_CPP11_SMART_POINTERS_PRESENT
+#include <memory> // for unique_ptr
 #endif
 
-#if __TBB_CPP11_RVALUE_REF_PRESENT || _LIBCPP_VERSION
-#include <utility> // for std::move
+#if __TBB_CPP11_RVALUE_REF_PRESENT || __TBB_CPP11_DECLTYPE_PRESENT || _LIBCPP_VERSION
+#include <utility> // for std::move, std::forward, std::declval
 #endif
 
 namespace tbb {
 namespace internal {
+
+#if __TBB_CPP11_SMART_POINTERS_PRESENT && __TBB_CPP11_RVALUE_REF_PRESENT && __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+    template<typename T, typename... Args>
+    std::unique_ptr<T> make_unique(Args&&... args) {
+        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+    }
+#endif
 
 //! Class for determining type of std::allocator<T>::value_type.
 template<typename T>
@@ -456,15 +467,6 @@ struct bool_constant {
 };
 typedef bool_constant<true> true_type;
 typedef bool_constant<false> false_type;
-
-#if __TBB_ALLOCATOR_TRAITS_PRESENT
-using std::allocator_traits;
-#else
-template<typename allocator>
-struct allocator_traits{
-    typedef tbb::internal::false_type propagate_on_container_move_assignment;
-};
-#endif
 
 //! A template to select either 32-bit or 64-bit constant as compile time, depending on machine word size.
 template <unsigned u, unsigned long long ull >
@@ -526,7 +528,7 @@ struct STATIC_ASSERTION_FAILED<true>; //intentionally left undefined to cause co
 //! @endcond
 }} // namespace tbb::internal
 
-#if    __TBB_STATIC_ASSERT_PRESENT
+#if __TBB_STATIC_ASSERT_PRESENT
 #define __TBB_STATIC_ASSERT(condition,msg) static_assert(condition,msg)
 #else
 //please note condition is intentionally inverted to get a bit more understandable error msg

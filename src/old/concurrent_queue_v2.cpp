@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "concurrent_queue_v2.h"
@@ -31,8 +27,6 @@
 #endif
 
 #define RECORD_EVENTS 0
-
-using namespace std;
 
 namespace tbb {
 
@@ -176,15 +170,15 @@ bool micro_queue::pop( void* dst, ticket k, concurrent_queue_base& base ) {
     k &= -concurrent_queue_rep::n_queue;
     spin_wait_until_eq( head_counter, k );
     spin_wait_while_eq( tail_counter, k );
-    page& p = *head_page;
-    __TBB_ASSERT( &p, NULL );
+    page *p = head_page;
+    __TBB_ASSERT( p, NULL );
     size_t index = modulo_power_of_two( k/concurrent_queue_rep::n_queue, base.items_per_page );
     bool success = false;
     {
-        pop_finalizer finalizer( *this, k+concurrent_queue_rep::n_queue, index==base.items_per_page-1 ? &p : NULL );
-        if( p.mask & uintptr_t(1)<<index ) {
+        pop_finalizer finalizer( *this, k+concurrent_queue_rep::n_queue, index==base.items_per_page-1 ? p : NULL );
+        if( p->mask & uintptr_t(1)<<index ) {
             success = true;
-            base.assign_and_destroy_item( dst, p, index );
+            base.assign_and_destroy_item( dst, *p, index );
         }
     }
     return success;
@@ -210,7 +204,7 @@ concurrent_queue_base::concurrent_queue_base( size_t item_sz ) {
     __TBB_ASSERT( (size_t)&my_rep->head_counter % NFS_GetLineSize()==0, "alignment error" );
     __TBB_ASSERT( (size_t)&my_rep->tail_counter % NFS_GetLineSize()==0, "alignment error" );
     __TBB_ASSERT( (size_t)&my_rep->array % NFS_GetLineSize()==0, "alignment error" );
-    memset(my_rep,0,sizeof(concurrent_queue_rep));
+    std::memset(static_cast<void*>(my_rep),0,sizeof(concurrent_queue_rep));
     this->item_size = item_sz;
 }
 

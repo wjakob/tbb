@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef _TBB_scheduler_H
@@ -38,7 +34,6 @@ namespace tbb {
 namespace internal {
 
 template<typename SchedulerTraits> class custom_scheduler;
-struct nested_arena_context;
 
 //------------------------------------------------------------------------
 // generic_scheduler
@@ -56,8 +51,16 @@ struct scheduler_properties {
     //! Indicates that a scheduler is on outermost level.
     /**  Note that the explicit execute method will set this property. **/
     bool outermost : 1;
+#if __TBB_PREVIEW_CRITICAL_TASKS
+    //! Indicates that a scheduler is in the process of executing critical task(s).
+    bool has_taken_critical_task : 1;
+
+    //! Reserved bits
+    unsigned char : 5;
+#else
     //! Reserved bits
     unsigned char : 6;
+#endif /* __TBB_PREVIEW_CRITICAL_TASKS */
 };
 
 struct scheduler_state {
@@ -72,6 +75,7 @@ struct scheduler_state {
 
     //! Innermost task whose task::execute() is running. A dummy task on the outermost level.
     task* my_innermost_running_task;
+
 
     mail_inbox my_inbox;
 
@@ -111,7 +115,7 @@ struct scheduler_state {
     the thread that creates the instance.
 
     Class generic_scheduler is an abstract base class that contains most of the scheduler,
-    except for tweaks specific to processors and tools (e.g. VTune).
+    except for tweaks specific to processors and tools (e.g. VTune(TM) Performance Tools).
     The derived template class custom_scheduler<SchedulerTraits> fills in the tweaks. */
 class generic_scheduler: public scheduler
                        , public ::rml::job
@@ -123,7 +127,11 @@ public: // almost every class in TBB uses generic_scheduler
     static const size_t quick_task_size = 256-task_prefix_reservation_size;
 
     static bool is_version_3_task( task& t ) {
+#if __TBB_PREVIEW_CRITICAL_TASKS
+        return (t.prefix().extra_state & 0x7)>=0x1;
+#else
         return (t.prefix().extra_state & 0x0F)>=0x1;
+#endif
     }
 
     //! Position in the call stack specifying its maximal filling when stealing is still allowed
@@ -262,8 +270,20 @@ public: // almost every class in TBB uses generic_scheduler
         return t.prefix().extra_state==es_task_proxy;
     }
 
+    //! Attempts to steal a task from a randomly chosen thread/scheduler
+    task* steal_task( __TBB_ISOLATION_EXPR(isolation_tag isolation) );
+
     //! Steal task from another scheduler's ready pool.
-    task* steal_task( __TBB_ISOLATION_ARG( arena_slot& victim_arena_slot, isolation_tag isolation ) );
+    task* steal_task_from( __TBB_ISOLATION_ARG( arena_slot& victim_arena_slot, isolation_tag isolation ) );
+
+#if __TBB_PREVIEW_CRITICAL_TASKS
+    //! Tries to find critical task in critical task stream
+    task* get_critical_task( __TBB_ISOLATION_EXPR(isolation_tag isolation) );
+
+    //! Pushes task to critical task stream if it appears to be such task and returns
+    //! true. Otherwise does nothing and returns false.
+    bool handled_as_critical( task& t );
+#endif
 
     /** Initial size of the task deque sufficient to serve without reallocation
         4 nested parallel_for calls with iteration space of 65535 grains each. **/
@@ -278,7 +298,7 @@ public: // almost every class in TBB uses generic_scheduler
     static generic_scheduler* create_master( arena* a );
 
     //! Perform necessary cleanup when a master thread stops using TBB.
-    void cleanup_master( bool needs_wait_workers );
+    bool cleanup_master( bool blocking_terminate );
 
     //! Initialize a scheduler for a worker thread.
     static generic_scheduler* create_worker( market& m, size_t index );
@@ -294,14 +314,14 @@ public:
 #if TBB_USE_ASSERT > 1
     //! Check that internal data structures are in consistent state.
     /** Raises __TBB_ASSERT failure if inconsistency is found. */
-    void assert_task_pool_valid () const;
+    void assert_task_pool_valid() const;
 #else
     void assert_task_pool_valid() const {}
 #endif /* TBB_USE_ASSERT <= 1 */
 
     void attach_arena( arena*, size_t index, bool is_master );
-    void nested_arena_entry( arena*, size_t, nested_arena_context &, bool );
-    void nested_arena_exit( nested_arena_context & );
+    void nested_arena_entry( arena*, size_t );
+    void nested_arena_exit();
     void wait_until_empty();
 
     void spawn( task& first, task*& next ) __TBB_override;
@@ -310,8 +330,8 @@ public:
 
     void enqueue( task&, void* reserved ) __TBB_override;
 
-    void local_spawn( task& first, task*& next );
-    void local_spawn_root_and_wait( task& first, task*& next );
+    void local_spawn( task* first, task*& next );
+    void local_spawn_root_and_wait( task* first, task*& next );
     virtual void local_wait_for_all( task& parent, task* child ) = 0;
 
     //! Destroy and deallocate this scheduler object
@@ -692,37 +712,99 @@ inline void generic_scheduler::offload_task ( task& t, intptr_t /*priority*/ ) {
 }
 #endif /* __TBB_TASK_PRIORITY */
 
+#if __TBB_PREVIEW_CRITICAL_TASKS
+class critical_task_count_guard : internal::no_copy {
+public:
+    critical_task_count_guard(scheduler_properties& properties, task& t)
+        : my_properties(properties),
+          my_original_critical_task_state(properties.has_taken_critical_task) {
+        my_properties.has_taken_critical_task |= internal::is_critical(t);
+    }
+    ~critical_task_count_guard() {
+        my_properties.has_taken_critical_task = my_original_critical_task_state;
+    }
+private:
+    scheduler_properties& my_properties;
+    bool my_original_critical_task_state;
+};
+#endif /* __TBB_PREVIEW_CRITICAL_TASKS */
+
+#if __TBB_FP_CONTEXT || __TBB_TASK_GROUP_CONTEXT
+//! Helper class for tracking floating point context and task group context switches
+/** Assuming presence of an itt collector, in addition to keeping track of floating
+    point context, this class emits itt events to indicate begin and end of task group
+    context execution **/
+template <bool report_tasks>
+class context_guard_helper {
+#if __TBB_TASK_GROUP_CONTEXT
+    const task_group_context *curr_ctx;
+#endif
 #if __TBB_FP_CONTEXT
-class cpu_ctl_env_helper {
     cpu_ctl_env guard_cpu_ctl_env;
     cpu_ctl_env curr_cpu_ctl_env;
+#endif
 public:
-    cpu_ctl_env_helper() {
+    context_guard_helper()
+#if __TBB_TASK_GROUP_CONTEXT
+        : curr_ctx(NULL)
+#endif
+    {
+#if __TBB_FP_CONTEXT
         guard_cpu_ctl_env.get_env();
         curr_cpu_ctl_env = guard_cpu_ctl_env;
+#endif
     }
-    ~cpu_ctl_env_helper() {
+    ~context_guard_helper() {
+#if __TBB_FP_CONTEXT
         if ( curr_cpu_ctl_env != guard_cpu_ctl_env )
             guard_cpu_ctl_env.set_env();
+#endif
+#if __TBB_TASK_GROUP_CONTEXT
+        if (report_tasks && curr_ctx)
+            ITT_TASK_END;
+#endif
     }
-    void set_env( const task_group_context *ctx ) {
+    void set_ctx( const task_group_context *ctx ) {
         generic_scheduler::assert_context_valid(ctx);
+#if __TBB_FP_CONTEXT
         const cpu_ctl_env &ctl = *punned_cast<cpu_ctl_env*>(&ctx->my_cpu_ctl_env);
-        if ( ctl != curr_cpu_ctl_env ) {
-            curr_cpu_ctl_env = ctl;
-            curr_cpu_ctl_env.set_env();
+#endif
+#if __TBB_TASK_GROUP_CONTEXT
+        if(ctx != curr_ctx) {
+#endif
+#if __TBB_FP_CONTEXT
+            if ( ctl != curr_cpu_ctl_env ) {
+                curr_cpu_ctl_env = ctl;
+                curr_cpu_ctl_env.set_env();
+            }
+#endif
+#if __TBB_TASK_GROUP_CONTEXT
+            // if task group context was active, report end of current execution frame.
+            if (report_tasks) {
+                if (curr_ctx)
+                    ITT_TASK_END;
+                // reporting begin of new task group context execution frame.
+                // using address of task group context object to group tasks (parent).
+                // id of task execution frame is NULL and reserved for future use.
+                ITT_TASK_BEGIN(ctx,ctx->my_name,NULL);
+                curr_ctx = ctx;
+            }
         }
+#endif
     }
     void restore_default() {
+#if __TBB_FP_CONTEXT
         if ( curr_cpu_ctl_env != guard_cpu_ctl_env ) {
             guard_cpu_ctl_env.set_env();
             curr_cpu_ctl_env = guard_cpu_ctl_env;
         }
+#endif
     }
 };
 #else
-struct cpu_ctl_env_helper {
-    void set_env( __TBB_CONTEXT_ARG1(task_group_context *) ) {}
+template <bool T>
+struct context_guard_helper {
+    void set_ctx( __TBB_CONTEXT_ARG1(task_group_context *) ) {}
     void restore_default() {}
 };
 #endif /* __TBB_FP_CONTEXT */

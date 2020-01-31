@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_concurrent_monitor_H
@@ -100,13 +96,13 @@ public:
     class thread_context : waitset_node_t, no_copy {
         friend class concurrent_monitor;
     public:
-        thread_context() : spurious(false), aborted(false), ready(false), context(0) {
+        thread_context() : skipped_wakeup(false), aborted(false), ready(false), context(0) {
             epoch = 0;
             in_waitset = false;
         }
         ~thread_context() {
             if (ready) {
-                if( spurious ) semaphore().P();
+                if( skipped_wakeup ) semaphore().P();
                 semaphore().~binary_semaphore();
             }
         }
@@ -119,7 +115,7 @@ public:
         tbb::aligned_space<binary_semaphore> sema;
         __TBB_atomic unsigned epoch;
         tbb::atomic<bool> in_waitset;
-        bool  spurious;
+        bool  skipped_wakeup;
         bool  aborted;
         bool  ready;
         uintptr_t context;

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "tbb/global_control.h" // thread_stack_size
@@ -25,6 +21,7 @@
 #include "arena.h"
 #include "itt_notify.h"
 #include "semaphore.h"
+#include "tbb/internal/_flow_graph_impl.h"
 
 #include <functional>
 
@@ -217,12 +214,19 @@ arena::arena ( market& m, unsigned num_slots, unsigned num_reserved_slots ) {
         mailbox(i+1).construct();
         ITT_SYNC_CREATE(&mailbox(i+1), SyncType_Scheduler, SyncObj_Mailbox);
         my_slots[i].hint_for_pop = i;
+#if __TBB_PREVIEW_CRITICAL_TASKS
+        my_slots[i].hint_for_critical = i;
+#endif
 #if __TBB_STATISTICS
         my_slots[i].my_counters = new ( NFS_Allocate(1, sizeof(statistics_counters), NULL) ) statistics_counters;
 #endif /* __TBB_STATISTICS */
     }
     my_task_stream.initialize(my_num_slots);
     ITT_SYNC_CREATE(&my_task_stream, SyncType_Scheduler, SyncObj_TaskStream);
+#if __TBB_PREVIEW_CRITICAL_TASKS
+    my_critical_task_stream.initialize(my_num_slots);
+    ITT_SYNC_CREATE(&my_critical_task_stream, SyncType_Scheduler, SyncObj_CriticalTaskStream);
+#endif
 #if __TBB_ENQUEUE_ENFORCED_CONCURRENCY
     my_concurrency_mode = cm_normal;
 #endif
@@ -267,10 +271,14 @@ void arena::free_arena () {
         drained += mailbox(i+1).drain();
     }
     __TBB_ASSERT( my_task_stream.drain()==0, "Not all enqueued tasks were executed");
+#if __TBB_PREVIEW_CRITICAL_TASKS
+    __TBB_ASSERT( my_critical_task_stream.drain()==0, "Not all critical tasks were executed");
+#endif
 #if __TBB_COUNT_TASK_NODES
     my_market->update_task_node_count( -drained );
 #endif /* __TBB_COUNT_TASK_NODES */
-    my_market->release(); // remove an internal reference
+    // remove an internal reference
+    my_market->release( /*is_public=*/false, /*blocking_terminate=*/false );
 #if __TBB_TASK_GROUP_CONTEXT
     __TBB_ASSERT( my_default_ctx, "Master thread never entered the arena?" );
     my_default_ctx->~task_group_context();
@@ -429,6 +437,10 @@ bool arena::is_out_of_work() {
                     }
                     __TBB_ASSERT( k <= n, NULL );
                     bool work_absent = k == n;
+#if __TBB_PREVIEW_CRITICAL_TASKS
+                    bool no_critical_tasks = my_critical_task_stream.empty(0);
+                    work_absent &= no_critical_tasks;
+#endif
 #if __TBB_TASK_PRIORITY
                     // Variable tasks_present indicates presence of tasks at any priority
                     // level, while work_absent refers only to the current priority.
@@ -558,17 +570,48 @@ void arena::enqueue_task( task& t, intptr_t prio, FastRandom &random )
     }
     __TBB_ASSERT(t.prefix().affinity==affinity_id(0), "affinity is ignored for enqueued tasks");
 #endif /* TBB_USE_ASSERT */
+#if __TBB_PREVIEW_CRITICAL_TASKS
+    if( prio == internal::priority_critical || internal::is_critical( t ) ) {
+        // TODO: consider using of 'scheduler::handled_as_critical'
+        internal::make_critical( t );
+#if __TBB_TASK_ISOLATION
+        generic_scheduler* s = governor::local_scheduler_if_initialized();
+        __TBB_ASSERT( s, "Scheduler must be initialized at this moment" );
+        // propagate isolation level to critical task
+        t.prefix().isolation = s->my_innermost_running_task->prefix().isolation;
+#endif
+        ITT_NOTIFY(sync_releasing, &my_critical_task_stream);
+        if( !s || !s->my_arena_slot ) {
+            // Either scheduler is not initialized or it is not attached to the arena, use random
+            // lane for the task.
+            my_critical_task_stream.push( &t, 0, internal::random_lane_selector(random) );
+        } else {
+            unsigned& lane = s->my_arena_slot->hint_for_critical;
+            my_critical_task_stream.push( &t, 0, tbb::internal::subsequent_lane_selector(lane) );
+        }
+        advertise_new_work<work_spawned>();
+        return;
+    }
+#endif /* __TBB_PREVIEW_CRITICAL_TASKS */
 
     ITT_NOTIFY(sync_releasing, &my_task_stream);
 #if __TBB_TASK_PRIORITY
     intptr_t p = prio ? normalize_priority(priority_t(prio)) : normalized_normal_priority;
     assert_priority_valid(p);
+#if __TBB_PREVIEW_CRITICAL_TASKS && __TBB_CPF_BUILD
+    my_task_stream.push( &t, p, internal::random_lane_selector(random) );
+#else
     my_task_stream.push( &t, p, random );
+#endif
     if ( p != my_top_priority )
         my_market->update_arena_priority( *this, p );
 #else /* !__TBB_TASK_PRIORITY */
     __TBB_ASSERT_EX(prio == 0, "the library is not configured to respect the task priority");
+#if __TBB_PREVIEW_CRITICAL_TASKS && __TBB_CPF_BUILD
+    my_task_stream.push( &t, 0, internal::random_lane_selector(random) );
+#else
     my_task_stream.push( &t, 0, random );
+#endif
 #endif /* !__TBB_TASK_PRIORITY */
     advertise_new_work<work_enqueued>();
 #if __TBB_TASK_PRIORITY
@@ -577,34 +620,61 @@ void arena::enqueue_task( task& t, intptr_t prio, FastRandom &random )
 #endif /* __TBB_TASK_PRIORITY */
 }
 
-struct nested_arena_context : no_copy {
-    generic_scheduler &my_scheduler;
-    scheduler_state const my_orig_state;
-    task_group_context *my_orig_ctx;
-    nested_arena_context(generic_scheduler *s, arena* a, size_t slot_index, bool type)
-        : my_scheduler(*s), my_orig_state(*s), my_orig_ctx(NULL) {
-        s->nested_arena_entry(a, slot_index, *this, type);
+class nested_arena_context : no_copy {
+public:
+    nested_arena_context(generic_scheduler *s, arena* a, size_t slot_index, bool type, bool same)
+        : my_scheduler(*s), my_orig_ctx(NULL), same_arena(same) {
+        if (same_arena) {
+            my_orig_state.my_properties = my_scheduler.my_properties;
+            my_orig_state.my_innermost_running_task = my_scheduler.my_innermost_running_task;
+            mimic_outermost_level(a, type);
+        } else {
+            my_orig_state = *s;
+            mimic_outermost_level(a, type);
+            s->nested_arena_entry(a, slot_index);
+        }
     }
     ~nested_arena_context() {
-        my_scheduler.nested_arena_exit(*this);
-        static_cast<scheduler_state&>(my_scheduler) = my_orig_state; // restore arena settings
-        governor::assume_scheduler(&my_scheduler);
+#if __TBB_TASK_GROUP_CONTEXT
+        my_scheduler.my_dummy_task->prefix().context = my_orig_ctx; // restore context of dummy task
+#endif
+        if (same_arena) {
+            my_scheduler.my_properties = my_orig_state.my_properties;
+            my_scheduler.my_innermost_running_task = my_orig_state.my_innermost_running_task;
+        } else {
+            my_scheduler.nested_arena_exit();
+            static_cast<scheduler_state&>(my_scheduler) = my_orig_state; // restore arena settings
+#if __TBB_TASK_PRIORITY
+            my_scheduler.my_local_reload_epoch = *my_orig_state.my_ref_reload_epoch;
+#endif
+            governor::assume_scheduler(&my_scheduler);
+        }
+    }
+
+private:
+    generic_scheduler &my_scheduler;
+    scheduler_state my_orig_state;
+    task_group_context *my_orig_ctx;
+    const bool same_arena;
+
+    void mimic_outermost_level(arena* a, bool type) {
+        my_scheduler.my_properties.outermost = true;
+        my_scheduler.my_properties.type = type;
+        my_scheduler.my_innermost_running_task = my_scheduler.my_dummy_task;
+#if __TBB_PREVIEW_CRITICAL_TASKS
+        my_scheduler.my_properties.has_taken_critical_task = false;
+#endif
+#if __TBB_TASK_GROUP_CONTEXT
+        // Save dummy's context and replace it by arena's context
+        my_orig_ctx = my_scheduler.my_dummy_task->prefix().context;
+        my_scheduler.my_dummy_task->prefix().context = a->my_default_ctx;
+#endif
     }
 };
 
-void generic_scheduler::nested_arena_entry(arena* a, size_t slot_index, nested_arena_context& c, bool type) {
+void generic_scheduler::nested_arena_entry(arena* a, size_t slot_index) {
     __TBB_ASSERT( is_alive(a->my_guard), NULL );
-    // Mimic outermost level
-    my_properties.outermost = true;
-    my_properties.type = type;
-    my_innermost_running_task = my_dummy_task;
-#if __TBB_TASK_GROUP_CONTEXT
-    // Save dummy's context and replace it by arena's context
-    c.my_orig_ctx = my_dummy_task->prefix().context;
-    my_dummy_task->prefix().context = a->my_default_ctx;
-#endif
-    if( a == my_arena )
-        return;
+    __TBB_ASSERT( a!=my_arena, NULL);
 
     // overwrite arena settings
 #if __TBB_TASK_PRIORITY
@@ -615,34 +685,27 @@ void generic_scheduler::nested_arena_entry(arena* a, size_t slot_index, nested_a
     attach_arena( a, slot_index, /*is_master*/true );
     __TBB_ASSERT( my_arena == a, NULL );
     governor::assume_scheduler( this );
+    // TODO? ITT_NOTIFY(sync_acquired, a->my_slots + index);
+    // TODO: it requires market to have P workers (not P-1)
+    // TODO: a preempted worker should be excluded from assignment to other arenas e.g. my_slack--
+    if( !is_worker() && slot_index >= my_arena->my_num_reserved_slots )
+        my_arena->my_market->adjust_demand(*my_arena, -1);
 #if __TBB_ARENA_OBSERVER
     my_last_local_observer = 0; // TODO: try optimize number of calls
     my_arena->my_observers.notify_entry_observers( my_last_local_observer, /*worker=*/false );
 #endif
-    // TODO? ITT_NOTIFY(sync_acquired, a->my_slots + index);
-    // TODO: it requires market to have P workers (not P-1)
-    // TODO: a preempted worker should be excluded from assignment to other arenas e.g. my_slack--
-    if( !is_worker() && slot_index >= my_arena->my_num_reserved_slots ) my_arena->my_market->adjust_demand(*my_arena, -1);
 }
 
-void generic_scheduler::nested_arena_exit(nested_arena_context& c) {
-#if __TBB_TASK_GROUP_CONTEXT
-    // restore context of dummy task
-    my_dummy_task->prefix().context = c.my_orig_ctx;
-#endif
-    if ( my_arena == c.my_orig_state.my_arena )
-        return;
-
-    if( !is_worker() && my_arena_index >= my_arena->my_num_reserved_slots ) my_arena->my_market->adjust_demand(*my_arena, 1);
+void generic_scheduler::nested_arena_exit() {
 #if __TBB_ARENA_OBSERVER
     my_arena->my_observers.notify_exit_observers( my_last_local_observer, /*worker=*/false );
 #endif /* __TBB_ARENA_OBSERVER */
-
 #if __TBB_TASK_PRIORITY
     if ( my_offloaded_tasks )
         my_arena->orphan_offloaded_tasks( *this );
-    my_local_reload_epoch = *c.my_orig_state.my_ref_reload_epoch;
 #endif
+    if( !is_worker() && my_arena_index >= my_arena->my_num_reserved_slots )
+        my_arena->my_market->adjust_demand(*my_arena, 1);
     // Free the master slot.
     __TBB_ASSERT(my_arena->my_slots[my_arena_index].my_scheduler, "A slot is already empty");
     __TBB_store_with_release(my_arena->my_slots[my_arena_index].my_scheduler, (generic_scheduler*)NULL);
@@ -671,8 +734,7 @@ void task_arena_base::internal_initialize( ) {
     if( my_max_concurrency < 1 )
         my_max_concurrency = (int)governor::default_num_threads();
     __TBB_ASSERT( my_master_slots <= (unsigned)my_max_concurrency, "Number of slots reserved for master should not exceed arena concurrency");
-    arena* new_arena = market::create_arena( my_max_concurrency, my_master_slots,
-                                              global_control::active_value(global_control::thread_stack_size) );
+    arena* new_arena = market::create_arena( my_max_concurrency, my_master_slots, 0 );
     // add an internal market reference; a public reference was added in create_arena
     market &m = market::global_market( /*is_public=*/false );
     // allocate default context for task_arena
@@ -686,7 +748,8 @@ void task_arena_base::internal_initialize( ) {
     // threads might race to initialize the arena
     if(as_atomic(my_arena).compare_and_swap(new_arena, NULL) != NULL) {
         __TBB_ASSERT(my_arena, NULL); // another thread won the race
-        m.release(/*is_public*/true); // release public market reference
+        // release public market reference
+        m.release( /*is_public=*/true, /*blocking_terminate=*/false );
         new_arena->on_thread_leaving<arena::ref_external>(); // destroy unneeded arena
 #if __TBB_TASK_GROUP_CONTEXT
         spin_wait_while_eq(my_context, (task_group_context*)NULL);
@@ -701,7 +764,7 @@ void task_arena_base::internal_initialize( ) {
 
 void task_arena_base::internal_terminate( ) {
     if( my_arena ) {// task_arena was initialized
-        my_arena->my_market->release( /*is_public*/true );
+        my_arena->my_market->release( /*is_public=*/true, /*blocking_terminate=*/false );
         my_arena->on_thread_leaving<arena::ref_external>();
         my_arena = 0;
 #if __TBB_TASK_GROUP_CONTEXT
@@ -736,8 +799,8 @@ void task_arena_base::internal_enqueue( task& t, intptr_t prio ) const {
     generic_scheduler* s = governor::local_scheduler_if_initialized();
     __TBB_ASSERT(s, "Scheduler is not initialized"); // we allocated a task so can expect the scheduler
 #if __TBB_TASK_GROUP_CONTEXT
-    __TBB_ASSERT(my_arena->my_default_ctx == t.prefix().context, NULL);
-    __TBB_ASSERT(!my_arena->my_default_ctx->is_group_execution_cancelled(), // TODO: any better idea?
+    // Is there a better place for checking the state of my_default_ctx?
+    __TBB_ASSERT(!(my_arena->my_default_ctx == t.prefix().context && my_arena->my_default_ctx->is_group_execution_cancelled()),
                  "The task will not be executed because default task_group_context of task_arena is cancelled. Has previously enqueued task thrown an exception?");
 #endif
     my_arena->enqueue_task( t, prio, s->my_random );
@@ -756,7 +819,7 @@ class delegated_task : public task {
             task * orig_dummy;
             task_group_context * orig_ctx;
             scheduler_properties orig_props;
-            outermost_context(delegated_task *_t, generic_scheduler &_s) 
+            outermost_context(delegated_task *_t, generic_scheduler &_s)
                 : t(_t), s(_s), orig_dummy(s.my_dummy_task), orig_props(s.my_properties) {
                 __TBB_ASSERT(s.my_innermost_running_task == t, NULL);
 #if __TBB_TASK_GROUP_CONTEXT
@@ -792,78 +855,106 @@ public:
     bool operator()(uintptr_t ctx) const { return (void*)ctx == (void*)&my_delegate; }
 };
 
-void task_arena_base::internal_execute( internal::delegate_base& d) const {
+void task_arena_base::internal_execute(internal::delegate_base& d) const {
     __TBB_ASSERT(my_arena, NULL);
     generic_scheduler* s = governor::local_scheduler_weak();
     __TBB_ASSERT(s, "Scheduler is not initialized");
-    // TODO: is it safe to assign slot to a scheduler which is not yet switched?
-    size_t index1 =  s->my_arena == my_arena ? s->my_arena_index : my_arena->occupy_free_slot</* as_worker*/false>( *s );
-    if ( index1 != arena::out_of_arena ) {
-        cpu_ctl_env_helper cpu_ctl_helper;
-        cpu_ctl_helper.set_env( __TBB_CONTEXT_ARG1(my_context) );
+
+    bool same_arena = s->my_arena == my_arena;
+    size_t index1 = s->my_arena_index;
+    if (!same_arena) {
+        index1 = my_arena->occupy_free_slot</* as_worker*/false>(*s);
+        if (index1 == arena::out_of_arena) {
+
+#if __TBB_USE_OPTIONAL_RTTI
+            // Workaround for the bug inside graph. If the thread can not occupy arena slot during task_arena::execute()
+            // and all aggregator operations depend on this task completion (all other threads are inside arena already)
+            // deadlock appears, because enqueued task will never enter arena.
+            // Workaround: check if the task came from graph via RTTI (casting to graph::spawn_functor)
+            // and enqueue this task with non-blocking internal_enqueue method.
+            // TODO: have to change behaviour later in next GOLD release (maybe to add new library entry point - try_execute)
+            typedef tbb::flow::interface10::graph::spawn_functor graph_funct;
+            internal::delegated_function< graph_funct, void >* deleg_funct =
+                    dynamic_cast< internal::delegated_function< graph_funct, void>* >(&d);
+
+            if (deleg_funct) {
+                internal_enqueue(*new(task::allocate_root(*my_context))
+                    internal::function_task< internal::strip< graph_funct >::type >
+                        (internal::forward< graph_funct >(deleg_funct->my_func)), 0);
+                return;
+            } else {
+#endif /*  __TBB_USE_OPTIONAL_RTTI */
+                concurrent_monitor::thread_context waiter;
+#if __TBB_TASK_GROUP_CONTEXT
+                task_group_context exec_context(task_group_context::isolated, my_version_and_traits & exact_exception_flag);
+#if __TBB_FP_CONTEXT
+                exec_context.copy_fp_settings(*my_context);
+#endif
+#endif
+                auto_empty_task root(__TBB_CONTEXT_ARG(s, &exec_context));
+                root.prefix().ref_count = 2;
+                my_arena->enqueue_task(*new(task::allocate_root(__TBB_CONTEXT_ARG1(exec_context)))
+                    delegated_task(d, my_arena->my_exit_monitors, &root),
+                    0, s->my_random); // TODO: priority?
+                size_t index2 = arena::out_of_arena;
+                do {
+                    my_arena->my_exit_monitors.prepare_wait(waiter, (uintptr_t)&d);
+                    if (__TBB_load_with_acquire(root.prefix().ref_count) < 2) {
+                        my_arena->my_exit_monitors.cancel_wait(waiter);
+                        break;
+                    }
+                    index2 = my_arena->occupy_free_slot</*as_worker*/false>(*s);
+                    if (index2 != arena::out_of_arena) {
+                        my_arena->my_exit_monitors.cancel_wait(waiter);
+                        nested_arena_context scope(s, my_arena, index2, scheduler_properties::master, same_arena);
+                        s->local_wait_for_all(root, NULL);
 #if TBB_USE_EXCEPTIONS
-        try {
+                        __TBB_ASSERT(!exec_context.my_exception, NULL); // exception can be thrown above, not deferred
+#endif
+                        __TBB_ASSERT(root.prefix().ref_count == 0, NULL);
+                        break;
+                    }
+                    my_arena->my_exit_monitors.commit_wait(waiter);
+                } while (__TBB_load_with_acquire(root.prefix().ref_count) == 2);
+                if (index2 == arena::out_of_arena) {
+                    // notify a waiting thread even if this thread did not enter arena,
+                    // in case it was woken by a leaving thread but did not need to enter
+                    my_arena->my_exit_monitors.notify_one(); // do not relax!
+                }
+#if TBB_USE_EXCEPTIONS
+                // process possible exception
+                if (task_group_context::exception_container_type *pe = exec_context.my_exception)
+                    TbbRethrowException(pe);
+#endif
+                return;
+#if __TBB_USE_OPTIONAL_RTTI
+            } // if task came from graph
+#endif
+        } // if (index1 == arena::out_of_arena)
+    } // if (!same_arena)
+
+    context_guard_helper</*report_tasks=*/false> context_guard;
+    context_guard.set_ctx(__TBB_CONTEXT_ARG1(my_context));
+#if TBB_USE_EXCEPTIONS
+    try {
 #endif
         //TODO: replace dummy tasks for workers as well to avoid using of the_dummy_context
-        nested_arena_context scope(s, my_arena, index1, scheduler_properties::master);
+        nested_arena_context scope(s, my_arena, index1, scheduler_properties::master, same_arena);
         d();
 #if TBB_USE_EXCEPTIONS
-        } catch(...) {
-            cpu_ctl_helper.restore_default(); // TODO: is it needed on Windows?
-            if( my_version_and_traits & exact_exception_flag ) throw;
-            else {
-                task_group_context exception_container( task_group_context::isolated,
-                    task_group_context::default_traits & ~task_group_context::exact_exception );
-                exception_container.register_pending_exception();
-                __TBB_ASSERT(exception_container.my_exception, NULL);
-                TbbRethrowException( exception_container.my_exception );
-            }
-        }
-#endif
-    } else {
-        concurrent_monitor::thread_context waiter;
-#if __TBB_TASK_GROUP_CONTEXT
-        task_group_context exec_context( task_group_context::isolated, my_version_and_traits & exact_exception_flag );
-#if __TBB_FP_CONTEXT
-        exec_context.copy_fp_settings( *my_context );
-#endif
-#endif
-        auto_empty_task root(__TBB_CONTEXT_ARG(s, &exec_context));
-        root.prefix().ref_count = 2;
-        my_arena->enqueue_task( *new( task::allocate_root(__TBB_CONTEXT_ARG1(exec_context)) )
-                                delegated_task(d, my_arena->my_exit_monitors, &root),
-                                0, s->my_random ); // TODO: priority?
-        size_t index2 = arena::out_of_arena;
-        do {
-            my_arena->my_exit_monitors.prepare_wait(waiter, (uintptr_t)&d);
-            if( __TBB_load_with_acquire(root.prefix().ref_count) < 2 ) {
-                my_arena->my_exit_monitors.cancel_wait(waiter);
-                break;
-            }
-            index2 = my_arena->occupy_free_slot</*as_worker*/false>( *s );
-            if( index2 != arena::out_of_arena ) {
-                my_arena->my_exit_monitors.cancel_wait(waiter);
-                nested_arena_context scope(s, my_arena, index2, scheduler_properties::master);
-                s->local_wait_for_all(root, NULL);
-#if TBB_USE_EXCEPTIONS
-                __TBB_ASSERT( !exec_context.my_exception, NULL ); // exception can be thrown above, not deferred
-#endif
-                __TBB_ASSERT( root.prefix().ref_count == 0, NULL );
-                break;
-            }
-            my_arena->my_exit_monitors.commit_wait(waiter);
-        } while( __TBB_load_with_acquire(root.prefix().ref_count) == 2 );
-        if( index2==arena::out_of_arena ) {
-            // notify a waiting thread even if this thread did not enter arena,
-            // in case it was woken by a leaving thread but did not need to enter
-            my_arena->my_exit_monitors.notify_one(); // do not relax!
-        }
-#if TBB_USE_EXCEPTIONS
-        // process possible exception
-        if( task_group_context::exception_container_type *pe = exec_context.my_exception )
-            TbbRethrowException( pe );
-#endif
     }
+    catch (...) {
+        context_guard.restore_default(); // TODO: is it needed on Windows?
+        if (my_version_and_traits & exact_exception_flag) throw;
+        else {
+            task_group_context exception_container(task_group_context::isolated,
+                task_group_context::default_traits & ~task_group_context::exact_exception);
+            exception_container.register_pending_exception();
+            __TBB_ASSERT(exception_container.my_exception, NULL);
+            TbbRethrowException(exception_container.my_exception);
+        }
+    }
+#endif
 }
 
 // this wait task is a temporary approach to wait for arena emptiness for masters without slots
@@ -903,7 +994,7 @@ void task_arena_base::internal_wait() const {
         while( my_arena->my_pool_state != arena::SNAPSHOT_EMPTY ) {
             if( !__TBB_load_with_acquire(my_arena->my_slots[0].my_scheduler) // TODO TEMP: one master, make more masters
                 && as_atomic(my_arena->my_slots[0].my_scheduler).compare_and_swap(s, NULL) == NULL ) {
-                nested_arena_context a(s, my_arena, 0, scheduler_properties::worker);
+                nested_arena_context a(s, my_arena, 0, scheduler_properties::worker, false);
                 s->wait_until_empty();
             } else {
                 binary_semaphore waiter; // TODO: replace by a single event notification from is_out_of_work
@@ -934,7 +1025,7 @@ public:
 };
 
 void isolate_within_arena( delegate_base& d, intptr_t reserved ) {
-    __TBB_ASSERT( reserved == 0, NULL );
+    __TBB_ASSERT_EX( reserved == 0, NULL );
     // TODO: Decide what to do if the scheduler is not initialized. Is there a use case for it?
     generic_scheduler* s = governor::local_scheduler_weak();
     __TBB_ASSERT( s, "this_task_arena::isolate() needs an initialized scheduler" );

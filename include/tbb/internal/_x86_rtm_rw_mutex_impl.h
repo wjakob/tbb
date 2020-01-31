@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB__x86_rtm_rw_mutex_impl_H
@@ -88,11 +84,11 @@ private:
 
     static x86_rtm_rw_mutex* internal_get_mutex( const spin_rw_mutex::scoped_lock& lock )
     {
-        return static_cast<x86_rtm_rw_mutex*>( lock.internal_get_mutex() );
+        return static_cast<x86_rtm_rw_mutex*>( lock.mutex );
     }
     static void internal_set_mutex( spin_rw_mutex::scoped_lock& lock, spin_rw_mutex* mtx )
     {
-        lock.internal_set_mutex( mtx );
+        lock.mutex = mtx;
     }
     //! @endcond
 public:
@@ -171,7 +167,8 @@ private:
         bool upgrade_to_writer() {
             x86_rtm_rw_mutex* mutex = x86_rtm_rw_mutex::internal_get_mutex(my_scoped_lock);
             __TBB_ASSERT( mutex, "lock is not acquired" );
-            __TBB_ASSERT( transaction_state==RTM_transacting_reader || transaction_state==RTM_real_reader, "Invalid state for upgrade" );
+            if (transaction_state == RTM_transacting_writer || transaction_state == RTM_real_writer)
+                return true; // Already a writer
             return mutex->internal_upgrade(*this);
         }
 
@@ -180,7 +177,8 @@ private:
         bool downgrade_to_reader() {
             x86_rtm_rw_mutex* mutex = x86_rtm_rw_mutex::internal_get_mutex(my_scoped_lock);
             __TBB_ASSERT( mutex, "lock is not acquired" );
-            __TBB_ASSERT( transaction_state==RTM_transacting_writer || transaction_state==RTM_real_writer, "Invalid state for downgrade" );
+            if (transaction_state == RTM_transacting_reader || transaction_state == RTM_real_reader)
+                return true; // Already a reader
             return mutex->internal_downgrade(*this);
         }
 

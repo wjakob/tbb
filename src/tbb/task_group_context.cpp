@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "scheduler.h"
@@ -200,6 +196,12 @@ task_group_context::~task_group_context () {
 }
 
 void task_group_context::init () {
+#if DO_ITT_NOTIFY
+    // Check version of task group context to avoid reporting misleading identifier.
+    if( ( my_version_and_traits & version_mask ) < 3 )
+        my_name = internal::CUSTOM_CTX;
+#endif
+    ITT_TASK_GROUP(this, my_name, NULL);
     __TBB_STATIC_ASSERT ( sizeof(my_version_and_traits) >= 4, "Layout of my_version_and_traits must be reconsidered on this platform" );
     __TBB_STATIC_ASSERT ( sizeof(task_group_context) == 2 * NFS_MaxLineSize, "Context class has wrong size - check padding and members alignment" );
     __TBB_ASSERT ( (uintptr_t(this) & (sizeof(my_cancellation_requested) - 1)) == 0, "Context is improperly aligned" );

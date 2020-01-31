@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,13 +12,10 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "harness.h"
+#include "harness_graph.h"
 #include "tbb/flow_graph.h"
 #include "tbb/task_scheduler_init.h"
 
@@ -214,7 +211,6 @@ public:
     typedef tbb::flow::source_node<TType> source_type;
     static const int N = tbb::flow::tuple_size<TType>::value;
     static void test() {
-        TType v;
         source_type* all_source_nodes[MaxNSources];
         sink_node_helper<N,SType>::print_parallel_remark();
         REMARK(" >\n");
@@ -295,7 +291,9 @@ static void test() {
     SType* my_split = makeSplit<TUPLE_SIZE,SType>::create(g);
     sink_node_helper<TUPLE_SIZE, SType>::print_serial_remark(); REMARK(" >\n");
 
-    test_one_serial<SType>( *my_split, g);
+    test_output_ports_return_ref(*my_split);
+
+    test_one_serial<SType>(*my_split, g);
     // build the vector with copy construction from the used split node.
     std::vector<SType>split_vector(ELEMS, *my_split);
     // destroy the tired old split_node in case we're accidentally reusing pieces of it.
@@ -303,7 +301,7 @@ static void test() {
 
 
     for(int e = 0; e < ELEMS; ++e) {  // exercise each of the vector elements
-        test_one_serial<SType>( split_vector[e], g);
+        test_one_serial<SType>(split_vector[e], g);
     }
 }
 

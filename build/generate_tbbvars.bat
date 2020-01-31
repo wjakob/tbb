@@ -1,6 +1,6 @@
 @echo off
 REM
-REM Copyright (c) 2005-2016 Intel Corporation
+REM Copyright (c) 2005-2019 Intel Corporation
 REM
 REM Licensed under the Apache License, Version 2.0 (the "License");
 REM you may not use this file except in compliance with the License.
@@ -14,10 +14,6 @@ REM WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 REM See the License for the specific language governing permissions and
 REM limitations under the License.
 REM
-REM
-REM
-REM
-REM
 setlocal
 for %%D in ("%tbb_root%") do set actual_root=%%~fD
 set fslash_root=%actual_root:\=/%
@@ -25,6 +21,7 @@ set bin_dir=%CD%
 set fslash_bin_dir=%bin_dir:\=/%
 set _INCLUDE=INCLUDE& set _LIB=LIB
 if not x%UNIXMODE%==x set _INCLUDE=CPATH& set _LIB=LIBRARY_PATH
+if not x%USE_INCLUDE_ENV%==x set _INCLUDE=INCLUDE
 
 echo Generating local tbbvars.bat
 echo @echo off>tbbvars.bat

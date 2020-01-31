@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 // No ifndef guard because this file is not a normal include file.
@@ -33,7 +29,7 @@
 #define RML_SERVER_NAME "libirml" DEBUG_SUFFIX ".dylib"
 #elif __linux__
 #define RML_SERVER_NAME "libirml" DEBUG_SUFFIX ".so.1"
-#elif __FreeBSD__ || __NetBSD__ || __sun || _AIX
+#elif __FreeBSD__ || __NetBSD__ || __OpenBSD__ || __sun || _AIX
 #define RML_SERVER_NAME "libirml" DEBUG_SUFFIX ".so"
 #else
 #error Unknown OS

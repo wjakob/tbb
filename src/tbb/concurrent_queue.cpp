@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "tbb/tbb_stddef.h"
@@ -27,20 +23,7 @@
 #include "concurrent_monitor.h"
 #include "itt_notify.h"
 #include <new>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <cstring>   // for memset()
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
-
-using namespace std;
 
 #if defined(_MSC_VER) && defined(_Wp64)
     // Workaround for overzealous compiler warnings in /Wp64 mode
@@ -248,17 +231,17 @@ bool micro_queue::pop( void* dst, ticket k, concurrent_queue_base& base ) {
     k &= -concurrent_queue_rep::n_queue;
     spin_wait_until_eq( head_counter, k );
     spin_wait_while_eq( tail_counter, k );
-    page& p = *head_page;
-    __TBB_ASSERT( &p, NULL );
+    page *p = head_page;
+    __TBB_ASSERT( p, NULL );
     size_t index = modulo_power_of_two( k/concurrent_queue_rep::n_queue, base.items_per_page );
     bool success = false;
     {
-        micro_queue_pop_finalizer finalizer( *this, base, k+concurrent_queue_rep::n_queue, index==base.items_per_page-1 ? &p : NULL );
-        if( p.mask & uintptr_t(1)<<index ) {
+        micro_queue_pop_finalizer finalizer( *this, base, k+concurrent_queue_rep::n_queue, index==base.items_per_page-1 ? p : NULL );
+        if( p->mask & uintptr_t(1)<<index ) {
             success = true;
             ITT_NOTIFY( sync_acquired, dst );
             ITT_NOTIFY( sync_acquired, head_page );
-            base.assign_and_destroy_item( dst, p, index );
+            base.assign_and_destroy_item( dst, *p, index );
             ITT_NOTIFY( sync_releasing, head_page );
         } else {
             --base.my_rep->n_invalid_entries;
@@ -364,7 +347,7 @@ concurrent_queue_base_v3::concurrent_queue_base_v3( size_t item_sz ) {
     __TBB_ASSERT( is_aligned(&my_rep->head_counter, NFS_GetLineSize()), "alignment error" );
     __TBB_ASSERT( is_aligned(&my_rep->tail_counter, NFS_GetLineSize()), "alignment error" );
     __TBB_ASSERT( is_aligned(&my_rep->array, NFS_GetLineSize()), "alignment error" );
-    memset(my_rep,0,sizeof(concurrent_queue_rep));
+    std::memset(static_cast<void*>(my_rep),0,sizeof(concurrent_queue_rep));
     new ( &my_rep->items_avail ) concurrent_monitor();
     new ( &my_rep->slots_avail ) concurrent_monitor();
     this->item_size = item_sz;

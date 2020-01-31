@@ -1,6 +1,6 @@
 @echo on
 REM
-REM Copyright (c) 2005-2016 Intel Corporation
+REM Copyright (c) 2005-2019 Intel Corporation
 REM
 REM Licensed under the Apache License, Version 2.0 (the "License");
 REM you may not use this file except in compliance with the License.
@@ -13,10 +13,6 @@ REM distributed under the License is distributed on an "AS IS" BASIS,
 REM WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 REM See the License for the specific language governing permissions and
 REM limitations under the License.
-REM
-REM
-REM
-REM
 REM
 :: Getting parameters
 :: Architecture
@@ -54,7 +50,7 @@ copy "%TBBROOT%\%interim_path%\%vc_dir%\tbbmalloc%postfix%.pdb" "%output_dir%"
 copy "%TBBROOT%\%interim_lib_path%\%vc_dir%\tbb%postfix%.lib" "%output_dir%"
 
 :: Copying DAT-file
-echo Using DAT-file %dat_file% 
+echo Using DAT-file %dat_file%
 if exist %dat_file% copy %dat_file% "%output_dir%\Assets\balls.dat"
 
 goto end

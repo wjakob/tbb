@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -52,13 +48,13 @@
 #elif _WIN32
 #include <malloc.h>
 #define alloca _alloca
-#elif __FreeBSD__||__NetBSD__
+#elif __FreeBSD__||__NetBSD__||__OpenBSD__
 #include <stdlib.h>
 #else
 #include <alloca.h>
 #endif
 
-/* 
+/*
  * types.h - This file contains all of the type definitions for the raytracer
  *
  *  $Id: types.h,v 1.2 2007-02-22 17:54:16 Exp $
@@ -72,7 +68,7 @@
 
 /* Maximum internal table sizes */
 /* Use prime numbers for best memory system performance */
-#define INTTBSIZE 1024       /* maximum intersections we can hold    */ 
+#define INTTBSIZE 1024       /* maximum intersections we can hold    */
 #define MAXLIGHTS 39         /* maximum number of lights in a scene  */
 #define MAXIMGS   39         /* maxiumum number of distinct images   */
 #define RPCQSIZE  113	     /* number of RPC messages to queue      */
@@ -136,7 +132,7 @@ typedef struct {         /* Scalar Volume Data */
   char name[96];         /* Volume data filename              */
   unsigned char * data;  /* pointer to raw byte volume data   */
 } scalarvol;
- 
+
 typedef struct {
   color (* texfunc)(void *, void *, void *);
   int shadowcast;  /* does the object cast a shadow */
@@ -148,7 +144,7 @@ typedef struct {
   flt phongexp;    /* phong exponent/shininess factor */
   int phongtype;   /* phong type: 0 == plastic, nonzero == metal */
   flt specular;    /* specular reflection */
-  flt opacity;     /* how opaque the object is */ 
+  flt opacity;     /* how opaque the object is */
   vector ctr;      /* origin of texture */
   vector rot;      /* rotation of texture about origin */
   vector scale;    /* scale of texture in x,y,z */
@@ -164,23 +160,23 @@ typedef struct {
   int (* bbox)(void *, vector *, vector *);        /* return the object bbox */
   void (* free)(void *);                           /* free the object        */
 } object_methods;
- 
-typedef struct {
-  unsigned int id;                      /* Unique Object serial number    */
-  void * nextobj;                       /* pointer to next object in list */ 
-  object_methods * methods;             /* this object's methods          */
-  texture * tex;                        /* object texture                 */
-} object; 
 
 typedef struct {
-  object * obj;  /* to object we hit                        */ 
+  unsigned int id;                      /* Unique Object serial number    */
+  void * nextobj;                       /* pointer to next object in list */
+  object_methods * methods;             /* this object's methods          */
+  texture * tex;                        /* object texture                 */
+} object;
+
+typedef struct {
+  object * obj;  /* to object we hit                        */
   flt t;         /* distance along the ray to the hit point */
 } intersection;
 
 typedef struct {
   int num;                      /* number of intersections    */
   intersection closest;         /* closest intersection > 0.0 */
-  intersection list[INTTBSIZE]; /* list of all intersections  */ 
+  intersection list[INTTBSIZE]; /* list of all intersections  */
 } intersectstruct;
 
 typedef struct {
@@ -204,7 +200,7 @@ typedef struct {
 } scenedef;
 
 typedef struct {
-   intersectstruct * intstruct; /* ptr to thread's intersection data       */ 
+   intersectstruct * intstruct; /* ptr to thread's intersection data       */
    unsigned int depth;   /* levels left to recurse.. (maxdepth - curdepth) */
    unsigned int flags;   /* ray flags, any special treatment needed etc    */
    unsigned int serial;  /* serial number of the ray                       */

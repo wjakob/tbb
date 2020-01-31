@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #if _USRDLL
@@ -155,10 +151,10 @@ struct Run {
             REPORT("Can't load " MALLOCLIB_NAME1 " or " MALLOCLIB_NAME2 "\n");
             exit(1);
         }
-        (FunctionAddress&)malloc_ptr = GetAddress(lib, "scalable_malloc");
-        (FunctionAddress&)free_ptr = GetAddress(lib, "scalable_free");
-        (FunctionAddress&)aligned_malloc_ptr = GetAddress(lib, "scalable_aligned_malloc");
-        (FunctionAddress&)aligned_free_ptr = GetAddress(lib, "scalable_aligned_free");
+        GetAddress(lib, "scalable_malloc", malloc_ptr);
+        GetAddress(lib, "scalable_free", free_ptr);
+        GetAddress(lib, "scalable_aligned_malloc", aligned_malloc_ptr);
+        GetAddress(lib, "scalable_aligned_free", aligned_free_ptr);
 
         for (size_t sz = 1024; sz <= 10*1024 ; sz*=10) {
             void *p1 = aligned_malloc_ptr(sz, 16);
@@ -187,22 +183,26 @@ int TestMain () {
 
     // warm-up run
     NativeParallelFor( 1, Run() );
-    /* 1st call to GetMemoryUsage() allocate some memory,
-       but it seems memory consumption stabilized after this.
-     */
-    GetMemoryUsage();
-    std::size_t memory_in_use = GetMemoryUsage();
-    ASSERT(memory_in_use == GetMemoryUsage(),
-           "Memory consumption should not increase after 1st GetMemoryUsage() call");
 
-    // expect that memory consumption stabilized after several runs
-    for (i=0; i<3; i++) {
-        std::size_t memory_in_use = GetMemoryUsage();
-        for (int j=0; j<10; j++)
-            NativeParallelFor( 1, Run() );
-        memory_leak = GetMemoryUsage() - memory_in_use;
-        if (memory_leak == 0)  // possibly too strong?
-            break;
+    {
+      /* 1st call to GetMemoryUsage() allocate some memory,
+         but it seems memory consumption stabilized after this.
+      */
+      GetMemoryUsage();
+      std::size_t memory_in_use = GetMemoryUsage();
+      ASSERT(memory_in_use == GetMemoryUsage(),
+             "Memory consumption should not increase after 1st GetMemoryUsage() call");
+    }
+    {
+        // expect that memory consumption stabilized after several runs
+        for (i=0; i<3; i++) {
+            std::size_t memory_in_use = GetMemoryUsage();
+            for (int j=0; j<10; j++)
+                NativeParallelFor( 1, Run() );
+            memory_leak = GetMemoryUsage() - memory_in_use;
+            if (memory_leak == 0)  // possibly too strong?
+                break;
+        }
     }
     if(3==i) {
         // not stabilized, could be leak

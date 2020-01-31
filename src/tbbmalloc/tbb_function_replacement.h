@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_function_replacement_H
@@ -45,7 +41,7 @@ typedef void (*FUNCPTR)();
 FRR_TYPE ReplaceFunctionA(const char *dllName, const char *funcName, FUNCPTR newFunc, const char ** opcodes, FUNCPTR* origFunc=NULL);
 FRR_TYPE ReplaceFunctionW(const wchar_t *dllName, const char *funcName, FUNCPTR newFunc, const char ** opcodes, FUNCPTR* origFunc=NULL);
 
-bool IsPrologueKnown(HMODULE module, const char *funcName, const char **opcodes);
+bool IsPrologueKnown(const char* dllName, const char *funcName, const char **opcodes, HMODULE module);
 
 // Utilities to convert between ADDRESS and LPVOID
 union Int2Ptr {
@@ -56,7 +52,7 @@ union Int2Ptr {
 inline UINT_PTR Ptr2Addrint(LPVOID ptr);
 inline LPVOID Addrint2Ptr(UINT_PTR ptr);
 
-// Use this value as the maximum size the trampoline region
+// The size of a trampoline region
 const unsigned MAX_PROBE_SIZE = 32;
 
 // The size of a jump relative instruction "e9 00 00 00 00"
@@ -67,6 +63,10 @@ const unsigned SIZE_OF_INDJUMP = 6;
 
 // The size of address we put in the location (in Intel64)
 const unsigned SIZE_OF_ADDRESS = 8;
+
+// The size limit (in bytes) for an opcode pattern to fit into a trampoline
+// There should be enough space left for a relative jump; +1 is for the extra pattern byte.
+const unsigned MAX_PATTERN_SIZE = MAX_PROBE_SIZE - SIZE_OF_RELJUMP + 1;
 
 // The max distance covered in 32 bits: 2^31 - 1 - C
 // where C should not be smaller than the size of a probe.

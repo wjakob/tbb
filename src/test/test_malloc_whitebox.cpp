@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /* to prevent loading dynamic TBBmalloc at startup, that is not needed
@@ -66,7 +62,6 @@ namespace tbbmalloc_whitebox {
 #include "../tbbmalloc/tbbmalloc.cpp"
 
 const int LARGE_MEM_SIZES_NUM = 10;
-const size_t MByte = 1024*1024;
 
 class AllocInfo {
     int *p;
@@ -227,10 +222,10 @@ public:
             blocks.push_back(TestBlock(idx));
             setBackRef(blocks.back().idx, &blocks.back().data);
         }
-        for (int i=0; i<cnt; i++)
+        for (size_t i=0; i<cnt; i++)
             ASSERT((Block*)&blocks[i].data == getBackRef(blocks[i].idx), NULL);
-        for (int i=cnt-1; i>=0; i--)
-            removeBackRef(blocks[i].idx);
+        for (size_t i=cnt; i>0; i--)
+            removeBackRef(blocks[i-1].idx);
     }
 };
 
@@ -395,16 +390,16 @@ int putMallocMem(intptr_t /*pool_id*/, void *ptr, size_t bytes)
 }
 
 class StressLOCacheWork: NoAssign {
-    rml::MemoryPool *mallocPool;
+    rml::MemoryPool *my_mallocPool;
 public:
-    StressLOCacheWork(rml::MemoryPool *mallocPool) : mallocPool(mallocPool) {}
+    StressLOCacheWork(rml::MemoryPool *mallocPool) : my_mallocPool(mallocPool) {}
     void operator()(int) const {
         for (size_t sz=minLargeObjectSize; sz<1*1024*1024;
              sz+=LargeObjectCache::largeBlockCacheStep) {
-            void *ptr = pool_malloc(mallocPool, sz);
+            void *ptr = pool_malloc(my_mallocPool, sz);
             ASSERT(ptr, "Memory was not allocated");
             memset(ptr, sz, sz);
-            pool_free(mallocPool, ptr);
+            pool_free(my_mallocPool, ptr);
         }
     }
 };
@@ -621,9 +616,14 @@ public:
         for (int i=0; i<ITERS; i++) {
             BlockI *slabBlock = backend->getSlabBlock(1);
             ASSERT(slabBlock, "Memory was not allocated");
-            LargeMemoryBlock *lmb = backend->getLargeBlock(8*1024);
+            uintptr_t prevBlock = (uintptr_t)slabBlock;
             backend->putSlabBlock(slabBlock);
-            backend->putLargeBlock(lmb);
+
+            LargeMemoryBlock *largeBlock = backend->getLargeBlock(16*1024);
+            ASSERT(largeBlock, "Memory was not allocated");
+            ASSERT((uintptr_t)largeBlock != prevBlock,
+                    "Large block cannot be reused from slab memory, only in fixed_pool case.");
+            backend->putLargeBlock(largeBlock);
         }
     }
 };
@@ -633,8 +633,7 @@ void TestBackend()
     rml::MemPoolPolicy pol(getMallocMem, putMallocMem);
     rml::MemoryPool *mPool;
     pool_create_v1(0, &pol, &mPool);
-    rml::internal::ExtMemoryPool *ePool =
-        &((rml::internal::MemoryPool*)mPool)->extMemPool;
+    rml::internal::ExtMemoryPool *ePool = &((rml::internal::MemoryPool*)mPool)->extMemPool;
     rml::internal::Backend *backend = &ePool->backend;
 
     for( int p=MaxThread; p>=MinThread; --p ) {
@@ -769,60 +768,99 @@ void TestHeapLimit()
 
 void checkNoHugePages()
 {
-    ASSERT(!hugePages.enabled, "scalable_allocation_mode "
+    ASSERT(!hugePages.isEnabled, "scalable_allocation_mode "
            "must have priority over environment variable");
 }
 
 /*---------------------------------------------------------------------------*/
-// The regression test against a bug in TBBMALLOC_CLEAN_ALL_BUFFERS allocation
-// command. When cleanup is requested the backend should process the queue of
-// postponed coalescing requests otherwise not all unsued memory might be
-// deallocated.
+// The regression test against bugs in TBBMALLOC_CLEAN_ALL_BUFFERS allocation command.
+// The idea is to allocate and deallocate a set of objects randomly in parallel.
+// For large sizes (16K), it forces conflicts in backend during coalescing.
+// For small sizes (4K), it forces cross-thread deallocations and then orphaned slabs.
+// Global cleanup should process orphaned slabs and the queue of postponed coalescing
+// requests, otherwise it will not be able to unmap all unused memory.
 
-const size_t alloc_size = 16*1024;
-const int total_alloc_size = 100 * 1024 * 1024;
-const int num_allocs = total_alloc_size / alloc_size;
+const int num_allocs = 10*1024;
 void *ptrs[num_allocs];
+tbb::atomic<int> alloc_counter;
 
-tbb::atomic<int> deallocs_counter;
+void multiThreadAlloc(size_t alloc_size) {
+    for( int i = alloc_counter++; i < num_allocs; i = alloc_counter++ ) {
+       ptrs[i] = scalable_malloc( alloc_size );
+       ASSERT( ptrs[i] != NULL, "scalable_malloc returned zero." );
+    }
+}
+void crossThreadDealloc() {
+    for( int i = --alloc_counter; i >= 0; i = --alloc_counter ) {
+       if (i < num_allocs) scalable_free( ptrs[i] );
+    }
+}
 
-struct TestCleanAllBuffersDeallocate : public SimpleBarrier {
+template<int AllocSize>
+struct TestCleanAllBuffersBody : public SimpleBarrier {
     void operator() ( int ) const {
         barrier.wait();
-        for( int i = deallocs_counter++; i < num_allocs; i = deallocs_counter++ )
-           scalable_free( ptrs[i] );
+        multiThreadAlloc(AllocSize);
+        barrier.wait();
+        crossThreadDealloc();
     }
 };
 
-// The idea is to allocate a set of objects and then deallocate them in random
-// order in parallel to force occurring conflicts in backend during coalescing.
-// Thus if the backend does not check the queue of postponed coalescing
-// requests it will not be able to unmap all memory and a memory leak will be
-// observed.
+template<int AllocSize>
 void TestCleanAllBuffers() {
     const int num_threads = 8;
     // Clean up if something was allocated before the test
     scalable_allocation_command(TBBMALLOC_CLEAN_ALL_BUFFERS,0);
 
     size_t memory_in_use_before = getMemSize();
-    for ( int i=0; i<num_allocs; ++i ) {
-        ptrs[i] = scalable_malloc( alloc_size );
-        ASSERT( ptrs[i] != NULL, "scalable_malloc has return zero." );
-    }
-    deallocs_counter = 0;
-    TestCleanAllBuffersDeallocate::initBarrier(num_threads);
-    NativeParallelFor(num_threads, TestCleanAllBuffersDeallocate());
-    // TODO: reproduce the conditions for bug reproduction more reliably
+    alloc_counter = 0;
+    TestCleanAllBuffersBody<AllocSize>::initBarrier(num_threads);
+
+    NativeParallelFor(num_threads, TestCleanAllBuffersBody<AllocSize>());
+    // TODO: reproduce the bug conditions more reliably
     if ( defaultMemPool->extMemPool.backend.coalescQ.blocksToFree == NULL )
         REMARK( "Warning: The queue of postponed coalescing requests is empty. Unable to create the condition for bug reproduction.\n" );
-    ASSERT( scalable_allocation_command(TBBMALLOC_CLEAN_ALL_BUFFERS,0) == TBBMALLOC_OK, "The cleanup request has not cleaned anything." );
+    int result = scalable_allocation_command(TBBMALLOC_CLEAN_ALL_BUFFERS,0);
+    ASSERT( result == TBBMALLOC_OK, "The cleanup request has not cleaned anything." );
     size_t memory_in_use_after = getMemSize();
 
-    REMARK( "memory_in_use_before = %ld\nmemory_in_use_after = %ld\n", memory_in_use_before, memory_in_use_after );
-
     size_t memory_leak = memory_in_use_after - memory_in_use_before;
-    ASSERT( memory_leak == 0, "The backend has not processed the queue of postponed coalescing requests during cleanup." );
+    REMARK( "memory_in_use_before = %ld\nmemory_in_use_after = %ld\n", memory_in_use_before, memory_in_use_after );
+    ASSERT( memory_leak == 0, "Cleanup was unable to release all allocated memory." );
 }
+
+//! Force cross thread deallocation of small objects to create a set of privatizable slab blocks.
+//! TBBMALLOC_CLEAN_THREAD_BUFFERS command have to privatize all the block.
+struct TestCleanThreadBuffersBody : public SimpleBarrier {
+    void operator() ( int ) const {
+        barrier.wait();
+        multiThreadAlloc(2*1024);
+        barrier.wait();
+        crossThreadDealloc();
+        barrier.wait();
+        int result = scalable_allocation_command(TBBMALLOC_CLEAN_THREAD_BUFFERS,0);
+        ASSERT(result == TBBMALLOC_OK, "Per-thread clean request has not cleaned anything.");
+
+        // Check that TLS was cleaned fully
+        TLSData *tlsCurr = defaultMemPool->getTLS(/*create=*/false);
+        for (int i = 0; i < numBlockBinLimit; i++) {
+            ASSERT(!(tlsCurr->bin[i].activeBlk), "Some bin was not cleaned.");
+        }
+        ASSERT(!(tlsCurr->lloc.head), "Local LOC was not cleaned.");
+        ASSERT(!(tlsCurr->freeSlabBlocks.head), "Free Block pool was not cleaned.");
+    }
+};
+
+void TestCleanThreadBuffers() {
+    const int num_threads = 8;
+    // Clean up if something was allocated before the test
+    scalable_allocation_command(TBBMALLOC_CLEAN_ALL_BUFFERS,0);
+
+    alloc_counter = 0;
+    TestCleanThreadBuffersBody::initBarrier(num_threads);
+    NativeParallelFor(num_threads, TestCleanThreadBuffersBody());
+}
+
 /*---------------------------------------------------------------------------*/
 /*------------------------- Large Object Cache tests ------------------------*/
 #if _MSC_VER==1600 || _MSC_VER==1500
@@ -1134,21 +1172,246 @@ void *findCacheLine(void *p) {
 void TestSlabAlignment() {
     const size_t min_sz = 8;
     const int space = 2*16*1024; // fill at least 2 slabs
-    void *ptrs[space / min_sz];  // the worst case is min_sz byte object
+    void *pointers[space / min_sz];  // the worst case is min_sz byte object
 
     for (size_t sz = min_sz; sz <= 64; sz *= 2) {
-        for (int i = 0; i < space/sz; i++) {
-            ptrs[i] = scalable_malloc(sz);
-            Block *block = (Block *)alignDown(ptrs[i], slabSize);
-            MALLOC_ASSERT(findCacheLine(&block->isFull) != findCacheLine(ptrs[i]),
+        for (size_t i = 0; i < space/sz; i++) {
+            pointers[i] = scalable_malloc(sz);
+            Block *block = (Block *)alignDown(pointers[i], slabSize);
+            MALLOC_ASSERT(findCacheLine(&block->isFull) != findCacheLine(pointers[i]),
                           "A user object must not share a cache line with slab control structures.");
             MALLOC_ASSERT(findCacheLine(&block->next) != findCacheLine(&block->nextPrivatizable),
                           "GlobalBlockFields and LocalBlockFields must be on different cache lines.");
         }
-        for (int i = 0; i < space/sz; i++)
-            scalable_free(ptrs[i]);
+        for (size_t i = 0; i < space/sz; i++)
+            scalable_free(pointers[i]);
     }
 }
+
+#include "harness_memory.h"
+
+// TODO: Consider adding Huge Pages support on macOS (special mmap flag).
+// Transparent Huge pages support could be enabled by different system parsing mechanism,
+// because there is no /proc/meminfo on macOS
+#if __linux__
+void TestTHP() {
+    // Get backend from default memory pool
+    rml::internal::Backend *backend = &(defaultMemPool->extMemPool.backend);
+
+    // Configure malloc to use huge pages
+    scalable_allocation_mode(USE_HUGE_PAGES, 1);
+    MALLOC_ASSERT(hugePages.isEnabled, "Huge pages should be enabled via scalable_allocation_mode");
+
+    const int HUGE_PAGE_SIZE = 2 * 1024 * 1024;
+
+    // allocCount transparent huge pages should be allocated
+    const int allocCount = 10;
+
+    // Allocate huge page aligned memory regions to track system
+    // counters for transparent huge pages
+    void*  allocPtrs[allocCount];
+
+    // Wait for the system to update process memory info files after other tests
+    Harness::Sleep(4000);
+
+    // Parse system info regarding current THP status
+    size_t currentSystemTHPCount = getSystemTHPCount();
+    size_t currentSystemTHPAllocatedSize = getSystemTHPAllocatedSize();
+
+    for (int i = 0; i < allocCount; i++) {
+        // Allocation size have to be aligned on page size
+        size_t allocSize = HUGE_PAGE_SIZE - (i * 1000);
+
+        // Map memory
+        allocPtrs[i] = backend->allocRawMem(allocSize);
+
+        MALLOC_ASSERT(allocPtrs[i], "Allocation not succeded.");
+        MALLOC_ASSERT(allocSize == HUGE_PAGE_SIZE,
+            "Allocation size have to be aligned on Huge Page size internaly.");
+
+        // First touch policy - no real pages allocated by OS without accessing the region
+        memset(allocPtrs[i], 1, allocSize);
+
+        MALLOC_ASSERT(isAligned(allocPtrs[i], HUGE_PAGE_SIZE),
+            "The pointer returned by scalable_malloc is not alligned on huge page size.");
+    }
+
+    // Wait for the system to update process memory info files after allocations
+    Harness::Sleep(4000);
+
+    // Generaly, kernel tries to allocate transparent huge pages, but sometimes it cannot do this
+    // (tested on SLES 11/12), so consider this system info checks as a remark.
+    // Also, some systems can allocate more memory then needed in background (tested on Ubuntu 14.04)
+    size_t newSystemTHPCount = getSystemTHPCount();
+    size_t newSystemTHPAllocatedSize = getSystemTHPAllocatedSize();
+    if ((newSystemTHPCount - currentSystemTHPCount) < allocCount
+            && (newSystemTHPAllocatedSize - currentSystemTHPAllocatedSize) / (2 * 1024) < allocCount) {
+        REPORT( "Warning: the system didn't allocate needed amount of THPs.\n" );
+    }
+
+    // Test memory unmap
+    for (int i = 0; i < allocCount; i++) {
+        MALLOC_ASSERT(backend->freeRawMem(allocPtrs[i], HUGE_PAGE_SIZE),
+                "Something went wrong during raw memory free");
+    }
+}
+#endif // __linux__
+
+inline size_t getStabilizedMemUsage() {
+    for (int i = 0; i < 3; i++) GetMemoryUsage();
+    return GetMemoryUsage();
+}
+
+inline void* reallocAndRetrieve(void* origPtr, size_t reallocSize, size_t& origBlockSize, size_t& reallocBlockSize) {
+    rml::internal::LargeMemoryBlock* origLmb = ((rml::internal::LargeObjectHdr *)origPtr - 1)->memoryBlock;
+    origBlockSize = origLmb->unalignedSize;
+
+    void* reallocPtr = rml::internal::reallocAligned(defaultMemPool, origPtr, reallocSize, 0);
+
+    // Retrieved reallocated block information
+    rml::internal::LargeMemoryBlock* reallocLmb = ((rml::internal::LargeObjectHdr *)reallocPtr - 1)->memoryBlock;
+    reallocBlockSize = reallocLmb->unalignedSize;
+
+    return reallocPtr;
+}
+
+void TestReallocDecreasing() {
+
+    /* Testing that actual reallocation happens for large objects that do not fit the backend cache
+       but decrease in size by a factor of >= 2. */
+
+    size_t startSize = 100 * 1024 * 1024;
+    size_t maxBinnedSize = defaultMemPool->extMemPool.backend.getMaxBinnedSize();
+    void*  origPtr = scalable_malloc(startSize);
+    void*  reallocPtr = NULL;
+
+    // Realloc on 1MB less size
+    size_t origBlockSize = 42;
+    size_t reallocBlockSize = 43;
+    reallocPtr = reallocAndRetrieve(origPtr, startSize - 1 * 1024 * 1024, origBlockSize, reallocBlockSize);
+    MALLOC_ASSERT(origBlockSize == reallocBlockSize, "Reallocated block size shouldn't change");
+    MALLOC_ASSERT(reallocPtr == origPtr, "Original pointer shouldn't change");
+
+    // Repeated decreasing reallocation while max cache bin size reached
+    size_t reallocSize = (startSize / 2) - 1000; // exact realloc
+    while(reallocSize > maxBinnedSize) {
+
+        // Prevent huge/large objects caching
+        defaultMemPool->extMemPool.loc.cleanAll();
+        // Prevent local large object caching
+        TLSData *tls = defaultMemPool->getTLS(/*create=*/false);
+        tls->lloc.externalCleanup(&defaultMemPool->extMemPool);
+
+        size_t sysMemUsageBefore = getStabilizedMemUsage();
+        size_t totalMemSizeBefore = defaultMemPool->extMemPool.backend.getTotalMemSize();
+
+        reallocPtr = reallocAndRetrieve(origPtr, reallocSize, origBlockSize, reallocBlockSize);
+
+        MALLOC_ASSERT(origBlockSize > reallocBlockSize, "Reallocated block size should descrease.");
+
+        size_t sysMemUsageAfter = getStabilizedMemUsage();
+        size_t totalMemSizeAfter = defaultMemPool->extMemPool.backend.getTotalMemSize();
+
+        // Prevent false checking when backend caching occurred or could not read system memory usage info
+        if (totalMemSizeBefore > totalMemSizeAfter && sysMemUsageAfter != 0 && sysMemUsageBefore != 0) {
+            MALLOC_ASSERT(sysMemUsageBefore > sysMemUsageAfter, "Memory were not released");
+        }
+
+        origPtr = reallocPtr;
+        reallocSize = (reallocSize / 2) - 1000; // exact realloc
+    }
+    scalable_free(reallocPtr);
+
+    /* TODO: Decreasing reallocation of large objects that fit backend cache */
+    /* TODO: Small objects decreasing reallocation test */
+}
+#if !__TBB_WIN8UI_SUPPORT && defined(_WIN32)
+
+#include "../src/tbbmalloc/tbb_function_replacement.cpp"
+#include <string>
+namespace FunctionReplacement {
+    FunctionInfo funcInfo = { "funcname","dllname" };
+    char **func_replacement_log;
+    int status;
+
+    void LogCleanup() {
+        // Free all allocated memory
+        for (unsigned i = 0; i < Log::record_number; i++){
+            HeapFree(GetProcessHeap(), 0, Log::records[i]);
+        }
+        for (unsigned i = 0; i < Log::RECORDS_COUNT + 1; i++){
+            Log::records[i] = NULL;
+        }
+        Log::replacement_status = true;
+        Log::record_number = 0;
+    }
+
+    void TestEmptyLog() {
+        status = TBB_malloc_replacement_log(&func_replacement_log);
+
+        ASSERT(status == -1, "Status is true, but log is empty");
+        ASSERT(*func_replacement_log == NULL, "Log must be empty");
+    }
+
+    void TestLogOverload() {
+        for (int i = 0; i < 1000; i++)
+            Log::record(funcInfo, "opcode string", true);
+
+        status = TBB_malloc_replacement_log(&func_replacement_log);
+        // Find last record
+        for (; *(func_replacement_log + 1) != 0; func_replacement_log++) {}
+
+        std::string last_line(*func_replacement_log);
+        ASSERT(status == 0, "False status, but all functions found");
+        ASSERT(last_line.compare("Log was truncated.") == 0, "Log overflow was not handled");
+
+        // Change status
+        Log::record(funcInfo, "opcode string", false);
+        status = TBB_malloc_replacement_log(NULL);
+        ASSERT(status == -1, "Status is true, but we have false search case");
+
+        LogCleanup();
+    }
+
+    void TestFalseSearchCase() {
+        Log::record(funcInfo, "opcode string", false);
+        std::string expected_line = "Fail: "+ std::string(funcInfo.funcName) + " (" +
+                         std::string(funcInfo.dllName) + "), byte pattern: <opcode string>";
+
+        status = TBB_malloc_replacement_log(&func_replacement_log);
+
+        ASSERT(expected_line.compare(*func_replacement_log) == 0, "Wrong last string contnent");
+        ASSERT(status == -1, "Status is true, but we have false search case");
+        LogCleanup();
+    }
+
+    void TestWrongFunctionInDll(){
+        HMODULE ucrtbase_handle = GetModuleHandle("ucrtbase.dll");
+        if (ucrtbase_handle) {
+            IsPrologueKnown("ucrtbase.dll", "fake_function", NULL, ucrtbase_handle);
+            std::string expected_line = "Fail: fake_function (ucrtbase.dll), byte pattern: <unknown>";
+
+            status = TBB_malloc_replacement_log(&func_replacement_log);
+
+            ASSERT(expected_line.compare(*func_replacement_log) == 0, "Wrong last string contnent");
+            ASSERT(status == -1, "Status is true, but we have false search case");
+            LogCleanup();
+        } else {
+            REMARK("Cannot found ucrtbase.dll on system, test skipped!\n");
+        }
+    }
+}
+
+void TesFunctionReplacementLog() {
+    using namespace FunctionReplacement;
+    // Do not reorder the test cases
+    TestEmptyLog();
+    TestLogOverload();
+    TestFalseSearchCase();
+    TestWrongFunctionInDll();
+}
+
+#endif /*!__TBB_WIN8UI_SUPPORT && defined(_WIN32)*/
 
 int TestMain () {
     scalable_allocation_mode(USE_HUGE_PAGES, 0);
@@ -1161,6 +1424,9 @@ int TestMain () {
     checkNoHugePages();
     // to succeed, leak detection must be the 1st memory-intensive test
     TestBackRef();
+    TestCleanAllBuffers<4*1024>();
+    TestCleanAllBuffers<16*1024>();
+    TestCleanThreadBuffers();
     TestPools();
     TestBackend();
 
@@ -1176,8 +1442,23 @@ int TestMain () {
     TestObjectRecognition();
     TestBitMask();
     TestHeapLimit();
-    TestCleanAllBuffers();
     TestLOC();
     TestSlabAlignment();
+    TestReallocDecreasing();
+
+#if __linux__
+    if (isTHPEnabledOnMachine()) {
+        TestTHP();
+    } else {
+        REMARK("Transparent Huge Pages is not supported on the system - skipped the test\n");
+    }
+#endif
+
+
+#if !__TBB_WIN8UI_SUPPORT && defined(_WIN32)
+    TesFunctionReplacementLog();
+#endif
+
     return Harness::Done;
 }
+

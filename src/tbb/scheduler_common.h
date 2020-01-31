@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef _TBB_scheduler_common_H
@@ -168,6 +164,10 @@ enum task_extra_state {
     es_version_1_task = 0,
     //! Tag for v3 tasks (i.e. tasks in TBB 2.1-2.2)
     es_version_3_task = 1,
+#if __TBB_PREVIEW_CRITICAL_TASKS
+    //! Tag for critical tasks
+    es_task_critical = 0x8,
+#endif
     //! Tag for enqueued tasks
     es_task_enqueued = 0x10,
     //! Tag for v3 task_proxy.
@@ -216,14 +216,14 @@ inline bool is_alive( uintptr_t v ) { return v != venom; }
 
 /** Logically, this method should be a member of class task.
     But we do not want to publish it, so it is here instead. */
-inline void assert_task_valid( const task& task ) {
-    __TBB_ASSERT( &task!=NULL, NULL );
+inline void assert_task_valid( const task* task ) {
+    __TBB_ASSERT( task!=NULL, NULL );
     __TBB_ASSERT( !is_poisoned(&task), NULL );
-    __TBB_ASSERT( (uintptr_t)&task % task_alignment == 0, "misaligned task" );
+    __TBB_ASSERT( (uintptr_t)task % task_alignment == 0, "misaligned task" );
 #if __TBB_RECYCLE_TO_ENQUEUE
-    __TBB_ASSERT( (unsigned)task.state()<=(unsigned)task::to_enqueue, "corrupt task (invalid state)" );
+    __TBB_ASSERT( (unsigned)task->state()<=(unsigned)task::to_enqueue, "corrupt task (invalid state)" );
 #else
-    __TBB_ASSERT( (unsigned)task.state()<=(unsigned)task::recycle, "corrupt task (invalid state)" );
+    __TBB_ASSERT( (unsigned)task->state()<=(unsigned)task::recycle, "corrupt task (invalid state)" );
 #endif
 }
 
@@ -233,7 +233,7 @@ inline void assert_task_valid( const task& task ) {
     the variable used as its argument may be undefined in release builds. **/
 #define poison_value(g) ((void)0)
 
-inline void assert_task_valid( const task& ) {}
+inline void assert_task_valid( const task* ) {}
 
 #endif /* !TBB_USE_ASSERT */
 
@@ -346,6 +346,11 @@ struct arena_slot_line2 {
     //! Hint provided for operations with the container of starvation-resistant tasks.
     /** Modified by the owner thread (during these operations). **/
     unsigned hint_for_pop;
+
+#if __TBB_PREVIEW_CRITICAL_TASKS
+    //! Similar to 'hint_for_pop' but for critical tasks.
+    unsigned hint_for_critical;
+#endif
 
     //! Index of the element following the last ready task in the deque.
     /** Modified by the owner thread. **/

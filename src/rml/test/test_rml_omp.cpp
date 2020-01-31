@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include <tbb/tbb_config.h>
@@ -75,7 +71,7 @@ public:
         ASSERT( !t.info[index].ran, "duplicate index?" );
         t.info[index].job = &j;
         t.info[index].ran = true;
-        do_process(j);
+        do_process(&j);
         if( index==1 && nesting.level<nesting.limit ) {
             DoOneConnection<MyFactory,MyClient> doc(MaxThread,Nesting(nesting.level+1,nesting.limit),0,false);
             doc(0);

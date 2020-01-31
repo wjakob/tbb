@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,13 +12,8 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
-#include "harness_defs.h"
 #include "tbb/parallel_sort.h"
 #include "tbb/task_scheduler_init.h"
 #include "tbb/concurrent_vector.h"
@@ -26,22 +21,11 @@
 #include <math.h>
 #include <vector>
 #include <exception>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <algorithm>
 #include <iterator>
 #include <functional>
 #include <string>
 #include <cstring>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 /** Has tightly controlled interface so that we can verify
     that parallel_sort uses only the required interface. */
@@ -538,17 +522,6 @@ void range_sort_test() {
 
     rand_vec(v);
     tbb::parallel_sort(v, std::greater<int>());
-    for(itor a=v.begin(); a<v.end()-1; ++a) ASSERT(*a >= *(a+1), "v not sorted");
-    v.clear();
-
-    // const range checks
-    rand_vec(v);
-    tbb::parallel_sort(tbb::blocked_range<std::vector<int>::iterator>(v.begin(), v.end()));
-    for(itor a=v.begin(); a<v.end()-1; ++a) ASSERT(*a <= *(a+1), "v not sorted");
-    v.clear();
-
-    rand_vec(v);
-    tbb::parallel_sort(tbb::blocked_range<std::vector<int>::iterator>(v.begin(), v.end()), std::greater<int>());
     for(itor a=v.begin(); a<v.end()-1; ++a) ASSERT(*a >= *(a+1), "v not sorted");
     v.clear();
 

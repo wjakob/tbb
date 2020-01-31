@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 // Tests for compatibility with the host's STL.
@@ -57,21 +53,11 @@ void TestMap(const typename Map::allocator_type &a) {
         ASSERT( m.find(i)->second==i*i, NULL );
 }
 
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <deque>
 #include <list>
 #include <map>
 #include <set>
 #include <vector>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
 struct MoveOperationTracker {
@@ -104,12 +90,23 @@ struct MoveOperationTracker {
 
 template<typename Allocator>
 void TestAllocatorWithSTL(const Allocator &a = Allocator() ) {
+
+// Allocator type convertion section
+#if __TBB_ALLOCATOR_TRAITS_PRESENT
+    typedef typename std::allocator_traits<Allocator>::template rebind_alloc<int> Ai;
+    typedef typename std::allocator_traits<Allocator>::template rebind_alloc<std::pair<const int, int> > Acii;
+#if _MSC_VER
+    typedef typename std::allocator_traits<Allocator>::template rebind_alloc<const int> Aci;
+    typedef typename std::allocator_traits<Allocator>::template rebind_alloc<std::pair<int, int> > Aii;
+#endif // _MSC_VER
+#else
     typedef typename Allocator::template rebind<int>::other Ai;
     typedef typename Allocator::template rebind<std::pair<const int, int> >::other Acii;
 #if _MSC_VER
     typedef typename Allocator::template rebind<const int>::other Aci;
     typedef typename Allocator::template rebind<std::pair<int, int> >::other Aii;
-#endif
+#endif // _MSC_VER
+#endif // __TBB_ALLOCATOR_TRAITS_PRESENT
 
     // Sequenced containers
     TestSequence<std::deque <int,Ai> >(a);
@@ -117,11 +114,15 @@ void TestAllocatorWithSTL(const Allocator &a = Allocator() ) {
     TestSequence<std::vector<int,Ai> >(a);
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
+#if __TBB_ALLOCATOR_TRAITS_PRESENT
+    typedef typename std::allocator_traits<Allocator>::template rebind_alloc<MoveOperationTracker> Amot;
+#else
     typedef typename Allocator::template rebind<MoveOperationTracker>::other Amot;
+#endif // __TBB_ALLOCATOR_TRAITS_PRESENT
     TestSequence<std::deque <MoveOperationTracker, Amot> >(a);
     TestSequence<std::list  <MoveOperationTracker, Amot> >(a);
     TestSequence<std::vector<MoveOperationTracker, Amot> >(a);
-#endif
+#endif // __TBB_CPP11_RVALUE_REF_PRESENT
 
     // Associative containers
     TestSet<std::set     <int, std::less<int>, Ai> >(a);
@@ -129,7 +130,7 @@ void TestAllocatorWithSTL(const Allocator &a = Allocator() ) {
     TestMap<std::map     <int, int, std::less<int>, Acii> >(a);
     TestMap<std::multimap<int, int, std::less<int>, Acii> >(a);
 
-#if _MSC_VER
+#if _MSC_VER && _CPPLIB_VER < 650
     // Test compatibility with Microsoft's implementation of std::allocator for some cases that
     // are undefined according to the ISO standard but permitted by Microsoft.
     TestSequence<std::deque <const int,Aci> >(a);

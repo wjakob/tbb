@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 // Test whether scalable_allocator complies with the requirements in 20.1.5 of ISO C++ Standard (1998).
@@ -94,7 +90,7 @@ struct FixedPool {
     void  *buf;
     size_t size;
     bool   used;
-    FixedPool(void *buf, size_t size) : buf(buf), size(size), used(false) {}
+    FixedPool(void *a_buf, size_t a_size) : buf(a_buf), size(a_size), used(false) {}
 };
 
 static void *fixedBufGetMem(intptr_t pool_id, size_t &bytes)
@@ -125,7 +121,7 @@ void TestSmallFixedSizePool()
    so it requires at least 16KB. Requirement of 9KB allocation is more modest.
 */
             allocated = pool.malloc( 16 ) || pool.malloc( 9*1024 );
-        } catch (std::invalid_argument) {
+        } catch (std::invalid_argument&) {
             ASSERT(!sz, "expect std::invalid_argument for zero-sized pool only");
         } catch (...) {
             ASSERT(0, "wrong exception type;");
@@ -156,7 +152,7 @@ void TestSmallFixedSizePool()
     try {
         tbb::fixed_pool pool(NULL, 10*1024*1024);
         ASSERT(0, "Useless allocator with no memory must not be created");
-    } catch (std::invalid_argument) {
+    } catch (std::invalid_argument&) {
     } catch (...) {
         ASSERT(0, "wrong exception type; expected invalid_argument");
     }
@@ -203,6 +199,21 @@ int TestMain () {
         }
 
         result += TestMain(tbb::memory_pool_allocator<void>(pool) );
+    }{
+        // Two nested level allocators case with fixed pool allocator as an underlying layer
+        // serving allocRawMem requests for the top level scalable allocator
+        typedef tbb::memory_pool<tbb::memory_pool_allocator<char, tbb::fixed_pool> > NestedPool;
+
+        static char buffer[8*1024*1024];
+        tbb::fixed_pool fixedPool(buffer, sizeof(buffer));
+        // Underlying fixed pool allocator
+        tbb::memory_pool_allocator<char, tbb::fixed_pool> fixedPoolAllocator(fixedPool);
+        // Memory pool that handles fixed pool allocator
+        NestedPool nestedPool(fixedPoolAllocator);
+        // Top level memory pool allocator
+        tbb::memory_pool_allocator<char, NestedPool> nestedAllocator(nestedPool);
+
+        result += TestMain(nestedAllocator);
     }
     TestSmallFixedSizePool();
     TestZeroSpaceMemoryPool();

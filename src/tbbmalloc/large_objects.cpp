@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "tbbmalloc_internal.h"
@@ -292,7 +288,7 @@ template<typename Props> void CacheBinFunctor<Props>::
                     num += 1;
 
                     STAT_increment(getThreadId(), ThreadCommonCounters, cacheLargeObj);
-                } while (( curr = curr->next ));
+                } while ((curr = curr->next) != NULL);
 
                 LargeMemoryBlock *tail = prev;
                 addToPutList(head, tail, num);
@@ -401,7 +397,7 @@ template<typename Props> void CacheBinFunctor<Props>::operator()(CacheBinOperati
         CacheBinOperation *opNext = opClean->next;
         prep.commitOperation( opClean );
 
-        while (( opClean = opNext )) {
+        while ((opClean = opNext) != NULL) {
             opNext = opClean->next;
             prep.commitOperation(opClean);
         }
@@ -950,6 +946,7 @@ bool ExtMemoryPool::hardCachesCleanup()
     // thread-local caches must be cleaned before LOC,
     // because object from thread-local cache can be released to LOC
     bool ret = releaseAllLocalCaches();
+    ret |= orphanedBlocks.cleanup(&backend);
     ret |= loc.cleanAll();
     ret |= backend.clean();
     return ret;

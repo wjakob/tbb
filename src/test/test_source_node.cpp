@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,14 +12,15 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 // have to expose the reset_node method to be able to reset a function_body
 #include "harness.h"
+
+#if __TBB_CPF_BUILD
+#define TBB_DEPRECATED_FLOW_NODE_EXTRACTION 1
+#endif
+
 #include "harness_graph.h"
 #include "tbb/flow_graph.h"
 #include "tbb/task.h"
@@ -28,13 +29,14 @@
 const int N = 1000;
 
 template< typename T >
-class test_push_receiver : public tbb::flow::receiver<T> {
+class test_push_receiver : public tbb::flow::receiver<T>, NoAssign {
 
     tbb::atomic<int> my_counters[N];
+    tbb::flow::graph& my_graph;
 
 public:
 
-    test_push_receiver() {
+    test_push_receiver(tbb::flow::graph& g) : my_graph(g) {
         for (int i = 0; i < N; ++i )
             my_counters[i] = 0;
     }
@@ -46,7 +48,7 @@ public:
 
     typedef typename tbb::flow::receiver<T>::predecessor_type predecessor_type;
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
     typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
     built_predecessors_type bpt;
@@ -61,6 +63,10 @@ public:
        int i = (int)v;
        ++my_counters[i];
        return const_cast<tbb::task *>(SUCCESSFULLY_ENQUEUED);
+    }
+
+    tbb::flow::graph& graph_reference() __TBB_override {
+        return my_graph;
     }
 
     void reset_receiver(tbb::flow::reset_flags /*f*/) __TBB_override {}
@@ -113,7 +119,7 @@ void test_single_dest() {
    // push only
    tbb::flow::graph g;
    tbb::flow::source_node<T> src(g, source_body<T>() );
-   test_push_receiver<T> dest;
+   test_push_receiver<T> dest(g);
    tbb::flow::make_edge( src, dest );
    g.wait_for_all();
    for (int i = 0; i < N; ++i ) {
@@ -138,7 +144,7 @@ void test_single_dest() {
    function_body<T> b2( counters2 );
    tbb::flow::function_node<T,bool> dest2(g, tbb::flow::serial, b2 );
    tbb::flow::make_edge( src2, dest2 );
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
    ASSERT(src2.successor_count() == 1, NULL);
    typename tbb::flow::source_node<T>::successor_list_type my_succs;
    src2.copy_successors(my_succs);
@@ -152,7 +158,7 @@ void test_single_dest() {
 
    // test copy constructor
    tbb::flow::source_node<T> src_copy(src);
-   test_push_receiver<T> dest_c;
+   test_push_receiver<T> dest_c(g);
    ASSERT( src_copy.register_successor(dest_c), NULL );
    g.wait_for_all();
    for (int i = 0; i < N; ++i ) {
@@ -249,7 +255,7 @@ void test_reset() {
     }
 }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
 void test_extract() {
     int counts = 0;
     tbb::flow::tuple<int,int> dont_care;
@@ -393,7 +399,7 @@ void test_extract() {
     g.wait_for_all();
     ASSERT(!q1.try_get(dont_care), "extract of successor did not remove pred link");
 }
-#endif  /* TBB_PREVIEW_FLOW_GRAPH_FEATURES */
+#endif  /* TBB_DEPRECATED_FLOW_NODE_EXTRACTION */
 
 int TestMain() {
     if( MinThread<1 ) {
@@ -406,7 +412,7 @@ int TestMain() {
         test_single_dest<float>();
     }
     test_reset();
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     test_extract();
 #endif
     return Harness::Done;

@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2016 Intel Corporation
+# Copyright (c) 2005-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,10 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-#
-#
-#
 
 tbb_root?=..
 examples_root:=$(tbb_root)/examples
@@ -94,8 +90,8 @@ else
 	@$(MAKE) -C "$(work_dir)_$(cfg)"  -r -f $(tbb_root)/build/Makefile.test $@
 endif
 
-python_%: tbb_release
-	bash -c ". $(work_dir)_release$(SLASH)tbbvars.sh && $(MAKE) -rC '$(full_tbb_root)/python' CXX=$(compiler) $(subst python_,,$@)"
+python_%: mkdir_release
+	$(MAKE) -C "$(work_dir)_release" -rf $(tbb_root)/python/Makefile $(subst python_,,$@)
 
 .PHONY: test_release test_debug test_release_no_depends test_debug_no_depends
 .PHONY: tbb_release tbb_debug tbb_test_release tbb_test_debug tbb_test_release_no_depends tbb_test_debug_no_depends

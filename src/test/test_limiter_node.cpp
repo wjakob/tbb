@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,14 +12,11 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "harness.h"
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if __TBB_CPF_BUILD
+#define TBB_DEPRECATED_FLOW_NODE_EXTRACTION 1
 #include "harness_graph.h"
 #endif
 #include "tbb/flow_graph.h"
@@ -32,17 +29,22 @@ const int N = 1000;
 using tbb::flow::internal::SUCCESSFULLY_ENQUEUED;
 
 template< typename T >
-struct serial_receiver : public tbb::flow::receiver<T> {
+struct serial_receiver : public tbb::flow::receiver<T>, NoAssign {
    T next_value;
+   tbb::flow::graph& my_graph;
 
-   serial_receiver() : next_value(T(0)) {}
+   serial_receiver(tbb::flow::graph& g) : next_value(T(0)), my_graph(g) {}
 
    tbb::task *try_put_task( const T &v ) __TBB_override {
        ASSERT( next_value++  == v, NULL );
        return const_cast<tbb::task *>(SUCCESSFULLY_ENQUEUED);
    }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    tbb::flow::graph& graph_reference() __TBB_override {
+        return my_graph;
+    }
+
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
     typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
     typedef typename tbb::flow::receiver<T>::predecessor_type predecessor_type;
@@ -58,18 +60,23 @@ struct serial_receiver : public tbb::flow::receiver<T> {
 };
 
 template< typename T >
-struct parallel_receiver : public tbb::flow::receiver<T> {
+struct parallel_receiver : public tbb::flow::receiver<T>, NoAssign {
 
-   tbb::atomic<int> my_count;
+    tbb::atomic<int> my_count;
+    tbb::flow::graph& my_graph;
 
-   parallel_receiver() { my_count = 0; }
+    parallel_receiver(tbb::flow::graph& g) : my_graph(g) { my_count = 0; }
 
-   tbb::task *try_put_task( const T &/*v*/ ) __TBB_override {
+    tbb::task *try_put_task( const T &/*v*/ ) __TBB_override {
        ++my_count;
        return const_cast<tbb::task *>(tbb::flow::internal::SUCCESSFULLY_ENQUEUED);
-   }
+    }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+    tbb::flow::graph& graph_reference() __TBB_override {
+        return my_graph;
+    }
+
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     typedef typename tbb::flow::receiver<T>::built_predecessors_type built_predecessors_type;
     typedef typename tbb::flow::receiver<T>::predecessor_list_type predecessor_list_type;
     typedef typename tbb::flow::receiver<T>::predecessor_type predecessor_type;
@@ -89,7 +96,7 @@ struct empty_sender : public tbb::flow::sender<T> {
 
         bool register_successor( successor_type & ) __TBB_override { return false; }
         bool remove_successor( successor_type & ) __TBB_override { return false; }
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         typedef typename tbb::flow::sender<T>::built_successors_type built_successors_type;
         typedef typename tbb::flow::sender<T>::successor_list_type successor_list_type;
         built_successors_type bst;
@@ -144,18 +151,18 @@ struct put_dec_body : NoAssign {
 };
 
 template< typename T >
-void test_puts_with_decrements( int num_threads, tbb::flow::limiter_node< T >& lim ) {
-    parallel_receiver<T> r;
+void test_puts_with_decrements( int num_threads, tbb::flow::limiter_node< T >& lim , tbb::flow::graph& g) {
+    parallel_receiver<T> r(g);
     empty_sender< tbb::flow::continue_msg > s;
     tbb::atomic<int> accept_count;
     accept_count = 0;
     tbb::flow::make_edge( lim, r );
     tbb::flow::make_edge(s, lim.decrement);
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     ASSERT(lim.decrement.predecessor_count() == 1, NULL);
     ASSERT(lim.successor_count() == 1, NULL);
     ASSERT(lim.predecessor_count() == 0, NULL);
-    typename tbb::flow::interface9::internal::decrementer<tbb::flow::limiter_node<T> >::predecessor_list_type dec_preds;
+    typename tbb::flow::interface10::internal::decrementer<tbb::flow::limiter_node<T> >::predecessor_list_type dec_preds;
     lim.decrement.copy_predecessors(dec_preds);
     ASSERT(dec_preds.size() == 1, NULL);
 #endif
@@ -180,7 +187,7 @@ int test_parallel(int num_threads) {
    for ( int i = 0; i < L; ++i ) {
        tbb::flow::graph g;
        tbb::flow::limiter_node< T > lim(g, i);
-       parallel_receiver<T> r;
+       parallel_receiver<T> r(g);
        tbb::atomic<int> accept_count;
        accept_count = 0;
        tbb::flow::make_edge( lim, r );
@@ -195,9 +202,9 @@ int test_parallel(int num_threads) {
    for ( int i = 1; i < L; ++i ) {
        tbb::flow::graph g;
        tbb::flow::limiter_node< T > lim(g, i);
-       test_puts_with_decrements(num_threads, lim);
+       test_puts_with_decrements(num_threads, lim, g);
        tbb::flow::limiter_node< T > lim_copy( lim );
-       test_puts_with_decrements(num_threads, lim_copy);
+       test_puts_with_decrements(num_threads, lim_copy, g);
    }
 
    return 0;
@@ -216,7 +223,7 @@ int test_serial() {
    for ( int i = 0; i < L; ++i ) {
        tbb::flow::graph g;
        tbb::flow::limiter_node< T > lim(g, i);
-       serial_receiver<T> r;
+       serial_receiver<T> r(g);
        tbb::flow::make_edge( lim, r );
        for ( int j = 0; j < L; ++j ) {
            bool msg = lim.try_put( T(j) );
@@ -229,7 +236,7 @@ int test_serial() {
    for ( int i = 1; i < L; ++i ) {
        tbb::flow::graph g;
        tbb::flow::limiter_node< T > lim(g, i);
-       serial_receiver<T> r;
+       serial_receiver<T> r(g);
        empty_sender< tbb::flow::continue_msg > s;
        tbb::flow::make_edge( lim, r );
        tbb::flow::make_edge(s, lim.decrement);
@@ -313,7 +320,7 @@ test_multifunction_to_limiter(int _max, int _nparallel) {
     tbb::flow::make_edge(tbb::flow::output_port<DECREMENT_OUTPUT>(mf_node), lim_node.decrement);
     tbb::flow::make_edge(lim_node, fn_node);
     tbb::flow::make_edge(fn_node, mf_node);
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     REMARK("pred cnt == %d\n",(int)(lim_node.predecessor_count()));
     REMARK("succ cnt == %d\n",(int)(lim_node.successor_count()));
     tbb::flow::limiter_node<int>::successor_list_type my_succs;
@@ -407,7 +414,7 @@ void test_reserve_release_messages() {
   }
 }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
 void test_extract() {
     tbb::flow::graph g;
     int j;
@@ -516,7 +523,7 @@ void test_extract() {
     }
 
 }
-#endif  // TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#endif  // TBB_DEPRECATED_FLOW_NODE_EXTRACTION
 
 int TestMain() {
     for (int i = 1; i <= 8; ++i) {
@@ -529,7 +536,7 @@ int TestMain() {
     test_multifunction_to_limiter(300,13);
     test_multifunction_to_limiter(3000,1);
     test_reserve_release_messages();
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     test_extract();
 #endif
    return Harness::Done;

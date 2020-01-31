@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,16 +12,13 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_concurrent_queue_H
 #define __TBB_concurrent_queue_H
 
 #include "internal/_concurrent_queue_impl.h"
+#include "internal/_allocator_traits.h"
 
 namespace tbb {
 
@@ -36,7 +33,7 @@ class concurrent_queue: public internal::concurrent_queue_base_v3<T> {
     template<typename Container, typename Value> friend class internal::concurrent_queue_iterator;
 
     //! Allocator type
-    typedef typename A::template rebind<char>::other page_allocator_type;
+    typedef typename tbb::internal::allocator_rebind<A, char>::type page_allocator_type;
     page_allocator_type my_allocator;
 
     //! Allocates a block of size n (bytes)
@@ -177,6 +174,15 @@ public:
     const_iterator unsafe_end() const {return const_iterator();}
 } ;
 
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+// Deduction guide for the constructor from two iterators
+template<typename InputIterator,
+         typename T = typename std::iterator_traits<InputIterator>::value_type,
+         typename A = cache_aligned_allocator<T>
+> concurrent_queue(InputIterator, InputIterator, const A& = A())
+-> concurrent_queue<T, A>;
+#endif /* __TBB_CPP17_DEDUCTION_GUIDES_PRESENT */
+
 template<typename T, class A>
 concurrent_queue<T,A>::~concurrent_queue() {
     clear();
@@ -200,9 +206,9 @@ void concurrent_queue<T,A>::clear() {
 template<typename T, class A = cache_aligned_allocator<T> >
 class concurrent_bounded_queue: public internal::concurrent_queue_base_v8 {
     template<typename Container, typename Value> friend class internal::concurrent_queue_iterator;
+    typedef typename tbb::internal::allocator_rebind<A, char>::type page_allocator_type;
 
     //! Allocator type
-    typedef typename A::template rebind<char>::other page_allocator_type;
     page_allocator_type my_allocator;
 
     typedef typename concurrent_queue_base_v3::padded_page<T> padded_page;
@@ -438,6 +444,15 @@ public:
     const_iterator unsafe_end() const {return const_iterator();}
 
 };
+
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+// guide for concurrent_bounded_queue(InputIterator, InputIterator, ...)
+template<typename InputIterator,
+         typename T = typename std::iterator_traits<InputIterator>::value_type,
+         typename A = cache_aligned_allocator<T>
+> concurrent_bounded_queue(InputIterator, InputIterator, const A& = A())
+-> concurrent_bounded_queue<T, A>;
+#endif /* __TBB_CPP17_DEDUCTION_GUIDES_PRESENT */
 
 template<typename T, class A>
 concurrent_bounded_queue<T,A>::~concurrent_bounded_queue() {

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #if !defined(__TBB_machine_H) || defined(__TBB_machine_windows_intel64_H)
@@ -29,7 +25,7 @@
 
 #include "msvc_ia32_common.h"
 
-#ifndef __TBB_ATOMIC_PRIMITIVES_DEFINED
+#if !__TBB_MSVC_PART_WORD_INTERLOCKED_INTRINSICS_PRESENT
 
 #include <intrin.h>
 #pragma intrinsic(_InterlockedCompareExchange,_InterlockedExchangeAdd,_InterlockedExchange)
@@ -66,7 +62,7 @@ inline __int64 __TBB_machine_fetchstore8 (volatile void *ptr, __int64 value ) {
     return _InterlockedExchange64( (__int64*)ptr, value );
 }
 
-#endif /*__TBB_ATOMIC_PRIMITIVES_DEFINED*/
+#endif /* __TBB_MSVC_PART_WORD_INTERLOCKED_INTRINSICS_PRESENT */
 
 #define __TBB_USE_FETCHSTORE_AS_FULL_FENCED_STORE           1
 #define __TBB_USE_GENERIC_HALF_FENCED_LOAD_STORE            1

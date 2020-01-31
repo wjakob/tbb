@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "tbb/blocked_range.h"
@@ -165,6 +161,25 @@ void TestProportionalSplitOverflow()
     REMARK("OK\n");
 }
 #endif /* __TBB_USE_PROPORTIONAL_SPLIT_IN_BLOCKED_RANGES */
+
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+void TestDeductionGuides() {
+    std::vector<const int *> v;
+
+    // check blocked_range(Value, Value, size_t)
+    tbb::blocked_range r1(v.begin(), v.end());
+    static_assert(std::is_same<decltype(r1), tbb::blocked_range<decltype(v)::iterator>>::value);
+
+    // check blocked_range(blocked_range &)
+    tbb::blocked_range r2(r1);
+    static_assert(std::is_same<decltype(r2), decltype(r1)>::value);
+
+    // check blocked_range(blocked_range &&)
+    tbb::blocked_range r3(std::move(r1));
+    static_assert(std::is_same<decltype(r3), decltype(r1)>::value);
+}
+#endif
+
 //------------------------------------------------------------------------
 // Test driver
 #include "tbb/task_scheduler_init.h"
@@ -184,5 +199,8 @@ int TestMain () {
         TestProportionalSplitOverflow();
     #endif
 
+    #if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+        TestDeductionGuides();
+    #endif
     return Harness::Done;
 }

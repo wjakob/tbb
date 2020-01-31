@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "tbb/tbb_config.h"
@@ -547,7 +543,7 @@ void TestSetPriority() {
     for (int t = 0; t < 2; ++t)
         for (int i = first; i <= last; ++i) {
             REMARK("\r                    \rTask %i... ", i);
-            ASSERT(g_trees[t][i]->priority() == expected_priority[t][i]? tbb::priority_high : tbb::priority_normal, NULL);
+            ASSERT(g_trees[t][i]->priority() == (expected_priority[t][i]? tbb::priority_high : tbb::priority_normal), NULL);
             REMARK("OK");
         }
     REMARK("\r                    \r");
@@ -647,7 +643,6 @@ int RunTests () {
     return Harness::Done;
 }
 
-#define TBB_PREVIEW_GLOBAL_CONTROL 1
 #include "tbb/global_control.h"
 
 int TestMain () {

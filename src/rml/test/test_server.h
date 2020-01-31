@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /* This header contains code shared by test_omp_server.cpp and test_tbb_server.cpp 
@@ -93,7 +89,7 @@ public:
     }
     ~MyJob() {
         // Overwrite so that accidental use after destruction can be detected.
-        memset(this,-1,sizeof(*this));
+        memset(static_cast<void*>(this),-1,sizeof(*this));
     }
 };
 
@@ -182,10 +178,10 @@ public:
     job* create_one_job();
 
 protected:
-    void do_process( job& j_ ) {
+    void do_process( job* j_ ) {
         ASSERT( state==live, NULL );
-        MyJob& j = static_cast<MyJob&>(j_);
-        ASSERT( &j, NULL );
+        MyJob& j = static_cast<MyJob&>(*j_);
+        ASSERT( j_, NULL );
         j.update(MyJob::busy,MyJob::idle);
         // use of the plain addition (not the atomic increment) is intentonial
         j.processing_count = j.processing_count + 1;

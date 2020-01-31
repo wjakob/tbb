@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_parallel_sort_H
@@ -27,6 +23,9 @@
 #include <algorithm>
 #include <iterator>
 #include <functional>
+#if __TBB_TASK_GROUP_CONTEXT
+    #include "tbb_profiling.h"
+#endif
 
 namespace tbb {
 
@@ -159,7 +158,7 @@ struct quick_sort_body {
 template<typename RandomAccessIterator, typename Compare>
 void parallel_quick_sort( RandomAccessIterator begin, RandomAccessIterator end, const Compare& comp ) {
 #if __TBB_TASK_GROUP_CONTEXT
-    task_group_context my_context;
+    task_group_context my_context(PARALLEL_SORT);
     const int serial_cutoff = 9;
 
     __TBB_ASSERT( begin + serial_cutoff < end, "min_parallel_size is smaller than serial cutoff?" );
@@ -230,24 +229,10 @@ void parallel_sort(Range& rng, const Compare& comp) {
     parallel_sort(tbb::internal::first(rng), tbb::internal::last(rng), comp);
 }
 
-//! Sorts the data in const rng using the given comparator
-/** @ingroup algorithms **/
-template<typename Range, typename Compare>
-void parallel_sort(const Range& rng, const Compare& comp) {
-    parallel_sort(tbb::internal::first(rng), tbb::internal::last(rng), comp);
-}
-
 //! Sorts the data in rng with a default comparator \c std::less<RandomAccessIterator>
 /** @ingroup algorithms **/
 template<typename Range>
 void parallel_sort(Range& rng) {
-    parallel_sort(tbb::internal::first(rng), tbb::internal::last(rng));
-}
-
-//! Sorts the data in const rng with a default comparator \c std::less<RandomAccessIterator>
-/** @ingroup algorithms **/
-template<typename Range>
-void parallel_sort(const Range& rng) {
     parallel_sort(tbb::internal::first(rng), tbb::internal::last(rng));
 }
 

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,14 +12,15 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
+
+#if __TBB_CPF_BUILD
+#define TBB_DEPRECATED_FLOW_NODE_EXTRACTION 1
+#endif
 
 #include "harness_graph.h"
 
+#include "tbb/flow_graph.h"
 #include "tbb/task_scheduler_init.h"
 
 #define N 300
@@ -33,7 +34,7 @@ void simple_read_write_tests() {
 
     for ( int t = 0; t < T; ++t ) {
         R v0(N+1);
-        harness_counting_receiver<R> r[M];
+        std::vector< harness_counting_receiver<R> > r(M, harness_counting_receiver<R>(g));
 
         ASSERT( n.is_valid() == false, NULL );
         ASSERT( n.try_get( v0 ) == false, NULL );
@@ -48,7 +49,7 @@ void simple_read_write_tests() {
            tbb::flow::make_edge( n, r[i] );
         }
 
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
         ASSERT(n.successor_count() == M, NULL);
         typename tbb::flow::overwrite_node<R>::successor_list_type my_succs;
         n.copy_successors(my_succs);
@@ -108,7 +109,7 @@ void parallel_read_write_tests() {
 
     for (size_t node_idx=0; node_idx<ow_vec.size(); ++node_idx) {
     for ( int t = 0; t < T; ++t ) {
-        harness_counting_receiver<R> r[M];
+        std::vector< harness_counting_receiver<R> > r(M, harness_counting_receiver<R>(g));
 
         for (int i = 0; i < M; ++i) {
            tbb::flow::make_edge( ow_vec[node_idx], r[i] );
@@ -149,8 +150,9 @@ int TestMain() {
         tbb::task_scheduler_init init(p);
         parallel_read_write_tests<int>();
         parallel_read_write_tests<float>();
+        test_reserving_nodes<tbb::flow::overwrite_node, size_t>();
     }
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     test_extract_on_node<tbb::flow::overwrite_node, int>();
     test_extract_on_node<tbb::flow::overwrite_node, float>();
 #endif

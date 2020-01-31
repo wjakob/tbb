@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 // Test whether cache_aligned_allocator works with some of the host's STL containers.
@@ -54,7 +50,7 @@ void Test_NFS_Allocate_Throws() {
     try {
         // Try allocating more memory than left in the address space; should cause std::bad_alloc
         (void) NFS_Allocate( 1, ~size_t(0) - itemsize*nitems + NFS_GetLineSize(), NULL);
-    } catch( std::bad_alloc ) {
+    } catch( std::bad_alloc& ) {
         exception_caught = true;
     } catch( ... ) {
         ASSERT( __TBB_EXCEPTION_TYPE_INFO_BROKEN, "Unexpected exception type (std::bad_alloc was expected)" );

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,16 +12,17 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #define HARNESS_DEFAULT_MIN_THREADS 2
 #define HARNESS_DEFAULT_MAX_THREADS 4
+#define __TBB_SHUFFLE_PRESENT (_MSC_VER >= 1910 || __cplusplus >= 201103L && (__TBB_GLIBCXX_VERSION >= 40800 || _LIBCPP_VERSION))
 
 #include "harness.h"
+
+#if __TBB_SHUFFLE_PRESENT
+#include <random>
+#endif
 
 #if __TBB_TASK_GROUP_CONTEXT
 
@@ -35,17 +36,7 @@
 #include "tbb/spin_mutex.h"
 #include "tbb/tick_count.h"
 
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <string>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 #define NUM_CHILD_TASKS                 256
 #define NUM_ROOT_TASKS                  32
@@ -695,7 +686,13 @@ class CtxConcurrentDestroyer : NoAssign, Harness::NoAfterlife {
     static Harness::SpinBarrier s_ExitBarrier;
 
     struct Shuffler {
-        void operator() () const { std::random_shuffle(s_Contexts, s_Contexts + s_NumContexts); }
+        void operator() () const {
+#if __TBB_SHUFFLE_PRESENT
+            std::shuffle(s_Contexts, s_Contexts + s_NumContexts, std::mt19937(std::random_device()()));
+#else
+            std::random_shuffle(s_Contexts, s_Contexts + s_NumContexts);
+#endif
+        }
     };
 public:
     static void Init ( int p ) {
@@ -723,7 +720,7 @@ public:
         s_Barrier.wait( Shuffler() );
         for ( int i = begin; i < end; ++i ) {
             s_Contexts[i]->tbb::task_group_context::~task_group_context();
-            memset( s_Contexts[i], 0, sizeof(tbb::task_group_context) );
+            memset( static_cast<void*>(s_Contexts[i]), 0, sizeof(tbb::task_group_context) );
         }
         s_ExitBarrier.wait();
     }

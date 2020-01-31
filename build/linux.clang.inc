@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2016 Intel Corporation
+# Copyright (c) 2005-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,11 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-#
-#
-#
 
+CPLUS ?= clang++
+CONLY ?= clang
 COMPILE_ONLY = -c -MMD
 PREPROC_ONLY = -E -x c++
 INCLUDE_KEY = -I
@@ -24,15 +22,13 @@ OUTPUT_KEY = -o #
 OUTPUTOBJ_KEY = -o #
 PIC_KEY = -fPIC
 WARNING_AS_ERROR_KEY = -Werror
-WARNING_KEY = -Wall
-TEST_WARNING_KEY = -Wextra -Wshadow -Wcast-qual -Woverloaded-virtual -Wnon-virtual-dtor
+WARNING_KEY = -Wall -Wextra
+TEST_WARNING_KEY = -Wshadow -Wcast-qual -Woverloaded-virtual -Wnon-virtual-dtor
 WARNING_SUPPRESS = -Wno-parentheses -Wno-non-virtual-dtor -Wno-dangling-else
 DYLIB_KEY = -shared
 EXPORT_KEY = -Wl,--version-script,
 LIBDL = -ldl
 
-CPLUS = clang++
-CONLY = clang
 LIB_LINK_FLAGS = $(DYLIB_KEY) -Wl,-soname=$(BUILDING_LIBRARY)
 LIBS += -lpthread -lrt
 LINK_FLAGS = -Wl,-rpath-link=. -rdynamic

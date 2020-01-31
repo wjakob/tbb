@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef _ITTNOTIFY_CONFIG_H_
@@ -294,7 +290,16 @@ ITT_INLINE long __itt_interlocked_increment(volatile long* ptr)
 #ifdef SDL_STRNCPY_S
 #define __itt_fstrcpyn(s1, b, s2, l) SDL_STRNCPY_S(s1, b, s2, l)
 #else
-#define __itt_fstrcpyn(s1, b, s2, l) strncpy(s1, s2, l)
+#define __itt_fstrcpyn(s1, b, s2, l) {                                      \
+    if (b > 0) {                                                            \
+        /* 'volatile' is used to suppress the warning that a destination */ \
+        /*  bound depends on the length of the source.                   */ \
+        volatile size_t num_to_copy = (size_t)(b - 1) < (size_t)(l) ?       \
+                (size_t)(b - 1) : (size_t)(l);                              \
+        strncpy(s1, s2, num_to_copy);                                       \
+        s1[num_to_copy] = 0;                                                \
+    }                                                                       \
+}
 #endif /* SDL_STRNCPY_S */
 
 #define __itt_fstrdup(s)          strdup(s)

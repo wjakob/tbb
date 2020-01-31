@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 // All platform-specific threading support is encapsulated here. */
@@ -28,7 +24,7 @@
 #include <process.h>
 #include <malloc.h> //_alloca
 #include "tbb/tbb_misc.h" // support for processor groups
-#if __TBB_WIN8UI_SUPPORT
+#if __TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00)
 #include <thread>
 #endif
 #elif USE_PTHREAD
@@ -78,7 +74,7 @@ public:
         friend class thread_monitor;
         tbb::atomic<size_t> my_epoch;
     };
-    thread_monitor() : spurious(false) {
+    thread_monitor() : skipped_wakeup(false), my_sema() {
         my_cookie.my_epoch = 0;
         ITT_SYNC_CREATE(&my_sema, SyncType_RML, SyncObj_ThreadMonitor);
         in_wait = false;
@@ -129,9 +125,9 @@ public:
     //! Detach thread
     static void detach_thread(handle_type handle);
 private:
-    cookie my_cookie;
-    tbb::atomic<bool>   in_wait;
-    bool   spurious;
+    cookie my_cookie; // epoch counter
+    tbb::atomic<bool> in_wait;
+    bool skipped_wakeup;
     tbb::internal::binary_semaphore my_sema;
 #if USE_PTHREAD
     static void check( int error_code, const char* routine );
@@ -144,13 +140,14 @@ private:
 #define STACK_SIZE_PARAM_IS_A_RESERVATION 0x00010000
 #endif
 
-#if __TBB_WIN8UI_SUPPORT
+// _beginthreadex API is not available in Windows 8 Store* applications, so use std::thread instead
+#if __TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00)
 inline thread_monitor::handle_type thread_monitor::launch( thread_routine_type thread_function, void* arg, size_t, const size_t*) {
 //TODO: check that exception thrown from std::thread is not swallowed silently
     std::thread* thread_tmp=new std::thread(thread_function, arg);
     return thread_tmp->native_handle();
 }
-#else //__TBB_WIN8UI_SUPPORT
+#else
 inline thread_monitor::handle_type thread_monitor::launch( thread_routine_type thread_routine, void* arg, size_t stack_size, const size_t* worker_index ) {
     unsigned thread_id;
     int number_of_processor_groups = ( worker_index ) ? tbb::internal::NumberOfProcessorGroups() : 0;
@@ -167,7 +164,7 @@ inline thread_monitor::handle_type thread_monitor::launch( thread_routine_type t
     }
     return h;
 }
-#endif //__TBB_WIN8UI_SUPPORT
+#endif //__TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00)
 
 void thread_monitor::join(handle_type handle) {
 #if TBB_USE_ASSERT
@@ -192,10 +189,10 @@ void thread_monitor::detach_thread(handle_type handle) {
 
 inline void thread_monitor::yield() {
 // TODO: consider unification via __TBB_Yield or tbb::this_tbb_thread::yield
-#if !__TBB_WIN8UI_SUPPORT
-    SwitchToThread();
-#else
+#if __TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00)
     std::this_thread::yield();
+#else
+    SwitchToThread();
 #endif
 }
 #endif /* USE_WINTHREAD */
@@ -244,24 +241,25 @@ inline void thread_monitor::notify() {
 }
 
 inline void thread_monitor::prepare_wait( cookie& c ) {
-    if( spurious ) {
-        spurious = false;
-        //  consumes a spurious posted signal. don't wait on my_sema.
-        my_sema.P();
+    if( skipped_wakeup ) {
+        // Lazily consume a signal that was skipped due to cancel_wait
+        skipped_wakeup = false;
+        my_sema.P(); // does not really wait on the semaphore
     }
     c = my_cookie;
-    in_wait = true;
-   __TBB_full_memory_fence();
+    in_wait.store<tbb::full_fence>( true );
 }
 
 inline void thread_monitor::commit_wait( cookie& c ) {
-    bool do_it = ( c.my_epoch == my_cookie.my_epoch);
+    bool do_it = ( c.my_epoch == my_cookie.my_epoch );
     if( do_it ) my_sema.P();
     else        cancel_wait();
 }
 
 inline void thread_monitor::cancel_wait() {
-    spurious = ! in_wait.fetch_and_store( false );
+    // if not in_wait, then some thread has sent us a signal;
+    // it will be consumed by the next prepare_wait call
+    skipped_wakeup = ! in_wait.fetch_and_store( false );
 }
 
 } // namespace internal

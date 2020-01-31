@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 // The original source for this code is
@@ -97,7 +93,7 @@ static void impl_zone_destroy(struct _malloc_zone_t *) {}
 /* note: impl_malloc_usable_size() is called for each free() call, so it must be fast */
 static size_t impl_malloc_usable_size(struct _malloc_zone_t *, const void *ptr)
 {
-    // malloc_usable_size() is used by OS X to recognize which memory manager
+    // malloc_usable_size() is used by macOS* to recognize which memory manager
     // allocated the address, so our wrapper must not redirect to the original function.
     return __TBB_malloc_safer_msize(const_cast<void*>(ptr), NULL);
 }

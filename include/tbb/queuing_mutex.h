@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,29 +12,12 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_queuing_mutex_H
 #define __TBB_queuing_mutex_H
 
-#include "tbb_config.h"
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
-
 #include <cstring>
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
-
 #include "atomic.h"
 #include "tbb_profiling.h"
 
@@ -59,6 +42,7 @@ public:
         //! Initialize fields to mean "no lock held".
         void initialize() {
             mutex = NULL;
+            going = 0;
 #if TBB_USE_ASSERT
             internal::poison_pointer(next);
 #endif /* TBB_USE_ASSERT */

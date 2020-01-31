@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef _TBB_ITT_NOTIFY
@@ -85,6 +81,9 @@ namespace tbb {
             *SyncObj_Mailbox,
             *SyncObj_TaskReturnList,
             *SyncObj_TaskStream,
+#if __TBB_PREVIEW_CRITICAL_TASKS
+            *SyncObj_CriticalTaskStream,
+#endif
             *SyncObj_ContextsList
             ;
 
@@ -108,6 +107,10 @@ namespace tbb {
 #define ITT_STACK(precond, name, obj)      ((void)0)
 #endif /* !__TBB_TASK_GROUP_CONTEXT */
 
+#define ITT_TASK_GROUP(obj,name,parent)     itt_make_task_group_v7(internal::ITT_DOMAIN_MAIN,(void*)(obj),ALGORITHM,(void*)(parent),(parent!=NULL) ? ALGORITHM : FLOW_NULL,name)
+#define ITT_TASK_BEGIN(obj,name,id)         itt_task_begin_v7(internal::ITT_DOMAIN_MAIN,(void*)(id),ALGORITHM,(void*)(obj),ALGORITHM,name)
+#define ITT_TASK_END                        itt_task_end_v7(internal::ITT_DOMAIN_MAIN)
+
 #else /* !DO_ITT_NOTIFY */
 
 #define ITT_NOTIFY(name,obj)            ((void)0)
@@ -117,6 +120,10 @@ namespace tbb {
 #define ITT_SYNC_RENAME(obj, name)      ((void)0)
 #define ITT_STACK_CREATE(obj)           ((void)0)
 #define ITT_STACK(precond, name, obj)   ((void)0)
+
+#define ITT_TASK_GROUP(type,name,parent)    ((void)0)
+#define ITT_TASK_BEGIN(type,name,id)        ((void)0)
+#define ITT_TASK_END                        ((void)0)
 
 #endif /* !DO_ITT_NOTIFY */
 

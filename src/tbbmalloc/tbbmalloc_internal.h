@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_tbbmalloc_internal_H
@@ -73,7 +69,7 @@
 
 #define COLLECT_STATISTICS ( MALLOC_DEBUG && MALLOCENV_COLLECT_STATISTICS )
 #ifndef USE_INTERNAL_TID
-#define USE_INTERNAL_TID COLLECT_STATISTICS
+#define USE_INTERNAL_TID COLLECT_STATISTICS || MALLOC_TRACE
 #endif
 
 #include "Statistics.h"
@@ -99,10 +95,19 @@ extern intptr_t memAllocKB, memHitKB;
 template<typename T>
 void suppress_unused_warning( const T& ) {}
 
+/********** Various global default constants ********/
+
+/*
+ * Default huge page size
+ */
+static const size_t HUGE_PAGE_SIZE = 2 * 1024 * 1024;
+
+/********** End of global default constatns *********/
+
 /********** Various numeric parameters controlling allocations ********/
 
 /*
- * smabSize - the size of a block for allocation of small objects,
+ * slabSize - the size of a block for allocation of small objects,
  * it must be larger than maxSegregatedObjectSize.
  */
 const uintptr_t slabSize = 16*1024;
@@ -118,9 +123,15 @@ const unsigned cacheCleanupFreq = 256;
  */
 const size_t largeObjectAlignment = estimatedCacheLineSize;
 
+/*
+ * This number of bins in the TLS that leads to blocks that we can allocate in.
+ */
+const uint32_t numBlockBinLimit = 31;
+
 /********** End of numeric parameters controlling allocations *********/
 
 class BlockI;
+class Block;
 struct LargeMemoryBlock;
 struct ExtMemoryPool;
 struct MemRegion;
@@ -235,9 +246,38 @@ class AllLocalCaches {
 public:
     void registerThread(TLSRemote *tls);
     void unregisterThread(TLSRemote *tls);
-    bool cleanup(ExtMemoryPool *extPool, bool cleanOnlyUnused);
+    bool cleanup(bool cleanOnlyUnused);
     void markUnused();
     void reset() { head = NULL; }
+};
+
+class LifoList {
+public:
+    inline LifoList();
+    inline void push(Block *block);
+    inline Block *pop();
+    inline Block *grab();
+
+private:
+    Block *top;
+    MallocMutex lock;
+};
+
+/*
+ * When a block that is not completely free is returned for reuse by other threads
+ * this is where the block goes.
+ *
+ * LifoList assumes zero initialization; so below its constructors are omitted,
+ * to avoid linking with C++ libraries on Linux.
+ */
+
+class OrphanedBlocks {
+    LifoList bins[numBlockBinLimit];
+public:
+    Block *get(TLSData *tls, unsigned int size);
+    void put(intptr_t binTag, Block *block);
+    void reset();
+    bool cleanup(Backend* backend);
 };
 
 /* cache blocks in range [MinSize; MaxSize) in bins with CacheStep
@@ -476,7 +516,7 @@ private:
     uint16_t largeObj:1;  // is this object "large"?
     uint16_t offset  :15; // offset from beginning of BackRefBlock
 public:
-    BackRefIdx() : master(invalid) {}
+    BackRefIdx() : master(invalid), largeObj(0), offset(0) {}
     bool isInvalid() const { return master == invalid; }
     bool isLargeObject() const { return largeObj; }
     master_t getMaster() const { return master; }
@@ -507,337 +547,169 @@ struct LargeMemoryBlock : public BlockI {
     BackRefIdx        backRefIdx;    // cached here, used copy is in LargeObjectHdr
 };
 
-// global state of blocks currently in processing
-class BackendSync {
-    // Class instances should reside in zero-initialized memory!
-    // The number of blocks currently removed from a bin and not returned back
-    intptr_t inFlyBlocks;         // to another
-    intptr_t binsModifications;   // incremented on every bin modification
-    Backend *backend;
+// Classes and methods for backend.cpp
+#include "backend.h"
+
+// An TBB allocator mode that can be controlled by user
+// via API/environment variable. Must be placed in zero-initialized memory.
+// External synchronization assumed.
+// TODO: TBB_VERSION support
+class AllocControlledMode {
+    intptr_t val;
+    bool     setDone;
 public:
-    void init(Backend *b) { backend = b; }
-    void blockConsumed() { AtomicIncrement(inFlyBlocks); }
-    void binsModified() { AtomicIncrement(binsModifications); }
-    void blockReleased() {
-#if __TBB_MALLOC_BACKEND_STAT
-        MALLOC_ITT_SYNC_RELEASING(&inFlyBlocks);
-#endif
-        AtomicIncrement(binsModifications);
-        intptr_t prev = AtomicAdd(inFlyBlocks, -1);
-        MALLOC_ASSERT(prev > 0, ASSERT_TEXT);
-        suppress_unused_warning(prev);
+    bool ready() const { return setDone; }
+    intptr_t get() const {
+        MALLOC_ASSERT(setDone, ASSERT_TEXT);
+        return val;
     }
-    intptr_t getNumOfMods() const { return FencedLoad(binsModifications); }
-    // return true if need re-do the blocks search
-    inline bool waitTillBlockReleased(intptr_t startModifiedCnt);
+    void set(intptr_t newVal) { // note set() can be called before init()
+        val = newVal;
+        setDone = true;
+    }
+    // envName - environment variable to get controlled mode
+    void initReadEnv(const char *envName, intptr_t defaultVal);
 };
 
-class CoalRequestQ { // queue of free blocks that coalescing was delayed
+// Page type to be used inside MapMemory.
+// Regular (4KB aligned), Huge and Transparent Huge Pages (2MB aligned).
+enum PageType {
+    REGULAR = 0,
+    PREALLOCATED_HUGE_PAGE,
+    TRANSPARENT_HUGE_PAGE
+};
+
+// init() and printStatus() is called only under global initialization lock.
+// Race is possible between registerAllocation() and registerReleasing(),
+// harm is that up to single huge page releasing is missed (because failure
+// to get huge page is registered only 1st time), that is negligible.
+// setMode is also can be called concurrently.
+// Object must reside in zero-initialized memory
+// TODO: can we check for huge page presence during every 10th mmap() call
+// in case huge page is released by another process?
+class HugePagesStatus {
 private:
-    FreeBlock   *blocksToFree;
-    BackendSync *bkndSync;
-    // counted blocks in blocksToFree and that are leaved blocksToFree
-    // and still in active coalescing
-    intptr_t     inFlyBlocks;
-public:
-    void init(BackendSync *bSync) { bkndSync = bSync; }
-    FreeBlock *getAll(); // return current list of blocks and make queue empty
-    void putBlock(FreeBlock *fBlock);
-    inline void blockWasProcessed();
-    intptr_t blocksInFly() const { return FencedLoad(inFlyBlocks); }
-};
+    AllocControlledMode requestedMode; // changed only by user
+                                       // to keep enabled and requestedMode consistent
+    MallocMutex setModeLock;
+    size_t      pageSize;
+    intptr_t    needActualStatusPrint;
 
-class MemExtendingSema {
-    intptr_t     active;
-public:
-    bool wait() {
-        bool rescanBins = false;
-        // up to 3 threads can add more memory from OS simultaneously,
-        // rest of threads have to wait
-        for (;;) {
-            intptr_t prevCnt = FencedLoad(active);
-            if (prevCnt < 3) {
-                intptr_t n = AtomicCompareExchange(active, prevCnt+1, prevCnt);
-                if (n == prevCnt)
-                    break;
-            } else {
-                SpinWaitWhileEq(active, prevCnt);
-                rescanBins = true;
-                break;
-            }
+    static void doPrintStatus(bool state, const char *stateName) {
+        // Under macOS* fprintf/snprintf acquires an internal lock, so when
+        // 1st allocation is done under the lock, we got a deadlock.
+        // Do not use fprintf etc during initialization.
+        fputs("TBBmalloc: huge pages\t", stderr);
+        if (!state)
+            fputs("not ", stderr);
+        fputs(stateName, stderr);
+        fputs("\n", stderr);
+    }
+
+    void parseSystemMemInfo() {
+        bool hpAvailable  = false;
+        bool thpAvailable = false;
+        unsigned long long hugePageSize = 0;
+
+#if __linux__
+        // Check huge pages existense
+        unsigned long long meminfoHugePagesTotal = 0;
+
+        parseFileItem meminfoItems[] = {
+            // Parse system huge page size
+            { "Hugepagesize: %llu kB", hugePageSize },
+            // Check if there are preallocated huge pages on the system
+            // https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt
+            { "HugePages_Total: %llu", meminfoHugePagesTotal } };
+
+        parseFile</*BUFF_SIZE=*/100>("/proc/meminfo", meminfoItems);
+
+        // Double check another system information regarding preallocated
+        // huge pages if there are no information in /proc/meminfo
+        unsigned long long vmHugePagesTotal = 0;
+
+        parseFileItem vmItem[] = { { "%llu", vmHugePagesTotal } };
+
+        // We parse a counter number, it can't be huge
+        parseFile</*BUFF_SIZE=*/100>("/proc/sys/vm/nr_hugepages", vmItem);
+
+        if (meminfoHugePagesTotal > 0 || vmHugePagesTotal > 0) {
+            MALLOC_ASSERT(hugePageSize != 0, "Huge Page size can't be zero if we found preallocated.");
+
+            // Any non zero value clearly states that there are preallocated
+            // huge pages on the system
+            hpAvailable = true;
         }
-        return rescanBins;
-    }
-    void signal() { AtomicAdd(active, -1); }
-};
 
-enum MemRegionType {
-    // The region does not guarantee the block size.
-    MEMREG_FLEXIBLE_SIZE = 0,
-    // The region can hold exact number of blocks with the size of the
-    // first reqested block.
-    MEMREG_SEVERAL_BLOCKS,
-    // The region holds only one block with a reqested size.
-    MEMREG_ONE_BLOCK
-};
+        // Check if there is transparent huge pages support on the system
+        unsigned long long thpPresent = 'n';
+        parseFileItem thpItem[] = { { "[alwa%cs] madvise never\n", thpPresent } };
+        parseFile</*BUFF_SIZE=*/100>("/sys/kernel/mm/transparent_hugepage/enabled", thpItem);
 
-class MemRegionList {
-    MallocMutex regionListLock;
-public:
-    MemRegion  *head;
-    void add(MemRegion *r);
-    void remove(MemRegion *r);
-    int reportStat(FILE *f);
-};
-
-class Backend {
-private:
-/* Blocks in range [minBinnedSize; getMaxBinnedSize()] are kept in bins,
-   one region can contains several blocks. Larger blocks are allocated directly
-   and one region always contains one block.
-*/
-    enum {
-        minBinnedSize = 8*1024UL,
-        /*   If huge pages are available, maxBinned_HugePage used.
-             If not, maxBinned_SmallPage is the threshold.
-             TODO: use pool's granularity for upper bound setting.*/
-        maxBinned_SmallPage = 1024*1024UL,
-        // TODO: support other page sizes
-        maxBinned_HugePage = 4*1024*1024UL
-    };
-    enum {
-        VALID_BLOCK_IN_BIN = 1 // valid block added to bin, not returned as result
-    };
-public:
-    static const int freeBinsNum =
-        (maxBinned_HugePage-minBinnedSize)/LargeObjectCache::largeBlockCacheStep + 1;
-
-    // if previous access missed per-thread slabs pool,
-    // allocate numOfSlabAllocOnMiss blocks in advance
-    static const int numOfSlabAllocOnMiss = 2;
-
-    enum {
-        NO_BIN = -1,
-        // special bin for blocks >= maxBinned_HugePage, blocks go to this bin
-        // when pool is created with keepAllMemory policy
-        // TODO: currently this bin is scanned using "1st fit", as it accumulates
-        // blocks of different sizes, "best fit" is preferred in terms of fragmentation
-        HUGE_BIN = freeBinsNum-1
-    };
-
-    // Bin keeps 2-linked list of free blocks. It must be 2-linked
-    // because during coalescing a block it's removed from a middle of the list.
-    struct Bin {
-        FreeBlock   *head,
-                    *tail;
-        MallocMutex  tLock;
-
-        void removeBlock(FreeBlock *fBlock);
-        void reset() { head = tail = 0; }
-        bool empty() const { return !head; }
-
-        size_t countFreeBlocks();
-        size_t reportFreeBlocks(FILE *f);
-        void reportStat(FILE *f);
-    };
-
-    typedef BitMaskMin<Backend::freeBinsNum> BitMaskBins;
-
-    // array of bins supplemented with bitmask for fast finding of non-empty bins
-    class IndexedBins {
-        BitMaskBins bitMask;
-        Bin         freeBins[Backend::freeBinsNum];
-        FreeBlock *getFromBin(int binIdx, BackendSync *sync, size_t size,
-                              bool resSlabAligned, bool alignedBin, bool wait,
-                              int *resLocked);
-    public:
-        FreeBlock *findBlock(int nativeBin, BackendSync *sync, size_t size,
-                             bool resSlabAligned, bool alignedBin, int *numOfLockedBins);
-        bool tryReleaseRegions(int binIdx, Backend *backend);
-        void lockRemoveBlock(int binIdx, FreeBlock *fBlock);
-        void addBlock(int binIdx, FreeBlock *fBlock, size_t blockSz, bool addToTail);
-        bool tryAddBlock(int binIdx, FreeBlock *fBlock, bool addToTail);
-        int getMinNonemptyBin(unsigned startBin) const {
-            int p = bitMask.getMinTrue(startBin);
-            return p == -1 ? Backend::freeBinsNum : p;
+        if (thpPresent == 'y') {
+            MALLOC_ASSERT(hugePageSize != 0, "Huge Page size can't be zero if we found thp existence.");
+            thpAvailable = true;
         }
-        void verify();
-        void reset();
-        void reportStat(FILE *f);
-    };
-
-private:
-    class AdvRegionsBins {
-        BitMaskBins bins;
-    public:
-        void registerBin(int regBin) { bins.set(regBin, 1); }
-        int getMinUsedBin(int start) const { return bins.getMinTrue(start); }
-        void reset() { bins.reset(); }
-    };
-    // auxiliary class to atomic maximum request finding
-    class MaxRequestComparator {
-        const Backend *backend;
-    public:
-        MaxRequestComparator(const Backend *be) : backend(be) {}
-        inline bool operator()(size_t oldMaxReq, size_t requestSize) const;
-    };
-
-#if CHECK_ALLOCATION_RANGE
-    // Keep min and max of all addresses requested from OS,
-    // use it for checking memory possibly allocated by replaced allocators
-    // and for debugging purposes. Valid only for default memory pool.
-    class UsedAddressRange {
-        static const uintptr_t ADDRESS_UPPER_BOUND = UINTPTR_MAX;
-
-        uintptr_t   leftBound,
-                    rightBound;
-        MallocMutex mutex;
-    public:
-        // rightBound is zero-initialized
-        void init() { leftBound = ADDRESS_UPPER_BOUND; }
-        void registerAlloc(uintptr_t left, uintptr_t right);
-        void registerFree(uintptr_t left, uintptr_t right);
-        // as only left and right bounds are kept, we can return true
-        // for pointer not allocated by us, if more than single region
-        // was requested from OS
-        bool inRange(void *ptr) const {
-            const uintptr_t p = (uintptr_t)ptr;
-            return leftBound<=p && p<=rightBound;
-        }
-    };
-#else
-    class UsedAddressRange {
-    public:
-        void init() { }
-        void registerAlloc(uintptr_t, uintptr_t) {}
-        void registerFree(uintptr_t, uintptr_t) {}
-        bool inRange(void *) const { return true; }
-    };
 #endif
+        MALLOC_ASSERT(!pageSize, "Huge page size can't be set twice. Double initialization.");
 
-    ExtMemoryPool   *extMemPool;
-    // used for release every region on pool destroying
-    MemRegionList    regionList;
+        // Initialize object variables
+        pageSize       = hugePageSize * 1024; // was read in KB from meminfo
+        isHPAvailable  = hpAvailable;
+        isTHPAvailable = thpAvailable;
+    }
 
-    CoalRequestQ     coalescQ; // queue of coalescing requests
-    BackendSync      bkndSync;
-    // semaphore protecting adding more more memory from OS
-    MemExtendingSema memExtendingSema;
-    size_t           totalMemSize,
-                     memSoftLimit;
-    UsedAddressRange usedAddrRange;
-    // to keep 1st allocation large than requested, keep bootstrapping status
-    enum {
-        bootsrapMemNotDone = 0,
-        bootsrapMemInitializing,
-        bootsrapMemDone
-    };
-    intptr_t         bootsrapMemStatus;
-    MallocMutex      bootsrapMemStatusMutex;
-
-    // Using of maximal observed requested size allows decrease
-    // memory consumption for small requests and decrease fragmentation
-    // for workloads when small and large allocation requests are mixed.
-    // TODO: decrease, not only increase it
-    size_t           maxRequestedSize;
-
-    FreeBlock *addNewRegion(size_t size, MemRegionType type, bool addToBin);
-    FreeBlock *findBlockInRegion(MemRegion *region, size_t exactBlockSize);
-    void startUseBlock(MemRegion *region, FreeBlock *fBlock, bool addToBin);
-    void releaseRegion(MemRegion *region);
-
-    FreeBlock *releaseMemInCaches(intptr_t startModifiedCnt,
-                                  int *lockedBinsThreshold, int numOfLockedBins);
-    void requestBootstrapMem();
-    FreeBlock *askMemFromOS(size_t totalReqSize, intptr_t startModifiedCnt,
-                            int *lockedBinsThreshold, int numOfLockedBins,
-                            bool *splittable);
-    FreeBlock *genericGetBlock(int num, size_t size, bool resSlabAligned);
-    void genericPutBlock(FreeBlock *fBlock, size_t blockSz);
-    FreeBlock *splitUnalignedBlock(FreeBlock *fBlock, int num, size_t size,
-                              bool needAlignedRes);
-    FreeBlock *splitAlignedBlock(FreeBlock *fBlock, int num, size_t size,
-                            bool needAlignedRes);
-
-    FreeBlock *doCoalesc(FreeBlock *fBlock, MemRegion **memRegion);
-    bool coalescAndPutList(FreeBlock *head, bool forceCoalescQDrop, bool reportBlocksProcessed);
-    void coalescAndPut(FreeBlock *fBlock, size_t blockSz);
-
-    void removeBlockFromBin(FreeBlock *fBlock);
-
-    void *allocRawMem(size_t &size);
-    bool freeRawMem(void *object, size_t size);
-
-    void putLargeBlock(LargeMemoryBlock *lmb);
-    void releaseCachesToLimit();
 public:
-    bool scanCoalescQ(bool forceCoalescQDrop);
-    intptr_t blocksInCoalescing() const { return coalescQ.blocksInFly(); }
-    void verify();
-    void init(ExtMemoryPool *extMemoryPool);
-    void reset();
-    bool destroy();
-    bool clean(); // clean on caches cleanup
-    void reportStat(FILE *f);
 
-    BlockI *getSlabBlock(int num) {
-        BlockI *b = (BlockI*)
-            genericGetBlock(num, slabSize, /*resSlabAligned=*/true);
-        MALLOC_ASSERT(isAligned(b, slabSize), ASSERT_TEXT);
-        return b;
-    }
-    void putSlabBlock(BlockI *block) {
-        genericPutBlock((FreeBlock *)block, slabSize);
-    }
-    void *getBackRefSpace(size_t size, bool *rawMemUsed);
-    void putBackRefSpace(void *b, size_t size, bool rawMemUsed);
+    // System information
+    bool isHPAvailable;
+    bool isTHPAvailable;
 
-    bool inUserPool() const;
+    // User defined value
+    bool isEnabled;
 
-    LargeMemoryBlock *getLargeBlock(size_t size);
-    void returnLargeObject(LargeMemoryBlock *lmb);
-
-    void *remap(void *ptr, size_t oldSize, size_t newSize, size_t alignment);
-
-    void setRecommendedMaxSize(size_t softLimit) {
-        memSoftLimit = softLimit;
-        releaseCachesToLimit();
-    }
-    inline size_t getMaxBinnedSize() const;
-
-    bool ptrCanBeValid(void *ptr) const { return usedAddrRange.inRange(ptr); }
-
-#if __TBB_MALLOC_WHITEBOX_TEST
-    size_t getTotalMemSize() const { return totalMemSize; }
-#endif
-private:
-    static int sizeToBin(size_t size) {
-        if (size >= maxBinned_HugePage)
-            return HUGE_BIN;
-        else if (size < minBinnedSize)
-            return NO_BIN;
-
-        int bin = (size - minBinnedSize)/LargeObjectCache::largeBlockCacheStep;
-
-        MALLOC_ASSERT(bin < HUGE_BIN, "Invalid size.");
-        return bin;
-    }
-#if __TBB_MALLOC_BACKEND_STAT
-    static size_t binToSize(int bin) {
-        MALLOC_ASSERT(bin <= HUGE_BIN, "Invalid bin.");
-
-        return bin*LargeObjectCache::largeBlockCacheStep + minBinnedSize;
-    }
-#endif
-    static bool toAlignedBin(FreeBlock *block, size_t size) {
-        return isAligned((char*)block+size, slabSize)
-            && size >= slabSize;
+    void init() {
+        parseSystemMemInfo();
+        MallocMutex::scoped_lock lock(setModeLock);
+        requestedMode.initReadEnv("TBB_MALLOC_USE_HUGE_PAGES", 0);
+        isEnabled = (isHPAvailable || isTHPAvailable) && requestedMode.get();
     }
 
-    // register bins related to advance regions
-    AdvRegionsBins advRegBins;
-    IndexedBins freeLargeBins,
-                freeAlignedBins;
+    // Could be set from user code at any place.
+    // If we didn't call init() at this place, isEnabled will be false
+    void setMode(intptr_t newVal) {
+        MallocMutex::scoped_lock lock(setModeLock);
+        requestedMode.set(newVal);
+        isEnabled = (isHPAvailable || isTHPAvailable) && newVal;
+    }
+
+    bool isRequested() const {
+        return requestedMode.ready() ? requestedMode.get() : false;
+    }
+
+    void reset() {
+        pageSize = needActualStatusPrint = 0;
+        isEnabled = isHPAvailable = isTHPAvailable = false;
+    }
+
+    // If memory mapping size is a multiple of huge page size, some OS kernels
+    // can use huge pages transparently. Use this when huge pages are requested.
+    size_t getGranularity() const {
+        if (requestedMode.ready())
+            return requestedMode.get() ? pageSize : 0;
+        else
+            return HUGE_PAGE_SIZE; // the mode is not yet known; assume typical 2MB huge pages
+    }
+
+    void printStatus() {
+        doPrintStatus(requestedMode.get(), "requested");
+        if (requestedMode.get()) { // report actual status iff requested
+            if (pageSize)
+                FencedStore(needActualStatusPrint, 1);
+            else
+                doPrintStatus(/*state=*/false, "available");
+        }
+    }
 };
 
 class AllLargeBlocksList {
@@ -853,10 +725,11 @@ struct ExtMemoryPool {
     Backend           backend;
     LargeObjectCache  loc;
     AllLocalCaches    allLocalCaches;
+    OrphanedBlocks    orphanedBlocks;
 
     intptr_t          poolId;
-    // To find all large objects. This used during user pool destruction,
-    // to release all backreferencies in large blocks (slab blocks do not have them).
+    // To find all large objects. Used during user pool destruction,
+    // to release all backreferences in large blocks (slab blocks do not have them).
     AllLargeBlocksList lmbList;
     // Callbacks to be used instead of MapMemory/UnmapMemory.
     rawAllocType      rawAlloc;
@@ -883,6 +756,7 @@ struct ExtMemoryPool {
     bool reset() {
         loc.reset();
         allLocalCaches.reset();
+        orphanedBlocks.reset();
         bool ret = tlsPointerKey.destroy();
         backend.reset();
         return ret;
@@ -926,80 +800,6 @@ struct FreeObject {
     FreeObject  *next;
 };
 
-// An TBB allocator mode that can be controlled by user
-// via API/environment variable. Must be placed in zero-initialized memory.
-// External synchronization assumed.
-// TODO: TBB_VERSION support
-class AllocControlledMode {
-    intptr_t val;
-    bool     setDone;
-public:
-    intptr_t get() const {
-        MALLOC_ASSERT(setDone, ASSERT_TEXT);
-        return val;
-    }
-    void set(intptr_t newVal) { // note set() can be called before init()
-        val = newVal;
-        setDone = true;
-    }
-    // envName - environment variable to get controlled mode
-    void initReadEnv(const char *envName, intptr_t defaultVal);
-};
-
-// init() and printStatus() is called only under global initialization lock.
-// Race is possible between registerAllocation() and registerReleasing(),
-// harm is that up to single huge page releasing is missed (because failure
-// to get huge page is registered only 1st time), that is negligible.
-// setMode is also can be called concurrently.
-// Object must reside in zero-initialized memory
-// TODO: can we check for huge page presence during every 10th mmap() call
-// in case huge page is released by another process?
-class HugePagesStatus {
-private:
-    AllocControlledMode requestedMode; // changed only by user
-               // to keep enabled and requestedMode consistent
-    MallocMutex setModeLock;
-    size_t      pageSize;
-    intptr_t    needActualStatusPrint;
-
-    static void doPrintStatus(bool state, const char *stateName);
-public:
-    // both variables are changed only inside HugePagesStatus
-    intptr_t    enabled;
-    // Have we got huge pages at all? It's used when large hugepage-aligned
-    // region is releasing, to find can it release some huge pages or not.
-    intptr_t    wasObserved;
-
-    size_t getSize() const {
-        MALLOC_ASSERT(pageSize, ASSERT_TEXT);
-        return pageSize;
-    }
-    void printStatus();
-    void registerAllocation(bool available);
-    void registerReleasing(void* addr, size_t size);
-
-    void init(size_t hugePageSize) {
-        MALLOC_ASSERT(!hugePageSize || isPowerOfTwo(hugePageSize),
-                      "Only memory pages of a power-of-two size are supported.");
-        MALLOC_ASSERT(!pageSize, "Huge page size can't be set twice.");
-        pageSize = hugePageSize;
-
-        MallocMutex::scoped_lock lock(setModeLock);
-        requestedMode.initReadEnv("TBB_MALLOC_USE_HUGE_PAGES", 0);
-        enabled = pageSize && requestedMode.get();
-    }
-    void setMode(intptr_t newVal) {
-        MallocMutex::scoped_lock lock(setModeLock);
-        requestedMode.set(newVal);
-        enabled = pageSize && newVal;
-    }
-    void reset() {
-        pageSize = 0;
-        needActualStatusPrint = enabled = wasObserved = 0;
-    }
-};
-
-extern HugePagesStatus hugePages;
 
 /******* A helper class to support overriding malloc with scalable_malloc *******/
 #if MALLOC_CHECK_RECURSION

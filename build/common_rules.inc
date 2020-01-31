@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2016 Intel Corporation
+# Copyright (c) 2005-2019 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,10 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-#
-#
-#
 
 
 ifeq ($(tbb_strict),1)
@@ -46,8 +42,11 @@ endif
 INCLUDES += $(INCLUDE_KEY)$(tbb_root)/src $(INCLUDE_KEY)$(tbb_root)/src/rml/include $(INCLUDE_KEY)$(tbb_root)/include
 
 CPLUS_FLAGS += $(WARNING_KEY) $(CXXFLAGS)
-ifeq ($(tbb_cpf),1)
+ifeq (1,$(tbb_cpf))
 CPLUS_FLAGS += $(DEFINE_KEY)__TBB_CPF_BUILD=1
+endif
+ifeq (0,$(exceptions))
+CPLUS_FLAGS += $(DEFINE_KEY)TBB_USE_EXCEPTIONS=0
 endif
 LINK_FLAGS += $(LDFLAGS)
 LIB_LINK_FLAGS += $(LDFLAGS)
@@ -60,6 +59,7 @@ ifeq ($(origin LIB_LINK_LIBS), undefined)
     LIB_LINK_LIBS = $(LIBDL) $(LIBS)
 endif
 
+# some platforms do not provide separate C-only compiler
 CONLY ?= $(CPLUS)
 
 # The most generic rules
@@ -85,7 +85,7 @@ $(foreach t,%.$(OBJ) $(TEST_AFFIXES_OBJS),$(eval $(call make-cxx-obj,$(t))))
 #$(2) - is the input obj files and libraries
 define make-test-binary
 	$(CPLUS) $(OUTPUT_KEY)$(strip $1) $(CPLUS_FLAGS) $(2) $(LIBS) $(LINK_FLAGS)
-endef 
+endef
 
 # LINK_FILES the list of options to link test specific files (libraries and object files)
 LINK_FILES+=$(TEST_LIBS)

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,15 +12,12 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_tbb_semaphore_H
 #define __TBB_tbb_semaphore_H
 
+#include <tbb/atomic.h>
 #include "tbb/tbb_stddef.h"
 
 #if _WIN32||_WIN64
@@ -191,6 +188,8 @@ private:
 
 #if __TBB_USE_FUTEX
 class binary_semaphore : no_copy {
+// The implementation is equivalent to the "Mutex, Take 3" one
+// in the paper "Futexes Are Tricky" by Ulrich Drepper
 public:
     //! ctor
     binary_semaphore() { my_sem = 1; }
@@ -202,7 +201,7 @@ public:
         if( (s = my_sem.compare_and_swap( 1, 0 ))!=0 ) {
             if( s!=2 )
                 s = my_sem.fetch_and_store( 2 );
-            while( s!=0 ) {
+            while( s!=0 ) { // This loop deals with spurious wakeup
                 futex_wait( &my_sem, 2 );
                 s = my_sem.fetch_and_store( 2 );
             }
@@ -211,14 +210,11 @@ public:
     //! post/release
     void V() {
         __TBB_ASSERT( my_sem>=1, "multiple V()'s in a row?" );
-        if( my_sem--!=1 ) {
-            //if old value was 2
-            my_sem = 0;
+        if( my_sem.fetch_and_store( 0 )==2 )
             futex_wakeup_one( &my_sem );
-        }
     }
 private:
-    atomic<int> my_sem;
+    atomic<int> my_sem; // 0 - open; 1 - closed, no waits; 2 - closed, possible waits
 };
 #else
 typedef uint32_t sem_count_t;

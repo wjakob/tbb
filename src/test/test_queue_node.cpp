@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,15 +12,16 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 // TO DO: Add overlapping put / receive tests
 
 #include "harness.h"
+
+#if __TBB_CPF_BUILD
+#define TBB_DEPRECATED_FLOW_NODE_EXTRACTION 1
+#endif
+
 #include "tbb/flow_graph.h"
 #include "tbb/task_scheduler_init.h"
 #include "tbb/tick_count.h"
@@ -460,7 +461,7 @@ int TestMain() {
     REMARK("Testing resets\n");
     test_resets<int, tbb::flow::queue_node<int> >();
     test_resets<float, tbb::flow::queue_node<float> >();
-#if TBB_PREVIEW_FLOW_GRAPH_FEATURES
+#if TBB_DEPRECATED_FLOW_NODE_EXTRACTION
     test_buffer_extract<tbb::flow::queue_node<int> >().run_tests();
 #endif
     return Harness::Done;

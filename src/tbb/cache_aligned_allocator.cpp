@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "tbb/tbb_config.h"
@@ -31,8 +27,6 @@
 #else
 #include <dlfcn.h>
 #endif /* _WIN32||_WIN64 */
-
-using namespace std;
 
 #if __TBB_WEAK_SYMBOLS_PRESENT
 
@@ -104,7 +98,7 @@ static const dynamic_link_descriptor MallocLinkTable[] = {
 #define MALLOCLIB_NAME "tbbmalloc" DEBUG_SUFFIX ".dll"
 #elif __APPLE__
 #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".dylib"
-#elif __FreeBSD__ || __NetBSD__ || __sun || _AIX || __ANDROID__
+#elif __FreeBSD__ || __NetBSD__ || __OpenBSD__ || __sun || _AIX || __ANDROID__
 #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".so"
 #elif __linux__  // Note that order of these #elif's is important!
 #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX  __TBB_STRING(.so.TBB_COMPATIBLE_INTERFACE_VERSION)
@@ -124,8 +118,8 @@ void initialize_handler_pointers() {
         // This must be done now, and not before FillDynamicLinks runs, because if other
         // threads call the handlers, we want them to go through the DoOneTimeInitializations logic,
         // which forces them to wait.
-        FreeHandler = &free;
-        MallocHandler = &malloc;
+        FreeHandler = &std::free;
+        MallocHandler = &std::malloc;
         padded_allocate_handler = &padded_allocate;
         padded_free_handler = &padded_free;
     }
@@ -207,7 +201,7 @@ void NFS_Free( void* p ) {
 
 static void* padded_allocate( size_t bytes, size_t alignment ) {
     unsigned char* result = NULL;
-    unsigned char* base = (unsigned char*)malloc(alignment+bytes);
+    unsigned char* base = (unsigned char*)std::malloc(alignment+bytes);
     if( base ) {
         // Round up to the next line
         result = (unsigned char*)((uintptr_t)(base+alignment)&-alignment);
@@ -223,7 +217,7 @@ static void padded_free( void* p ) {
         // Recover where block actually starts
         unsigned char* base = ((unsigned char**)p)[-1];
         __TBB_ASSERT( (void*)((uintptr_t)(base+NFS_LineSize)&-NFS_LineSize)==p, "not allocated by NFS_Allocate?" );
-        free(base);
+        std::free(base);
     }
 }
 
@@ -248,9 +242,9 @@ bool __TBB_EXPORTED_FUNC is_malloc_used_v3() {
     }
     __TBB_ASSERT( MallocHandler!=&DummyMalloc && FreeHandler!=&DummyFree, NULL );
     // Cast to void avoids type mismatch errors on some compilers (e.g. __IBMCPP__)
-    __TBB_ASSERT( !(((void*)MallocHandler==(void*)&malloc) ^ ((void*)FreeHandler==(void*)&free)),
+    __TBB_ASSERT( !(((void*)MallocHandler==(void*)&std::malloc) ^ ((void*)FreeHandler==(void*)&std::free)),
                   "Both shim pointers must refer to routines from the same package (either TBB or CRT)" );
-    return (void*)MallocHandler == (void*)&malloc;
+    return (void*)MallocHandler == (void*)&std::malloc;
 }
 
 } // namespace internal

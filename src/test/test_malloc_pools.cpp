@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #include "tbb/scalable_allocator.h"
@@ -249,14 +245,12 @@ public:
             void *ptrLarge = pool_malloc(pool[id], lrgSz);
             ASSERT(ptrLarge, NULL);
             memset(ptrLarge, 1, lrgSz);
-
             // consume all small objects
-            while (pool_malloc(pool[id], 5*1024))
-                ;
-            // releasing of large object can give a chance to allocate more
+            while (pool_malloc(pool[id], 5 * 1024));
+            // releasing of large object will not give a chance to allocate more
+            // since only fixed pool can look at other bins aligned/notAligned
             pool_free(pool[id], ptrLarge);
-
-            ASSERT(pool_malloc(pool[id], 5*1024), NULL);
+            ASSERT(!pool_malloc(pool[id], 5*1024), NULL);
         }
 
         barrier.wait();
@@ -625,13 +619,12 @@ void TestEntries()
 
 rml::MemoryPool *CreateUsablePool(size_t size)
 {
-    using namespace rml;
-    MemoryPool *pool;
-    MemPoolPolicy okPolicy(getMemMalloc, putMemFree);
+    rml::MemoryPool *pool;
+    rml::MemPoolPolicy okPolicy(getMemMalloc, putMemFree);
 
     putMemAll = getMemAll = getMemSuccessful = 0;
-    MemPoolError res = pool_create_v1(0, &okPolicy, &pool);
-    if (res != POOL_OK) {
+    rml::MemPoolError res = pool_create_v1(0, &okPolicy, &pool);
+    if (res != rml::POOL_OK) {
         ASSERT(!getMemAll && !putMemAll, "No callbacks after fail.");
         return NULL;
     }
@@ -642,8 +635,8 @@ rml::MemoryPool *CreateUsablePool(size_t size)
         return NULL;
     }
     ASSERT(o, "Created pool must be useful.");
-    ASSERT(getMemSuccessful == 1 || getMemAll > getMemSuccessful,
-           "Multiple requests are allowed only when unsuccessful request occurred.");
+    ASSERT(getMemSuccessful == 1 || getMemSuccessful == 5 || getMemAll > getMemSuccessful,
+           "Multiple requests are allowed when unsuccessful request occurred or cannot search in bootstrap memory. ");
     ASSERT(!putMemAll, NULL);
     pool_free(pool, o);
 
@@ -652,10 +645,9 @@ rml::MemoryPool *CreateUsablePool(size_t size)
 
 void CheckPoolLeaks(size_t poolsAlwaysAvailable)
 {
-    using namespace rml;
     const size_t MAX_POOLS = 16*1000;
     const int ITERS = 20, CREATED_STABLE = 3;
-    MemoryPool *pools[MAX_POOLS];
+    rml::MemoryPool *pools[MAX_POOLS];
     size_t created, maxCreated = MAX_POOLS;
     int maxNotChangedCnt = 0;
 
@@ -663,7 +655,7 @@ void CheckPoolLeaks(size_t poolsAlwaysAvailable)
     // can be stabilized and still stable CREATED_STABLE times
     for (int j=0; j<ITERS && maxNotChangedCnt<CREATED_STABLE; j++) {
         for (created=0; created<maxCreated; created++) {
-            MemoryPool *p = CreateUsablePool(1024);
+            rml::MemoryPool *p = CreateUsablePool(1024);
             if (!p)
                 break;
             pools[created] = p;
@@ -685,22 +677,20 @@ void CheckPoolLeaks(size_t poolsAlwaysAvailable)
 
 void TestPoolCreation()
 {
-    using namespace rml;
-
     putMemAll = getMemAll = getMemSuccessful = 0;
 
-    MemPoolPolicy nullPolicy(NULL, putMemFree),
+    rml::MemPoolPolicy nullPolicy(NULL, putMemFree),
         emptyFreePolicy(getMemMalloc, NULL),
         okPolicy(getMemMalloc, putMemFree);
-    MemoryPool *pool;
+    rml::MemoryPool *pool;
 
-    MemPoolError res = pool_create_v1(0, &nullPolicy, &pool);
-    ASSERT(res==INVALID_POLICY, "pool with empty pAlloc can't be created");
+    rml::MemPoolError res = pool_create_v1(0, &nullPolicy, &pool);
+    ASSERT(res==rml::INVALID_POLICY, "pool with empty pAlloc can't be created");
     res = pool_create_v1(0, &emptyFreePolicy, &pool);
-    ASSERT(res==INVALID_POLICY, "pool with empty pFree can't be created");
+    ASSERT(res==rml::INVALID_POLICY, "pool with empty pFree can't be created");
     ASSERT(!putMemAll && !getMemAll, "no callback calls are expected");
     res = pool_create_v1(0, &okPolicy, &pool);
-    ASSERT(res==POOL_OK, NULL);
+    ASSERT(res==rml::POOL_OK, NULL);
     bool ok = pool_destroy(pool);
     ASSERT(ok, NULL);
     ASSERT(putMemAll == getMemSuccessful, "no leaks after pool_destroy");
@@ -717,16 +707,42 @@ struct AllocatedObject {
     rml::MemoryPool *pool;
 };
 
-// TODO: extend testing of pool_identify() in concurrent environment
+const size_t BUF_SIZE = 1024*1024;
+
+class PoolIdentityCheck : NoAssign {
+    rml::MemoryPool** const pools;
+    AllocatedObject** const objs;
+public:
+    PoolIdentityCheck(rml::MemoryPool** p, AllocatedObject** o) : pools(p), objs(o) {}
+    void operator()(int id) const {
+        objs[id] = (AllocatedObject*)pool_malloc(pools[id], BUF_SIZE/2);
+        ASSERT(objs[id], NULL);
+        rml::MemoryPool *act_pool = rml::pool_identify(objs[id]);
+        ASSERT(act_pool == pools[id], NULL);
+
+        for (size_t total=0; total<2*BUF_SIZE; total+=256) {
+            AllocatedObject *o = (AllocatedObject*)pool_malloc(pools[id], 256);
+            ASSERT(o, NULL);
+            act_pool = rml::pool_identify(o);
+            ASSERT(act_pool == pools[id], NULL);
+            pool_free(act_pool, o);
+        }
+        if( id&1 ) { // make every second returned object "small"
+            pool_free(act_pool, objs[id]);
+            objs[id] = (AllocatedObject*)pool_malloc(pools[id], 16);
+            ASSERT(objs[id], NULL);
+        }
+        objs[id]->pool = act_pool;
+    }
+};
+
 void TestPoolDetection()
 {
-    using namespace rml;
     const int POOLS = 4;
     rml::MemPoolPolicy pol(fixedBufGetMem, NULL, 0, /*fixedSizePool=*/true,
                            /*keepMemTillDestroy=*/false);
     rml::MemoryPool *pools[POOLS];
-    const size_t BUF_SIZE = 1024*1024;
-    FixedPoolHead<BUF_SIZE> head[POOLS];
+    FixedPoolHead<BUF_SIZE*POOLS> head[POOLS];
     AllocatedObject *objs[POOLS];
 
     for (int i=0; i<POOLS; i++)
@@ -734,23 +750,14 @@ void TestPoolDetection()
     // if object somehow released to different pools, subsequent allocation
     // from affected pools became impossible
     for (int k=0; k<10; k++) {
+        PoolIdentityCheck check(pools, objs);
+        if( k&1 )
+            NativeParallelFor( POOLS, check);
+        else
+            for (int i=0; i<POOLS; i++) check(i);
+
         for (int i=0; i<POOLS; i++) {
-            objs[i] = (AllocatedObject*)pool_malloc(pools[i], BUF_SIZE/2);
-            ASSERT(objs[i], NULL);
-            MemoryPool *act_pool = pool_identify(objs[i]);
-            ASSERT(act_pool == pools[i], NULL);
-            objs[i]->pool = act_pool;
-            for (size_t total=0; total<2*BUF_SIZE; total+=256) {
-                AllocatedObject *o = (AllocatedObject*)pool_malloc(pools[i], 256);
-                ASSERT(o, NULL);
-                act_pool = pool_identify(o);
-                ASSERT(act_pool == pools[i], NULL);
-                o->pool = act_pool;
-                pool_free(act_pool, o);
-            }
-        }
-        for (int i=0; i<POOLS; i++) {
-            rml::MemoryPool *p = pool_identify(objs[i]);
+            rml::MemoryPool *p = rml::pool_identify(objs[i]);
             ASSERT(p == objs[i]->pool, NULL);
             pool_free(p, objs[i]);
         }
@@ -831,6 +838,31 @@ void TestDestroyFailed()
            "expect pool_destroy() failure");
 }
 
+void TestPoolMSize() {
+    rml::MemoryPool *pool = CreateUsablePool(1024);
+
+    const int SZ = 10;
+    // Original allocation requests, random numbers from small to large
+    size_t requestedSz[SZ] = {8, 16, 500, 1000, 2000, 4000, 8000, 1024*1024, 4242+4242, 8484+8484};
+
+    // Unlike large objects, small objects do not store its original size along with the object itself
+    // On Power architecture TLS bins are divided differently.
+    size_t allocatedSz[SZ] =
+#if __powerpc64__ || __ppc64__ || __bgp__
+        {8, 16, 512, 1024, 2688, 5376, 8064, 1024*1024, 4242+4242, 8484+8484};
+#else
+        {8, 16, 512, 1024, 2688, 4032, 8128, 1024*1024, 4242+4242, 8484+8484};
+#endif
+    for (int i = 0; i < SZ; i++) {
+        void* obj = pool_malloc(pool, requestedSz[i]);
+        size_t objSize = pool_msize(pool, obj);
+        ASSERT(objSize == allocatedSz[i], "pool_msize returned the wrong value");
+        pool_free(pool, obj);
+    }
+    bool destroyed = pool_destroy(pool);
+    ASSERT(destroyed, NULL);
+}
+
 int TestMain () {
     TestTooSmallBuffer();
     TestPoolReset();
@@ -845,6 +877,7 @@ int TestMain () {
     TestLazyBootstrap();
     TestNoLeakOnDestroy();
     TestDestroyFailed();
+    TestPoolMSize();
 
     return Harness::Done;
 }

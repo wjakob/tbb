@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #define HARNESS_DEFAULT_MIN_THREADS 3
@@ -23,10 +19,6 @@
 
 #if _MSC_VER
     #pragma warning (disable: 4503) // Suppress "decorated name length exceeded, name was truncated" warning
-    #if !TBB_USE_EXCEPTIONS
-        // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-        #pragma warning (disable: 4530)
-    #endif
     #if _MSC_VER==1700 && !defined(__INTEL_COMPILER)
         // Suppress "unreachable code" warning by VC++ 17.0 (VS 2012)
         #pragma warning (disable: 4702)

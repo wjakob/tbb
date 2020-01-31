@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #if !defined(__TBB_machine_H) || defined(__TBB_machine_windows_ia32_H)
@@ -43,7 +39,7 @@ extern "C" {
     __int64 __TBB_EXPORTED_FUNC __TBB_machine_load8 (const volatile void *ptr);
 }
 
-#ifndef __TBB_ATOMIC_PRIMITIVES_DEFINED
+#if !__TBB_MSVC_PART_WORD_INTERLOCKED_INTRINSICS_PRESENT
 
 #define __TBB_MACHINE_DEFINE_ATOMICS(S,T,U,A,C) \
 static inline T __TBB_machine_cmpswp##S ( volatile void * ptr, U value, U comparand ) { \
@@ -93,7 +89,7 @@ __TBB_MACHINE_DEFINE_ATOMICS(4, ptrdiff_t, ptrdiff_t, eax, ecx)
 
 #undef __TBB_MACHINE_DEFINE_ATOMICS
 
-#endif /*__TBB_ATOMIC_PRIMITIVES_DEFINED*/
+#endif /* __TBB_MSVC_PART_WORD_INTERLOCKED_INTRINSICS_PRESENT */
 
 //TODO: Check if it possible and profitable for IA-32 architecture on (Linux and Windows)
 //to use of 64-bit load/store via floating point registers together with full fence

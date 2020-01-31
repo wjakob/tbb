@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef _TBB_market_H
@@ -217,6 +213,7 @@ private:
             update_allotment( my_arenas, my_total_demand, (int)my_num_workers_soft_limit );
     }
 
+    // TODO: consider to rewrite the code with is_arena_in_list function
     //! Returns next arena that needs more workers, or NULL.
     arena* arena_in_need (arena*) {
         if(__TBB_load_with_acquire(my_total_demand) <= 0)
@@ -234,9 +231,11 @@ private:
 
     void remove_arena_from_list ( arena& a );
 
-    arena* arena_in_need ( arena_list_type &arenas, arena *&next );
+    arena* arena_in_need ( arena_list_type &arenas, arena *hint );
 
     static int update_allotment ( arena_list_type& arenas, int total_demand, int max_workers );
+
+    bool is_arena_in_list( arena_list_type &arenas, arena *a );
 
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +270,7 @@ public:
     void detach_arena ( arena& );
 
     //! Decrements market's refcount and destroys it in the end
-    void release ( bool is_public = false );
+    bool release ( bool is_public, bool blocking_terminate );
 
 #if __TBB_ENQUEUE_ENFORCED_CONCURRENCY
     //! Imlpementation of mandatory concurrency enabling
@@ -288,9 +287,7 @@ public:
     /** Concurrent invocations are possible only on behalf of different arenas. **/
     void adjust_demand ( arena&, int delta );
 
-    //! Wait workers termination
-    void wait_workers ();
-
+    //! Used when RML asks for join mode during workers termination.
     bool must_join_workers () const { return my_join_workers; }
 
     //! Returns the requested stack size of worker threads.

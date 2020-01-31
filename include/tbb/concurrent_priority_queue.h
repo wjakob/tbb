@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_concurrent_priority_queue_H
@@ -27,6 +23,8 @@
 #include "tbb_stddef.h"
 #include "tbb_profiling.h"
 #include "internal/_aggregator_impl.h"
+#include "internal/_template_helpers.h"
+#include "internal/_allocator_traits.h"
 #include <vector>
 #include <iterator>
 #include <functional>
@@ -85,14 +83,28 @@ class concurrent_priority_queue {
     typedef A allocator_type;
 
     //! Constructs a new concurrent_priority_queue with default capacity
-    explicit concurrent_priority_queue(const allocator_type& a = allocator_type()) : mark(0), my_size(0), data(a)
+    explicit concurrent_priority_queue(const allocator_type& a = allocator_type()) : mark(0), my_size(0), compare(), data(a)
+    {
+        my_aggregator.initialize_handler(my_functor_t(this));
+    }
+
+    //! Constructs a new concurrent_priority_queue with default capacity
+    explicit concurrent_priority_queue(const Compare& c, const allocator_type& a = allocator_type()) : mark(0), my_size(0), compare(c), data(a)
     {
         my_aggregator.initialize_handler(my_functor_t(this));
     }
 
     //! Constructs a new concurrent_priority_queue with init_sz capacity
     explicit concurrent_priority_queue(size_type init_capacity, const allocator_type& a = allocator_type()) :
-        mark(0), my_size(0), data(a)
+        mark(0), my_size(0), compare(), data(a)
+    {
+        data.reserve(init_capacity);
+        my_aggregator.initialize_handler(my_functor_t(this));
+    }
+
+    //! Constructs a new concurrent_priority_queue with init_sz capacity
+    explicit concurrent_priority_queue(size_type init_capacity, const Compare& c, const allocator_type& a = allocator_type()) :
+        mark(0), my_size(0), compare(c), data(a)
     {
         data.reserve(init_capacity);
         my_aggregator.initialize_handler(my_functor_t(this));
@@ -101,7 +113,17 @@ class concurrent_priority_queue {
     //! [begin,end) constructor
     template<typename InputIterator>
     concurrent_priority_queue(InputIterator begin, InputIterator end, const allocator_type& a = allocator_type()) :
-        mark(0), data(begin, end, a)
+        mark(0), compare(), data(begin, end, a)
+    {
+        my_aggregator.initialize_handler(my_functor_t(this));
+        heapify();
+        my_size = data.size();
+    }
+
+    //! [begin,end) constructor
+    template<typename InputIterator>
+    concurrent_priority_queue(InputIterator begin, InputIterator end, const Compare& c, const allocator_type& a = allocator_type()) :
+        mark(0), compare(c), data(begin, end, a)
     {
         my_aggregator.initialize_handler(my_functor_t(this));
         heapify();
@@ -111,7 +133,16 @@ class concurrent_priority_queue {
 #if __TBB_INITIALIZER_LISTS_PRESENT
     //! Constructor from std::initializer_list
     concurrent_priority_queue(std::initializer_list<T> init_list, const allocator_type &a = allocator_type()) :
-        mark(0),data(init_list.begin(), init_list.end(), a)
+        mark(0), compare(), data(init_list.begin(), init_list.end(), a)
+    {
+        my_aggregator.initialize_handler(my_functor_t(this));
+        heapify();
+        my_size = data.size();
+    }
+
+    //! Constructor from std::initializer_list
+    concurrent_priority_queue(std::initializer_list<T> init_list, const Compare& c, const allocator_type &a = allocator_type()) :
+        mark(0), compare(c), data(init_list.begin(), init_list.end(), a)
     {
         my_aggregator.initialize_handler(my_functor_t(this));
         heapify();
@@ -121,7 +152,7 @@ class concurrent_priority_queue {
 
     //! Copy constructor
     /** This operation is unsafe if there are pending concurrent operations on the src queue. */
-    explicit concurrent_priority_queue(const concurrent_priority_queue& src) : mark(src.mark),
+    concurrent_priority_queue(const concurrent_priority_queue& src) : mark(src.mark),
         my_size(src.my_size), data(src.data.begin(), src.data.end(), src.data.get_allocator())
     {
         my_aggregator.initialize_handler(my_functor_t(this));
@@ -374,7 +405,7 @@ class concurrent_priority_queue {
                     compare(data[0], data[data.size()-1])) {
                     // there are newly pushed elems and the last one
                     // is higher than top
-                    *(tmp->elem) = move(data[data.size()-1]);
+                    *(tmp->elem) = tbb::internal::move(data[data.size()-1]);
                     __TBB_store_with_release(my_size, my_size-1);
                     itt_store_word_with_release(tmp->status, uintptr_t(SUCCEEDED));
                     data.pop_back();
@@ -390,7 +421,7 @@ class concurrent_priority_queue {
                     if (tmp->type == PUSH_OP) {
                         push_back_helper(*(tmp->elem), typename internal::use_element_copy_constructor<value_type>::type());
                     } else {
-                        data.push_back(move(*(tmp->elem)));
+                        data.push_back(tbb::internal::move(*(tmp->elem)));
                     }
                     __TBB_store_with_release(my_size, my_size + 1);
                     itt_store_word_with_release(tmp->status, uintptr_t(SUCCEEDED));
@@ -414,13 +445,13 @@ class concurrent_priority_queue {
                     compare(data[0], data[data.size()-1])) {
                     // there are newly pushed elems and the last one is
                     // higher than top
-                    *(tmp->elem) = move(data[data.size()-1]);
+                    *(tmp->elem) = tbb::internal::move(data[data.size()-1]);
                     __TBB_store_with_release(my_size, my_size-1);
                     itt_store_word_with_release(tmp->status, uintptr_t(SUCCEEDED));
                     data.pop_back();
                 }
                 else { // extract top and push last element down heap
-                    *(tmp->elem) = move(data[0]);
+                    *(tmp->elem) = tbb::internal::move(data[0]);
                     __TBB_store_with_release(my_size, my_size-1);
                     itt_store_word_with_release(tmp->status, uintptr_t(SUCCEEDED));
                     reheap();
@@ -440,14 +471,14 @@ class concurrent_priority_queue {
         for (; mark<data.size(); ++mark) {
             // for each unheapified element under size
             size_type cur_pos = mark;
-            value_type to_place = move(data[mark]);
+            value_type to_place = tbb::internal::move(data[mark]);
             do { // push to_place up the heap
                 size_type parent = (cur_pos-1)>>1;
                 if (!compare(data[parent], to_place)) break;
-                data[cur_pos] = move(data[parent]);
+                data[cur_pos] = tbb::internal::move(data[parent]);
                 cur_pos = parent;
             } while( cur_pos );
-            data[cur_pos] = move(to_place);
+            data[cur_pos] = tbb::internal::move(to_place);
         }
     }
 
@@ -462,12 +493,12 @@ class concurrent_priority_queue {
                 ++target;
             // target now has the higher priority child
             if (compare(data[target], data[data.size()-1])) break;
-            data[cur_pos] = move(data[target]);
+            data[cur_pos] = tbb::internal::move(data[target]);
             cur_pos = target;
             child = (cur_pos<<1)+1;
         }
         if (cur_pos != data.size()-1)
-            data[cur_pos] = move(data[data.size()-1]);
+            data[cur_pos] = tbb::internal::move(data[data.size()-1]);
         data.pop_back();
         if (mark > data.size()) mark = data.size();
     }
@@ -481,6 +512,31 @@ class concurrent_priority_queue {
     }
 };
 
+#if __TBB_CPP17_DEDUCTION_GUIDES_PRESENT
+namespace internal {
+
+template<typename T, typename... Args>
+using priority_queue_t = concurrent_priority_queue<
+    T,
+    std::conditional_t< (sizeof...(Args)>0) && !is_allocator_v< pack_element_t<0, Args...> >,
+                        pack_element_t<0, Args...>, std::less<T> >,
+    std::conditional_t< (sizeof...(Args)>0) && is_allocator_v< pack_element_t<sizeof...(Args)-1, Args...> >,
+                         pack_element_t<sizeof...(Args)-1, Args...>, cache_aligned_allocator<T> >
+>;
+}
+
+// Deduction guide for the constructor from two iterators
+template<typename InputIterator,
+         typename T = typename std::iterator_traits<InputIterator>::value_type,
+         typename... Args
+> concurrent_priority_queue(InputIterator, InputIterator, Args...)
+-> internal::priority_queue_t<T, Args...>;
+
+template<typename T, typename CompareOrAllocalor>
+concurrent_priority_queue(std::initializer_list<T> init_list, CompareOrAllocalor)
+-> internal::priority_queue_t<T, CompareOrAllocalor>;
+
+#endif /* __TBB_CPP17_DEDUCTION_GUIDES_PRESENT */
 } // namespace interface5
 
 using interface5::concurrent_priority_queue;

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 
@@ -120,6 +116,8 @@ typedef unsigned __int64 uint64_t;
 using namespace std;
 #endif
 #include <string>
+#include <set>
+#include <sstream>
 #endif
 
 #include "../tbbmalloc/shared_utils.h"  // alignDown, alignUp, estimatedCacheLineSize
@@ -145,7 +143,7 @@ public:
 class MemoryPool;
 class ExtMemoryPool;
 
-class BlockI {
+struct BlockI {
     intptr_t     blockState[2];
 };
 
@@ -186,10 +184,10 @@ const uint32_t minLargeObjectSize = fittingSize5 + 1;
 
 static void scalableMallocCheckSize(void *object, size_t size)
 {
-#if __APPLE__ && __clang__ && __TBB_CLANG_VERSION >= 70300 && __TBB_CLANG_VERSION <= 80000
-// This prevents Clang 703.0.29 and later under OS X from throwing out the
-// calls to new & delete in CheckNewDeleteOverload().
+#if __clang__
+// This prevents Clang from throwing out the calls to new & delete in CheckNewDeleteOverload().
     static void *v = object;
+    Harness::suppress_unused_warning(v);
 #endif
     ASSERT(object, NULL);
     if (size >= minLargeObjectSize) {
@@ -255,7 +253,7 @@ void CheckPvalloc(void *(*pvalloc_p)(size_t), void (*free_p)(void*))
 
 #endif // MALLOC_UNIXLIKE_OVERLOAD_ENABLED || MALLOC_ZONE_OVERLOAD_ENABLED
 
-// regression test: on OS X scalable_free() treated small aligned object,
+// regression test: on macOS scalable_free() treated small aligned object,
 // placed in large block, as small block
 void CheckFreeAligned() {
     size_t sz[] = {8, 4*1024, 16*1024, 0};
@@ -308,6 +306,16 @@ void TestZoneOverload() {
 #define TestZoneOverload()
 #endif
 
+#if _WIN32
+// regression test: certain MSVC runtime functions use "public" allocation functions
+// but internal free routines, causing crashes if tbbmalloc_proxy does not intercept the latter.
+void TestRuntimeRoutines() {
+    system("rem should be a safe command to call");
+}
+#else
+#define TestRuntimeRoutines()
+#endif
+
 struct BigStruct {
     char f[minLargeObjectSize];
 };
@@ -332,8 +340,42 @@ void CheckNewDeleteOverload() {
     delete []s4;
 }
 
+#if MALLOC_WINDOWS_OVERLOAD_ENABLED
+void FuncReplacementInfoCheck() {
+    char **func_replacement_log;
+    int func_replacement_status = TBB_malloc_replacement_log(&func_replacement_log);
+
+    std::set<std::string> functions;
+    functions.insert("free");
+    functions.insert("_msize");
+    functions.insert("_aligned_free");
+    functions.insert("_aligned_msize");
+
+    int status_check = 0;
+    for (char** log_string = func_replacement_log; *log_string != 0; log_string++) {
+        std::stringstream s(*log_string);
+        std::string status, function_name;
+        s >> status >> function_name;
+
+        if (status.find("Fail:") != status.npos) {
+            status_check = -1;
+        }
+
+        functions.erase(function_name);
+    }
+
+    ASSERT(functions.empty(), "Changed opcodes log must contain all required functions with \"Success\" changed status");
+    ASSERT(func_replacement_status == status_check, "replacement_opcodes_log() function return wrong status");
+
+    func_replacement_status = TBB_malloc_replacement_log(NULL);
+    ASSERT(func_replacement_status == status_check, "replacement_opcodes_log() function return wrong status");
+
+    ASSERT_WARNING(func_replacement_status == 0, "Some standart allocation functions was not replaced to tbb_malloc functions.");
+}
+#endif // MALLOC_WINDOWS_OVERLOAD_ENABLED
+
 int TestMain() {
-    void *ptr, *ptr1;
+    void *ptr = NULL;
 
 #if MALLOC_UNIXLIKE_OVERLOAD_ENABLED || MALLOC_ZONE_OVERLOAD_ENABLED
     ASSERT(dlsym(RTLD_DEFAULT, "scalable_malloc"),
@@ -364,8 +406,9 @@ int TestMain() {
 
 #if __TBB_POSIX_MEMALIGN_PRESENT
     int ret = posix_memalign(&ptr, 1024, 3*minLargeObjectSize);
+    ASSERT(0 == ret, NULL);
     scalableMallocCheckSize(ptr, 3*minLargeObjectSize);
-    ASSERT(0==ret && is_aligned(ptr, 1024), NULL);
+    ASSERT(is_aligned(ptr, 1024), NULL);
     free(ptr);
 #endif
 
@@ -405,7 +448,7 @@ int TestMain() {
     ASSERT(is_aligned(ptr, 16), NULL);
 
     // Testing of workaround for vs "is power of 2 pow N" bug that accepts zeros
-    ptr1 = _aligned_malloc(minLargeObjectSize, 0);
+    void* ptr1 = _aligned_malloc(minLargeObjectSize, 0);
     scalableMallocCheckSize(ptr, minLargeObjectSize);
     ASSERT(is_aligned(ptr, sizeof(void*)), NULL);
     _aligned_free(ptr1);
@@ -415,15 +458,19 @@ int TestMain() {
     ASSERT(is_aligned(ptr, 16), NULL);
     _aligned_free(ptr1);
 
+    FuncReplacementInfoCheck();
+
 #endif
     CheckFreeAligned();
 
     CheckNewDeleteOverload();
+
 #if _WIN32
     std::string stdstring = "dependency on msvcpXX.dll";
     ASSERT(strcmp(stdstring.c_str(), "dependency on msvcpXX.dll") == 0, NULL);
 #endif
     TestZoneOverload();
+    TestRuntimeRoutines();
 
     return Harness::Done;
 }

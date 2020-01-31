@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,17 +12,13 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_task_scheduler_observer_H
 #define __TBB_task_scheduler_observer_H
 
 #include "atomic.h"
-#if __TBB_ARENA_OBSERVER || __TBB_SLEEP_PERMISSION
+#if __TBB_ARENA_OBSERVER
 #include "task_arena.h"
 #endif
 
@@ -88,7 +84,7 @@ public:
 
 } // namespace internal
 
-#if __TBB_ARENA_OBSERVER || __TBB_SLEEP_PERMISSION
+#if __TBB_ARENA_OBSERVER
 namespace interface6 {
 class task_scheduler_observer : public internal::task_scheduler_observer_v3 {
     friend class internal::task_scheduler_observer_v3;
@@ -115,7 +111,7 @@ public:
         guarantees and is not composable. Thus the current default behavior of the
         constructor is obsolete too and will be changed in one of the future versions
         of the library. **/
-    task_scheduler_observer( bool local = false ) {
+    explicit task_scheduler_observer( bool local = false ) {
 #if  __TBB_ARENA_OBSERVER
         my_context_tag = local? implicit_tag : global_tag;
 #else
@@ -129,7 +125,7 @@ public:
     /** entry/exit notifications are invoked whenever a thread joins/leaves arena.
         If a thread is already in the arena when the observer is activated, the entry notification
         is called before it executes the first stolen task. **/
-    task_scheduler_observer( task_arena & a) {
+    explicit task_scheduler_observer( task_arena & a) {
         my_context_tag = (intptr_t)&a;
     }
 #endif /* __TBB_ARENA_OBSERVER */
@@ -149,23 +145,13 @@ public:
         }
         internal::task_scheduler_observer_v3::observe(state);
     }
-
-#if  __TBB_SLEEP_PERMISSION
-    //! Return commands for may_sleep()
-    enum { keep_awake = false, allow_sleep = true };
-
-    //! The callback can be invoked by a worker thread before it goes to sleep.
-    /** If it returns false ('keep_awake'), the thread will keep spinning and looking for work.
-        It will not be called for master threads. **/
-    virtual bool may_sleep() { return allow_sleep; }
-#endif /*__TBB_SLEEP_PERMISSION*/
 };
 
 } //namespace interface6
 using interface6::task_scheduler_observer;
-#else /*__TBB_ARENA_OBSERVER || __TBB_SLEEP_PERMISSION*/
+#else /*__TBB_ARENA_OBSERVER*/
 typedef tbb::internal::task_scheduler_observer_v3 task_scheduler_observer;
-#endif /*__TBB_ARENA_OBSERVER || __TBB_SLEEP_PERMISSION*/
+#endif /*__TBB_ARENA_OBSERVER*/
 
 } // namespace tbb
 

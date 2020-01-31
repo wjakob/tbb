@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef __TBB_memory_pool_H
@@ -107,7 +103,7 @@ public:
         typedef memory_pool_allocator<U, P> other;
     };
 
-    memory_pool_allocator(pool_type &pool) throw() : my_pool(&pool) {}
+    explicit memory_pool_allocator(pool_type &pool) throw() : my_pool(&pool) {}
     memory_pool_allocator(const memory_pool_allocator& src) throw() : my_pool(src.my_pool) {}
     template<typename U>
     memory_pool_allocator(const memory_pool_allocator<U,P>& src) throw() : my_pool(src.my_pool) {}
@@ -165,7 +161,7 @@ public:
         typedef memory_pool_allocator<U, P> other;
     };
 
-    memory_pool_allocator( pool_type &pool) throw() : my_pool(&pool) {}
+    explicit memory_pool_allocator( pool_type &pool) throw() : my_pool(&pool) {}
     memory_pool_allocator( const memory_pool_allocator& src) throw() : my_pool(src.my_pool) {}
     template<typename U>
     memory_pool_allocator(const memory_pool_allocator<U,P>& src) throw() : my_pool(src.my_pool) {}
@@ -196,7 +192,7 @@ class memory_pool : public internal::pool_base {
 
 public:
     //! construct pool with underlying allocator
-    memory_pool(const Alloc &src = Alloc());
+    explicit memory_pool(const Alloc &src = Alloc());
 
     //! destroy pool
     ~memory_pool() { destroy(); } // call the callbacks first and destroy my_alloc latter

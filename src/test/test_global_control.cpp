@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,17 +12,11 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #define TBB_PREVIEW_WAITING_FOR_WORKERS 1
-#define TBB_PREVIEW_GLOBAL_CONTROL 1
 #include "tbb/global_control.h"
 #include "harness.h"
-#define TBB_PREVIEW_LOCAL_OBSERVER 1
 #include "tbb/task_scheduler_observer.h"
 
 const size_t MB = 1024*1024;
@@ -81,9 +75,19 @@ void RunWorkersLimited(int tsi_max_threads, size_t parallelism, bool wait)
     Harness::ExactConcurrencyLevel::check(expected_threads);
 }
 
+class blocking_task_scheduler_init {
+    tbb::task_scheduler_init init;
+public:
+    blocking_task_scheduler_init(int num_threads = tbb::task_scheduler_init::automatic) : init(num_threads) {}
+    ~blocking_task_scheduler_init() {
+        bool ok = init.blocking_terminate(std::nothrow);
+        ASSERT(ok, "blocking_terminate has failed");
+    }
+};
+
 void TSI_and_RunWorkers(int tsi_max_threads, size_t parallelism, size_t max_value)
 {
-    tbb::task_scheduler_init tsi(tsi_max_threads, 0, /*blocking=*/true);
+    blocking_task_scheduler_init tsi(tsi_max_threads);
     size_t active = tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism);
     ASSERT(active == max(2U, max_value), "active_value must not be changed by task_scheduler_init");
     RunWorkersLimited(tsi_max_threads, parallelism, /*wait=*/false);
@@ -125,7 +129,7 @@ void TestWorkers(size_t curr_par)
 void TestWorkersConstraints() {
     const size_t max_parallelism =
         tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism);
-    tbb::task_scheduler_init tsi(tbb::task_scheduler_init::automatic, 0, /*blocking=*/true);
+    blocking_task_scheduler_init tsi;
     if (max_parallelism > 3) {
         tbb::global_control c(tbb::global_control::max_allowed_parallelism, max_parallelism-1);
         ASSERT(max_parallelism-1 ==
@@ -164,8 +168,7 @@ struct SetUseRun: NoAssign {
     void operator()( int id ) const {
         if (id == 0) {
             for (int i=0; i<10; i++) {
-                tbb::task_scheduler_init tsi(tbb::task_scheduler_init::automatic, 0,
-                                             /*blocking=*/true);
+                blocking_task_scheduler_init tsi;
                 RunParallelWork();
                 barr->timed_wait(BARRIER_TIMEOUT);
             }
@@ -245,12 +248,12 @@ void TestTooBigStack()
     const size_t stack_sizes[] = {512*MB, 2*1024*MB, UINT_MAX, 10LU*1024*MB};
 #endif
 
-#if __TBB_WIN8UI_SUPPORT
+#if __TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00)
     size_t default_ss = tbb::global_control::active_value(tbb::global_control::thread_stack_size);
 #endif
     for (unsigned i = 0; i<Harness::array_length(stack_sizes); i++) {
-        // as no stack size setting for Windows Store* apps, skip it
-#if TRY_BAD_EXPR_ENABLED && __TBB_x86_64 && (_WIN32 || _WIN64) && !__TBB_WIN8UI_SUPPORT
+        // No stack size setting for Windows 8 Store* apps, skip it
+#if TRY_BAD_EXPR_ENABLED && __TBB_x86_64 && (_WIN32 || _WIN64) && !(__TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00))
         if (stack_sizes[i] != (unsigned)stack_sizes[i]) {
             size_t curr_ss = tbb::global_control::active_value(tbb::global_control::thread_stack_size);
             tbb::set_assertion_handler( AssertionFailureHandler );
@@ -262,8 +265,8 @@ void TestTooBigStack()
 #endif
         tbb::global_control s1(tbb::global_control::thread_stack_size, stack_sizes[i]);
         size_t actual_stack_sz = tbb::global_control::active_value(tbb::global_control::thread_stack_size);
-#if __TBB_WIN8UI_SUPPORT
-        ASSERT(actual_stack_sz == default_ss, "It's ignored for Windows Store* apps");
+#if __TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00)
+        ASSERT(actual_stack_sz == default_ss, "It's ignored for Windows 8.x Store* apps");
 #else
         ASSERT(actual_stack_sz==stack_sizes[i], NULL);
 #endif
@@ -362,7 +365,7 @@ public:
 void TestTaskEnqueue()
 {
     {
-        tbb::task_scheduler_init tsi(20, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(20);
         tbb::atomic<int> flag;
         tbb::atomic<bool> taskDoneFlag;
         flag = 0;
@@ -381,7 +384,7 @@ void TestTaskEnqueue()
             __TBB_Yield();
     }
     {
-        tbb::task_scheduler_init tsi(1, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(1);
         tbb::atomic<int> flag;
         tbb::atomic<bool> taskDoneFlag;
         flag = 0;
@@ -399,7 +402,7 @@ void TestTaskEnqueue()
             __TBB_Yield();
     }
     {
-        tbb::task_scheduler_init tsi(2, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(2);
         tbb::atomic<int> flag;
         flag = 0;
 
@@ -411,7 +414,7 @@ void TestTaskEnqueue()
             __TBB_Yield();
     }
     {
-        tbb::task_scheduler_init tsi(2, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(2);
         tbb::atomic<int> flag;
         flag = 0;
 
@@ -426,7 +429,7 @@ void TestTaskEnqueue()
     tbb::global_control c(tbb::global_control::max_allowed_parallelism, 1);
 
     { // check that enqueue() guarantee mandatory parallelism
-        tbb::task_scheduler_init tsi(1, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(1);
         tbb::atomic<int> flag;
         flag = 0;
 
@@ -439,7 +442,7 @@ void TestTaskEnqueue()
         tbb::atomic<int> flag;
         flag = 0;
         {
-            tbb::task_scheduler_init tsi(1, 0, /*blocking=*/true);
+            blocking_task_scheduler_init tsi(1);
 
             for (int i=0; i<10; i++) {
                 FFTask* t = new( tbb::task::allocate_root() ) FFTask(&flag);
@@ -455,7 +458,7 @@ void TestTaskEnqueue()
     }
     const unsigned threads = 2;
     {
-        tbb::task_scheduler_init tsi(1, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(1);
         Harness::SpinBarrier barr1(threads), barr2(threads);
         RunWorkersLimited(1, 1, false);
 
@@ -465,7 +468,7 @@ void TestTaskEnqueue()
     tbb::atomic<int> counter;
     counter = 0;
     {
-        tbb::task_scheduler_init tsi(1, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(1);
         Harness::SpinBarrier barr(threads);
         RunWorkersLimited(1, 1, false);
 
@@ -475,7 +478,7 @@ void TestTaskEnqueue()
     counter = 0;
     { // an enqueued task can enqueue other tasks and calls parallel_for
         tbb::atomic<bool> signalToLeave;
-        tbb::task_scheduler_init tsi(1, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(1);
 
         signalToLeave = false;
         WorkAndEnqueueTask *t = new( tbb::task::allocate_root() )
@@ -580,7 +583,7 @@ void TestConcurrentArenas()
     Harness::SpinBarrier barrier(2);
     tbb::global_control c(tbb::global_control::max_allowed_parallelism, 1);
     {
-        tbb::task_scheduler_init tsi(2, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(2);
         ArenaObserver observer;
         observer.observe(true);
 
@@ -598,7 +601,7 @@ void TestConcurrentArenas()
     tbb::atomic<int> counter;
     counter = 0;
     {
-        tbb::task_scheduler_init tsi(1, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(1);
         tbb::task_arena arena(2);
 
         NativeParallelFor( 2, ArenaUserRun(&arena, &barrier, &counter) );
@@ -613,7 +616,7 @@ void TestParallelismRestored()
     counter = 0;
     {
         const int P = 4;
-        tbb::task_scheduler_init tsi(P, 0, /*blocking=*/true);
+        blocking_task_scheduler_init tsi(P);
         {
             tbb::global_control s(tbb::global_control::max_allowed_parallelism, 1);
             Harness::ExactConcurrencyLevel::check(1);
@@ -666,7 +669,7 @@ void TestNoUnwantedEnforced()
 {
     Harness::SpinBarrier barrier(2);
     tbb::global_control c(tbb::global_control::max_allowed_parallelism, 1);
-    tbb::task_scheduler_init tsi(4, 0, /*blocking=*/true);
+    blocking_task_scheduler_init tsi(4);
     NativeParallelFor( 2, NoUnwantedEnforcedRun(&barrier) );
 }
 
@@ -711,7 +714,7 @@ public:
 // still keep parallelism under control
 void TestMultipleControls()
 {
-    tbb::task_scheduler_init tsi(2, 0, /*blocking=*/true); // to prevent autoinitialization
+    blocking_task_scheduler_init tsi(2); // to prevent autoinitialization
     Harness::SpinBarrier barrier(2);
     NativeParallelFor( 2, TestMultipleControlsRun(&barrier) );
 }
@@ -720,7 +723,7 @@ void TestMultipleControls()
 // when enqueue enforced priority is enabled
 void TestForgottenEnqueuedTasks()
 {
-    tbb::task_scheduler_init tsi(2, 0, /*blocking=*/true);
+    tbb::task_scheduler_init tsi(2);
     tbb::atomic<int> counter;
     tbb::atomic<bool> waitFlag;
 
@@ -772,8 +775,9 @@ int TestMain()
 
     size_t default_ss = tbb::global_control::active_value(tbb::global_control::thread_stack_size);
     ASSERT(default_ss, NULL);
-#if !__TBB_WIN8UI_SUPPORT
-    // it's impossible to change stack size for Windows Store* apps, so skip the tests
+
+// it's impossible to change stack size for Windows 8 Store* apps, so skip the tests
+#if !(__TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0A00))
     TestStackSizeSimpleControl();
     TestStackSizeThreadsControl();
 #endif

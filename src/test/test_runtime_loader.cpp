@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2019 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,17 +12,7 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    // Suppress "C++ exception handler used, but unwind semantics are not enabled" warning in STL headers
-    #pragma warning (push)
-    #pragma warning (disable: 4530)
-#endif
 
 #if !(_WIN32||_WIN64) || (__MINGW64__||__MINGW32__)
 
@@ -53,10 +43,6 @@ int TestMain () {
     #undef HARNESS_USE_RUNTIME_LOADER    // We do not want harness to preload tbb.
 #endif
 #include "harness.h"
-
-#if !TBB_USE_EXCEPTIONS && _MSC_VER
-    #pragma warning (pop)
-#endif
 
 static int errors = 0;
 
@@ -196,7 +182,7 @@ int TestMain() {
                     // Check what?
                 }
 
-                // There was a problem on Linux* OS, and still a problem on OS X*.
+                // There was a problem on Linux* OS, and still a problem on macOS*.
                 SAY( "Throw an exception." );
                 // Iterate through all the ids first.
                 for ( int id = 1; id < tbb::internal::eid_max; ++ id ) {
