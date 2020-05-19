@@ -37,6 +37,9 @@ endif()
 if(NOT TBB_INSTALL_INCLUDE_DIR)
   set(TBB_INSTALL_INCLUDE_DIR include)
 endif()
+if(NOT TBB_INSTALL_CMAKE_DIR)
+  set(TBB_INSTALL_CMAKE_DIR ${TBB_INSTALL_LIBRARY_DIR}/cmake/TBB)
+endif()
 
 include_directories(include src src/rml/include ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -240,7 +243,8 @@ add_custom_target(tbb_def_files DEPENDS tbb.def tbbmalloc.def)
 # TBB library
 if (TBB_BUILD_STATIC)
   add_library(tbb_static STATIC ${tbb_src})
-  target_include_directories(tbb_static INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  target_include_directories(tbb_static PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  target_include_directories(tbb_static INTERFACE $<INSTALL_INTERFACE:include>)
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_DYNAMIC_LOAD_ENABLED=0")
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_SOURCE_DIRECTLY_INCLUDED=1")
@@ -257,7 +261,8 @@ endif()
 
 if (TBB_BUILD_SHARED)
   add_library(tbb SHARED ${tbb_src})
-  target_include_directories(tbb INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  target_include_directories(tbb PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  target_include_directories(tbb INTERFACE $<INSTALL_INTERFACE:include>)
   set_property(TARGET tbb APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
   add_dependencies(tbb tbb_def_files)
@@ -270,7 +275,12 @@ if (TBB_BUILD_SHARED)
     set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,\"${CMAKE_CURRENT_BINARY_DIR}/tbb.def\"")
   endif()
 
+  export(TARGETS tbb NAMESPACE TBB:: FILE "${CMAKE_CURRENT_BINARY_DIR}/tbb-targets.cmake")
+
+  install(EXPORT tbb-targets DESTINATION ${TBB_INSTALL_CMAKE_DIR} NAMESPACE TBB:: COMPONENT Development)
+
   install(TARGETS tbb
+          EXPORT  tbb-targets
           LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
           ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
           RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
@@ -386,6 +396,21 @@ set (TBB_CONFIG_DATE "${_configure_date}" CACHE STRING "First time that TBB was 
 set (_configure_date "${TBB_CONFIG_DATE}")
 include_directories (${CMAKE_BINARY_DIR})
 configure_file (build/version_string.ver.in version_string.ver @ONLY)
+
+# config file
+set (TBB_VERSION_STRING 2019.2)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(build/TBBConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/TBBConfig.cmake
+  INSTALL_DESTINATION ${TBB_INSTALL_CMAKE_DIR}
+  PATH_VARS TBB_INSTALL_INCLUDE_DIR TBB_INSTALL_LIBRARY_DIR)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/TBBConfigVersion.cmake
+  VERSION "${TBB_VERSION_STRING}"
+  COMPATIBILITY AnyNewerVersion)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/TBBConfig.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/TBBConfigVersion.cmake
+        DESTINATION ${TBB_INSTALL_CMAKE_DIR})
 
 if (TBB_BUILD_TESTS)
   enable_language (C)
