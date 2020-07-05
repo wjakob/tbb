@@ -90,6 +90,7 @@ libtbbmalloc_static.a
 tbb.def
 tbbmalloc.def
 version_string.ver
+src/tbb/win32-gcc-tbb-export.def
 
 # Other #
 #########
