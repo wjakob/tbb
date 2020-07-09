@@ -1,5 +1,4 @@
 language: cpp
-dist: trusty
 sudo: false
 
 matrix:
@@ -7,7 +6,7 @@ matrix:
     - os: linux
       compiler: gcc-4.8
       script:
-        - CXXFLAGS="-mno-rtm" cmake -DCMAKE_CXX_COMPILER=g++-4.8 -DTBB_CI_BUILD=ON .
+        - CXXFLAGS="-mno-rtm" cmake -DCMAKE_CXX_COMPILER=g++-4.8 .
         - make -j2
         - ctest -j2 --output-on-failure --timeout 500
       addons:
@@ -17,16 +16,18 @@ matrix:
             - g++-4.8-multilib
             - g++-multilib
             - cmake
+            - swig
+            - python-dev
     - os: osx
       compiler: clang
       script:
         - cmake .
         - make -j2
-        - ctest -j2 --output-on-failure --timeout 500
+        - ctest -j2 --output-on-failure --timeout 500 -E parallel_for
     - os: linux
       compiler: x86_64-w64-mingw32-g++
       script:
-        - cmake -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ -DCMAKE_TOOLCHAIN_FILE=build/mingw_cross_toolchain.cmake -DGNU_HOST=x86_64-w64-mingw32 -DTBB_CI_BUILD=ON .
+        - cmake -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ -DCMAKE_TOOLCHAIN_FILE=build/mingw_cross_toolchain.cmake -DGNU_HOST=x86_64-w64-mingw32 .
         - make -j2
       addons:
         apt:
@@ -39,7 +40,7 @@ matrix:
     - os: linux
       compiler: i686-w64-mingw32-g++
       script:
-        - cmake -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ -DCMAKE_TOOLCHAIN_FILE=build/mingw_cross_toolchain.cmake -DGNU_HOST=i686-w64-mingw32 -DTBB_CI_BUILD=ON .
+        - cmake -DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++ -DCMAKE_TOOLCHAIN_FILE=build/mingw_cross_toolchain.cmake -DGNU_HOST=i686-w64-mingw32 .
         - make -j2
       addons:
         apt:

@@ -18,6 +18,16 @@ if(POLICY CMP0068)
   cmake_policy(SET CMP0068 NEW)
 endif()
 
+if (POLICY CMP0078)
+  # swig standard target names
+  cmake_policy(SET CMP0078 NEW)
+endif ()
+
+if (POLICY CMP0086)
+  # UseSWIG honors SWIG_MODULE_NAME via -module flag
+  cmake_policy(SET CMP0086 NEW)
+endif ()
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Release' as none was specified.")
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
@@ -48,8 +58,8 @@ option(TBB_BUILD_STATIC          "Build TBB static library" ON)
 option(TBB_BUILD_TBBMALLOC       "Build TBB malloc library" ON)
 option(TBB_BUILD_TBBMALLOC_PROXY "Build TBB malloc proxy library" ON)
 option(TBB_BUILD_TESTS           "Build TBB tests and enable testing infrastructure" ON)
-option(TBB_CI_BUILD              "Is this a continuous integration build?" OFF)
 option(TBB_NO_DATE               "Do not save the configure date in the version string" OFF)
+option(TBB_BUILD_PYTHON          "Build TBB Python bindings" OFF)
 
 if(APPLE)
   set(CMAKE_MACOSX_RPATH ON)
@@ -510,10 +520,8 @@ if (TBB_BUILD_TESTS)
   endif ()
   tbb_add_test (overwrite_node)
   # tbb_add_test (parallel_do)
-  if (NOT TBB_CI_BUILD)
-    # This seems to fail on CI platforms (AppVeyor/Travis), perhaps because the VM exposes just 1 core?
-    tbb_add_test (parallel_for)
-  endif()
+  # This seems to fail on CI platforms (AppVeyor/Travis), perhaps because the VM exposes just 1 core?
+  tbb_add_test (parallel_for)
   tbb_add_test (parallel_for_each)
   tbb_add_test (parallel_for_vectorization)
   tbb_add_test (parallel_invoke)
@@ -561,4 +569,57 @@ if (TBB_BUILD_TESTS)
   tbb_add_test (tuple)
   tbb_add_test (write_once_node)
   tbb_add_test (yield)
+endif ()
+
+if (TBB_BUILD_PYTHON)
+  find_package(PythonInterp)
+  find_package(PythonLibs ${PYTHON_VERSION_STRING} EXACT)
+  find_package(SWIG 3)
+  if (PythonLibs_FOUND AND SWIG_FOUND AND TBB_BUILD_SHARED)
+    include (${SWIG_USE_FILE})
+    set_source_files_properties (python/tbb/api.i PROPERTIES CPLUSPLUS ON)
+    set (CMAKE_SWIG_FLAGS "-threads")
+
+    # swig_add_module is deprecated
+    if (CMAKE_VERSION VERSION_LESS 3.8)
+      swig_add_module (api python python/tbb/api.i)
+    else ()
+      swig_add_library (api LANGUAGE python SOURCES python/tbb/api.i)
+    endif ()
+
+    # UseSWIG generates now standard target names
+    if (CMAKE_VERSION VERSION_LESS 3.13)
+      set (module_target ${SWIG_MODULE_api_REAL_NAME})
+    else ()
+      set (module_target api)
+    endif ()
+
+    target_include_directories(${module_target} PRIVATE ${PYTHON_INCLUDE_DIRS})
+    target_link_libraries(${module_target} PRIVATE tbb)
+    if(WIN32)
+      target_link_libraries(${module_target} ${PYTHON_LIBRARIES})
+    elseif(APPLE)
+      set_target_properties(${module_target} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+    endif()
+
+    if (WIN32)
+      set (PYTHON_SITE_PACKAGES Lib/site-packages)
+    else ()
+      set (PYTHON_SITE_PACKAGES lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages)
+    endif ()
+    install(FILES python/TBB.py
+            DESTINATION ${PYTHON_SITE_PACKAGES})
+    install(FILES python/tbb/__init__.py python/tbb/pool.py python/tbb/test.py python/tbb/__main__.py ${CMAKE_CURRENT_BINARY_DIR}/api.py
+            DESTINATION ${PYTHON_SITE_PACKAGES}/tbb)
+    install(TARGETS ${module_target}
+            DESTINATION ${PYTHON_SITE_PACKAGES}/tbb)
+
+    if(UNIX AND NOT APPLE)
+      add_library(irml SHARED python/rml/ipc_server.cpp python/rml/ipc_utils.cpp src/tbb/cache_aligned_allocator.cpp src/tbb/dynamic_link.cpp src/tbb/tbb_misc_ex.cpp src/tbb/tbb_misc.cpp)
+      target_compile_definitions(irml PRIVATE DO_ITT_NOTIFY=0)
+      target_link_libraries(irml PRIVATE tbb)
+      set_target_properties(irml PROPERTIES VERSION 1)
+      install(TARGETS irml DESTINATION ${TBB_INSTALL_LIBRARY_DIR})
+    endif ()
+  endif ()
 endif ()
