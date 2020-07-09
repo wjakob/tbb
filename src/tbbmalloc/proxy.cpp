@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -146,7 +146,15 @@ static inline void initPageSize()
    1) detection that the proxy library is loaded
    2) check that dlsym("malloc") found something different from our replacement malloc
 */
+// Starting from GCC 9, the -Wmissing-attributes warning was extended for alias below
+#if __GNUC__ == 9
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-attributes"
+#endif
 extern "C" void *__TBB_malloc_proxy(size_t) __attribute__ ((alias ("malloc")));
+#if __GNUC__ == 9
+    #pragma GCC diagnostic pop
+#endif
 
 static void *orig_msize;
 
@@ -293,11 +301,20 @@ void *aligned_alloc(size_t alignment, size_t size) __attribute__ ((alias ("memal
 // in conjunction with standard malloc/free, so we must ovberload them.
 // Bionic doesn't have them. Not removing from the linker scripts,
 // as absent entry points are ignored by the linker.
+
+// Starting from GCC 9, the -Wmissing-attributes warning was extended for aliases below
+#if __GNUC__ == 9
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-attributes"
+#endif
 void *__libc_malloc(size_t size) __attribute__ ((alias ("malloc")));
 void *__libc_calloc(size_t num, size_t size) __attribute__ ((alias ("calloc")));
 void *__libc_memalign(size_t alignment, size_t size) __attribute__ ((alias ("memalign")));
 void *__libc_pvalloc(size_t size) __attribute__ ((alias ("pvalloc")));
 void *__libc_valloc(size_t size) __attribute__ ((alias ("valloc")));
+#if __GNUC__ == 9
+    #pragma GCC diagnostic pop
+#endif
 
 // call original __libc_* to support naive replacement of free via __libc_free etc
 void __libc_free(void *ptr)
@@ -406,10 +423,10 @@ void* __TBB_malloc_safer_realloc_##CRTLIB( void *ptr, size_t size )             
     return __TBB_malloc_safer_realloc( ptr, size, &func_ptrs );                                      \
 }                                                                                                    \
                                                                                                      \
-void* __TBB_malloc_safer__aligned_realloc_##CRTLIB( void *ptr, size_t size, size_t aligment )        \
+void* __TBB_malloc_safer__aligned_realloc_##CRTLIB( void *ptr, size_t size, size_t alignment )       \
 {                                                                                                    \
     orig_aligned_ptrs func_ptrs = {orig__aligned_free_##CRTLIB, orig__aligned_msize_##CRTLIB};       \
-    return __TBB_malloc_safer_aligned_realloc( ptr, size, aligment, &func_ptrs );                    \
+    return __TBB_malloc_safer_aligned_realloc( ptr, size, alignment, &func_ptrs );                   \
 }
 
 // Only for ucrtbase: substitution for _o_free

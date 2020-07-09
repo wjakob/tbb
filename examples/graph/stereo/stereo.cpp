@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ void hostFunction(const std::string& firstFile, const std::string& secondFile, c
     join_node< tuple< utils::image_buffer, utils::image_buffer > > joinNode(g);
 
     function_node< MergeImagesTuple, utils::image_buffer > mergeImages(g, unlimited, [](const MergeImagesTuple& bufferTuple) -> utils::image_buffer {
-        // Two input images from tupple are merged into the first image,
+        // Two input images from tuple are merged into the first image,
         utils::image_buffer leftImageBuffer = std::get<0>(bufferTuple);
         utils::image_buffer rightImageBuffer = std::get<1>(bufferTuple);
 

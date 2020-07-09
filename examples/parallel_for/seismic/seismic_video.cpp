@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 #include "seismic_video.h"
 #include "universe.h"
-#include "tbb/task_scheduler_init.h"
+#include "tbb/global_control.h"
 
 const char * const SeismicVideo::titles[2] = {"Seismic Simulation: Serial", "Seismic Simulation: Parallel"};
 void SeismicVideo::on_mouse(int x, int y, int key) {
@@ -37,7 +37,7 @@ void SeismicVideo::on_key(int key) {
 }
 
 void SeismicVideo::on_process() {
-    tbb::task_scheduler_init Init(threadsHigh);
+    tbb::global_control c(tbb::global_control::max_allowed_parallelism, threadsHigh);
     for( int frames = 0; numberOfFrames_==0 || frames<numberOfFrames_; ++frames ) {
         if( initIsParallel )
             u_.ParallelUpdateUniverse();

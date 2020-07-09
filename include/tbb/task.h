@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,8 +14,22 @@
     limitations under the License.
 */
 
+#include "internal/_deprecated_header_message_guard.h"
+
+#if !defined(__TBB_show_deprecation_message_task_H) && defined(__TBB_show_deprecated_header_message)
+#define  __TBB_show_deprecation_message_task_H
+#pragma message("TBB Warning: tbb/task.h is deprecated. For details, please see Deprecated Features appendix in the TBB reference manual.")
+#endif
+
+#if defined(__TBB_show_deprecated_header_message)
+#undef __TBB_show_deprecated_header_message
+#endif
+
 #ifndef __TBB_task_H
 #define __TBB_task_H
+
+#define __TBB_task_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #include "tbb_stddef.h"
 #include "tbb_machine.h"
@@ -115,6 +129,11 @@ namespace internal {
     //! A reference count
     /** Should always be non-negative.  A signed type is used so that underflow can be detected. */
     typedef intptr_t reference_count;
+
+#if __TBB_PREVIEW_RESUMABLE_TASKS
+    //! The flag to indicate that the wait task has been abandoned.
+    static const reference_count abandon_flag = reference_count(1) << (sizeof(reference_count)*CHAR_BIT - 2);
+#endif
 
     //! An id as used for specifying affinity.
     typedef unsigned short affinity_id;
@@ -219,7 +238,7 @@ namespace internal {
             thread-specific pools. */
         scheduler* origin;
 
-#if __TBB_TASK_PRIORITY
+#if __TBB_TASK_PRIORITY || __TBB_PREVIEW_RESUMABLE_TASKS
         union {
 #endif /* __TBB_TASK_PRIORITY */
         //! Obsolete. The scheduler that owns the task.
@@ -231,8 +250,15 @@ namespace internal {
         //! Pointer to the next offloaded lower priority task.
         /** Used to maintain a list of offloaded tasks inside the scheduler. **/
         task* next_offloaded;
+#endif
+
+#if __TBB_PREVIEW_RESUMABLE_TASKS
+        //! Pointer to the abandoned scheduler where the current task is waited for.
+        scheduler* abandoned_scheduler;
+#endif
+#if __TBB_TASK_PRIORITY || __TBB_PREVIEW_RESUMABLE_TASKS
         };
-#endif /* __TBB_TASK_PRIORITY */
+#endif /* __TBB_TASK_PRIORITY || __TBB_PREVIEW_RESUMABLE_TASKS */
 
         //! The task whose reference count includes me.
         /** In the "blocking style" of programming, this field points to the parent task.
@@ -433,7 +459,7 @@ private:
     intptr_t my_priority;
 #endif /* __TBB_TASK_PRIORITY */
 
-    //! Decription of algorithm for scheduler based instrumentation.
+    //! Description of algorithm for scheduler based instrumentation.
     internal::string_index my_name;
 
     //! Trailing padding protecting accesses to frequently used members from false sharing
@@ -542,10 +568,10 @@ public:
 
 #if __TBB_TASK_PRIORITY
     //! Changes priority of the task group
-    void set_priority ( priority_t );
+    __TBB_DEPRECATED_IN_VERBOSE_MODE void set_priority ( priority_t );
 
     //! Retrieves current priority of the current task group
-    priority_t priority () const;
+    __TBB_DEPRECATED_IN_VERBOSE_MODE priority_t priority () const;
 #endif /* __TBB_TASK_PRIORITY */
 
     //! Returns the context's trait
@@ -586,7 +612,7 @@ private:
 
 //! Base class for user-defined tasks.
 /** @ingroup task_scheduling */
-class task: __TBB_TASK_BASE_ACCESS interface5::internal::task_base {
+class __TBB_DEPRECATED_IN_VERBOSE_MODE task: __TBB_TASK_BASE_ACCESS interface5::internal::task_base {
 
     //! Set reference count
     void __TBB_EXPORTED_METHOD internal_set_ref_count( int count );
@@ -622,6 +648,10 @@ public:
 #if __TBB_RECYCLE_TO_ENQUEUE
         //! task to be scheduled for starvation-resistant execution
         ,to_enqueue
+#endif
+#if __TBB_PREVIEW_RESUMABLE_TASKS
+        //! a special task used to resume a scheduler.
+        ,to_resume
 #endif
     };
 
@@ -822,11 +852,11 @@ public:
 
     //! Enqueue task in task_arena
     //! The implementation is in task_arena.h
-    inline static void enqueue( task& t, task_arena& arena
 #if __TBB_TASK_PRIORITY
-        , priority_t p = priority_t(0)
+    inline static void enqueue( task& t, task_arena& arena, priority_t p = priority_t(0) );
+#else
+    inline static void enqueue( task& t, task_arena& arena);
 #endif
-    );
 
     //! The innermost task being executed or destroyed by the current thread at the moment.
     static task& __TBB_EXPORTED_FUNC self();
@@ -856,6 +886,24 @@ public:
         return (prefix().extra_state & 0x80)!=0;
     }
 
+    //! True if the task was enqueued
+    bool is_enqueued_task() const {
+        // es_task_enqueued = 0x10
+        return (prefix().extra_state & 0x10)!=0;
+    }
+
+#if __TBB_PREVIEW_RESUMABLE_TASKS
+    //! Type that defines suspension point
+    typedef void* suspend_point;
+
+    //! Suspend current task execution
+    template <typename F>
+    static void suspend(F f);
+
+    //! Resume specific suspend point
+    static void resume(suspend_point tag);
+#endif
+
     //------------------------------------------------------------------------
     // Debugging
     //------------------------------------------------------------------------
@@ -866,10 +914,18 @@ public:
     //! The internal reference count.
     int ref_count() const {
 #if TBB_USE_ASSERT
+#if __TBB_PREVIEW_RESUMABLE_TASKS
+        internal::reference_count ref_count_ = prefix().ref_count & ~internal::abandon_flag;
+#else
         internal::reference_count ref_count_ = prefix().ref_count;
+#endif
         __TBB_ASSERT( ref_count_==int(ref_count_), "integer overflow error");
 #endif
+#if __TBB_PREVIEW_RESUMABLE_TASKS
+        return int(prefix().ref_count & ~internal::abandon_flag);
+#else
         return int(prefix().ref_count);
+#endif
     }
 
     //! Obsolete, and only retained for the sake of backward compatibility. Always returns true.
@@ -922,10 +978,10 @@ public:
 
 #if __TBB_TASK_PRIORITY
     //! Changes priority of the task group this task belongs to.
-    void set_group_priority ( priority_t p ) {  prefix().context->set_priority(p); }
+    __TBB_DEPRECATED void set_group_priority ( priority_t p ) {  prefix().context->set_priority(p); }
 
     //! Retrieves current priority of the task group this task belongs to.
-    priority_t group_priority () const { return prefix().context->priority(); }
+    __TBB_DEPRECATED priority_t group_priority () const { return prefix().context->priority(); }
 
 #endif /* __TBB_TASK_PRIORITY */
 
@@ -959,9 +1015,31 @@ inline bool is_critical( task& t ) { return bool((t.prefix().extra_state & 0x8) 
 } // namespace internal
 #endif /* __TBB_PREVIEW_CRITICAL_TASKS */
 
+#if __TBB_PREVIEW_RESUMABLE_TASKS
+namespace internal {
+    template <typename F>
+    static void suspend_callback(void* user_callback, task::suspend_point tag) {
+        // Copy user function to a new stack to avoid a race when the previous scheduler is resumed.
+        F user_callback_copy = *static_cast<F*>(user_callback);
+        user_callback_copy(tag);
+    }
+    void __TBB_EXPORTED_FUNC internal_suspend(void* suspend_callback, void* user_callback);
+    void __TBB_EXPORTED_FUNC internal_resume(task::suspend_point);
+    task::suspend_point __TBB_EXPORTED_FUNC internal_current_suspend_point();
+}
+
+template <typename F>
+inline void task::suspend(F f) {
+    internal::internal_suspend((void*)internal::suspend_callback<F>, &f);
+}
+inline void task::resume(suspend_point tag) {
+    internal::internal_resume(tag);
+}
+#endif
+
 //! task that does nothing.  Useful for synchronization.
 /** @ingroup task_scheduling */
-class empty_task: public task {
+class __TBB_DEPRECATED_IN_VERBOSE_MODE empty_task: public task {
     task* execute() __TBB_override {
         return NULL;
     }
@@ -972,6 +1050,7 @@ namespace internal {
     template<typename F>
     class function_task : public task {
 #if __TBB_ALLOW_MUTABLE_FUNCTORS
+        // TODO: deprecated behavior, remove
         F my_func;
 #else
         const F my_func;
@@ -992,7 +1071,7 @@ namespace internal {
 //! A list of children.
 /** Used for method task::spawn_children
     @ingroup task_scheduling */
-class task_list: internal::no_copy {
+class __TBB_DEPRECATED_IN_VERBOSE_MODE task_list: internal::no_copy {
 private:
     task* first;
     task** next_ptr;
@@ -1005,7 +1084,7 @@ public:
     //! Destroys the list, but does not destroy the task objects.
     ~task_list() {}
 
-    //! True if list if empty; false otherwise.
+    //! True if list is empty; false otherwise.
     bool empty() const {return !first;}
 
     //! Push task onto back of list.
@@ -1103,5 +1182,8 @@ inline void *operator new( size_t bytes, const tbb::internal::allocate_additiona
 inline void operator delete( void* task, const tbb::internal::allocate_additional_child_of_proxy& p ) {
     p.free( *static_cast<tbb::task*>(task) );
 }
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_task_H_include_area
 
 #endif /* __TBB_task_H */

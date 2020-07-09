@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -709,7 +709,7 @@ FreeBlock *Backend::askMemFromOS(size_t blockSize, intptr_t startModifiedCnt,
         // no regions found, try to clean cache
         if (!block || block == (FreeBlock*)VALID_BLOCK_IN_BIN)
             return releaseMemInCaches(startModifiedCnt, lockedBinsThreshold, numOfLockedBins);
-        // Since a region can hold more than one block it can be splitted.
+        // Since a region can hold more than one block it can be split.
         *splittableRet = true;
     }
     // after asking memory from OS, release caches if we above the memory limits
@@ -964,9 +964,10 @@ void *Backend::remap(void *ptr, size_t oldSize, size_t newSize, size_t alignment
     if (oldRegion->type != MEMREG_ONE_BLOCK)
         return NULL;  // we are not single in the region
     const size_t userOffset = (uintptr_t)ptr - (uintptr_t)oldRegion;
+    const size_t alignedSize = LargeObjectCache::alignToBin(newSize + userOffset);
     const size_t requestSize =
-        alignUp(userOffset + newSize + sizeof(LastFreeBlock), extMemPool->granularity);
-    if (requestSize < newSize) // is wrapped around?
+        alignUp(sizeof(MemRegion) + alignedSize + sizeof(LastFreeBlock), extMemPool->granularity);
+    if (requestSize < alignedSize) // is wrapped around?
         return NULL;
     regionList.remove(oldRegion);
 
@@ -978,12 +979,10 @@ void *Backend::remap(void *ptr, size_t oldSize, size_t newSize, size_t alignment
     MemRegion *region = (MemRegion*)ret;
     MALLOC_ASSERT(region->type == MEMREG_ONE_BLOCK, ASSERT_TEXT);
     region->allocSz = requestSize;
+    region->blockSz = alignedSize;
 
     FreeBlock *fBlock = (FreeBlock *)alignUp((uintptr_t)region + sizeof(MemRegion),
                                              largeObjectAlignment);
-    // put LastFreeBlock at the very end of region
-    const uintptr_t fBlockEnd = (uintptr_t)region + requestSize - sizeof(LastFreeBlock);
-    region->blockSz = fBlockEnd - (uintptr_t)fBlock;
 
     regionList.add(region);
     startUseBlock(region, fBlock, /*addToBin=*/false);
@@ -992,7 +991,7 @@ void *Backend::remap(void *ptr, size_t oldSize, size_t newSize, size_t alignment
     // TODO: get rid of useless pair blockConsumed()/blockReleased()
     bkndSync.blockReleased();
 
-    // object must start at same offest from region's start
+    // object must start at same offset from region's start
     void *object = (void*)((uintptr_t)region + userOffset);
     MALLOC_ASSERT(isAligned(object, alignment), ASSERT_TEXT);
     LargeObjectHdr *header = (LargeObjectHdr*)object - 1;
@@ -1201,7 +1200,7 @@ bool Backend::scanCoalescQ(bool forceCoalescQDrop)
         // matches blockConsumed() from CoalRequestQ::putBlock()
         coalescAndPutList(currCoalescList, forceCoalescQDrop,
                           /*reportBlocksProcessed=*/true);
-    // returns status of coalescQ.getAll(), as an indication of possibe changes in backend
+    // returns status of coalescQ.getAll(), as an indication of possible changes in backend
     // TODO: coalescAndPutList() may report is some new free blocks became available or not
     return currCoalescList;
 }

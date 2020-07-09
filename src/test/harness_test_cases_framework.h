@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -156,7 +156,7 @@ namespace test_framework_unit_tests{
                 test_suite ts;
                 ts.register_test_case("tc_name",&do_nothing_tc);
                 bool silent =true;
-                ASSERT(!ts(!silent).empty(),"in verbose mode all messages should be outputed");
+                ASSERT(!ts(!silent).empty(),"in verbose mode all messages should be outputted");
             }
         };
     }

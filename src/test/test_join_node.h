@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -26,11 +26,13 @@
 #endif
 #endif
 
+#include "harness.h"
 #include "harness_graph.h"
 #include "harness_checktype.h"
 
 #include "tbb/flow_graph.h"
 #include "tbb/task_scheduler_init.h"
+#include "test_follows_and_precedes_api.h"
 
 #define __TBB_MIC_OFFLOAD_TEST_COMPILATION_BROKEN __TBB_MIC_OFFLOAD
 
@@ -250,7 +252,7 @@ struct my_struct_key<K&, V> {
 using tbb::internal::is_ref;
 
 template<class K, class V> struct VtoKFB {
-    typedef tbb::flow::interface10::internal::type_to_key_function_body<V, K> type;
+    typedef tbb::flow::interface11::internal::type_to_key_function_body<V, K> type;
 };
 
 template<typename K> struct make_hash_compare { typedef typename tbb::tbb_hash_compare<K> type; };
@@ -258,14 +260,14 @@ template<typename K> struct make_hash_compare { typedef typename tbb::tbb_hash_c
 template<typename K, class V>
 void hash_buffer_test(const char *sname) {
     typedef typename K_deref<K>::type KnoR;
-    tbb::flow::interface10::internal::hash_buffer<
+    tbb::flow::interface11::internal::hash_buffer<
         K,
         V,
         typename VtoKFB<K, V>::type,
         tbb::tbb_hash_compare<KnoR>
     > my_hash_buffer;
     const bool k_is_ref = is_ref<K>::value;
-    typedef tbb::flow::interface10::internal::type_to_key_function_body_leaf<
+    typedef tbb::flow::interface11::internal::type_to_key_function_body_leaf<
         V, K, my_struct_key<K, V> > my_func_body_type;
     typename VtoKFB<K, V>::type *kp = new my_func_body_type(my_struct_key<K, V>());
     my_hash_buffer.set_key_func(kp);
@@ -696,7 +698,6 @@ struct threebyte {
         b2 = (unsigned char)((i>>8)&0xFF);
         b3 = (unsigned char)((i>>16)&0xFF);
     }
-    threebyte(const threebyte &other): b1(other.b1), b2(other.b2), b3(other.b3) { }
     operator int() const { return (int)(b1+(b2<<8)+(b3<<16)); }
 };
 
@@ -853,7 +854,6 @@ class source_body {
     int addend;
 public:
     source_body(int init_val, int addto): my_count(init_val), addend(addto) { }
-    void operator=(const source_body& other) { my_count = other.my_count; addend = other.addend; }
     bool operator()(TT &v) {
         int lc = my_count;
         v = make_thingie<TT, INDEX>()(my_count);
@@ -867,7 +867,6 @@ class tag_func {
     TT my_mult;
 public:
     tag_func(TT multiplier): my_mult(multiplier) { }
-    void operator=(const tag_func& other) { my_mult = other.my_mult; }
     // operator() will return [0 .. Count)
     tbb::flow::tag_value operator()(TT v) {
         tbb::flow::tag_value t = tbb::flow::tag_value(v/my_mult);
@@ -1360,7 +1359,7 @@ public:
     typedef tbb::flow::join_node<tbb::flow::tuple<int, tbb::flow::continue_msg>, tbb::flow::reserving> input_join_type;
     typedef typename join_node_type::output_type TT;
     typedef typename tbb::flow::tuple_element<ELEM-1, TT>::type IT;
-    typedef typename tbb::flow::source_node<IT> my_source_node_type;
+    typedef typename tbb::flow::input_node<IT> my_source_node_type;
     typedef typename tbb::flow::function_node<tbb::flow::tuple<int, tbb::flow::continue_msg>, IT> my_recirc_function_type;
     static void print_remark(const char * str) {
         source_node_helper<ELEM-1, JNT>::print_remark(str);
@@ -1371,6 +1370,7 @@ public:
             my_source_node_type *new_node = new my_source_node_type(g, source_body<IT, ELEM>(i, nInputs));
             tbb::flow::make_edge(*new_node, tbb::flow::input_port<ELEM-1>(my_join));
             all_source_nodes[ELEM-1][i] = (void *)new_node;
+            new_node->activate();
         }
         // add the next source_node
         source_node_helper<ELEM-1, JNT>::add_source_nodes(my_join, g, nInputs);
@@ -1424,7 +1424,7 @@ class source_node_helper<1, JNT> {
     typedef tbb::flow::join_node<tbb::flow::tuple<int, tbb::flow::continue_msg>, tbb::flow::reserving> input_join_type;
     typedef typename join_node_type::output_type TT;
     typedef typename tbb::flow::tuple_element<0, TT>::type IT;
-    typedef typename tbb::flow::source_node<IT> my_source_node_type;
+    typedef typename tbb::flow::input_node<IT> my_source_node_type;
     typedef typename tbb::flow::function_node<tbb::flow::tuple<int, tbb::flow::continue_msg>, IT> my_recirc_function_type;
 public:
     static void print_remark(const char * str) {
@@ -1435,6 +1435,7 @@ public:
             my_source_node_type *new_node = new my_source_node_type(g, source_body<IT, 1>(i, nInputs));
             tbb::flow::make_edge(*new_node, tbb::flow::input_port<0>(my_join));
             all_source_nodes[0][i] = (void *)new_node;
+            new_node->activate();
         }
     }
 
@@ -2090,7 +2091,7 @@ template<typename Policy> struct policy_name {};
 
 template<> struct policy_name<tbb::flow::queueing> {
 const char* msg_beg() { return "queueing\n";}
-const char* msg_end() { return "test queueing extract\n";} 
+const char* msg_end() { return "test queueing extract\n";}
 };
 
 template<> struct policy_name<tbb::flow::reserving> {

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 */
 
 #include "Matrix.h"
-#include "tbb/atomic.h"
 #include <vector>
+#include <atomic>
 
 enum OpKind {
     // Use Cell's value
@@ -40,7 +40,7 @@ public:
 
     //! Inputs to this cell
     Cell* input[2];
-   
+
     //! Type of value stored in a Cell
     typedef Matrix value_type;
 
@@ -51,13 +51,16 @@ public:
     std::vector<Cell*> successor;
 
     //! Reference count of number of inputs that are not yet updated.
-    tbb::atomic<int> ref_count;
+    std::atomic<int> ref_count;
 
     //! Update the Cell's value.
     void update();
 
     //! Default constructor
     Cell() {}
+
+    //! Copy constructor
+    Cell(const Cell& other);
 };
 
 //! A directed graph where the vertices are Cells.

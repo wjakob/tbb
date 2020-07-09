@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -484,11 +484,6 @@ class BarIterator
     Bar* bar_ptr;
     BarIterator(Bar* bp_) : bar_ptr(bp_) {}
 public:
-    ~BarIterator() {}
-    BarIterator& operator=( const BarIterator& other ) {
-        bar_ptr = other.bar_ptr;
-        return *this;
-    }
     Bar& operator*() const {
         return *bar_ptr;
     }

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 #ifndef __TBB_concurrent_hash_map_H
 #define __TBB_concurrent_hash_map_H
+
+#define __TBB_concurrent_hash_map_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #include "tbb_stddef.h"
 #include <iterator>
@@ -122,9 +125,10 @@ namespace interface5 {
 #endif
         //! Constructor
         hash_map_base() {
-            std::memset( this, 0, pointers_per_table*sizeof(segment_ptr_t) // 32*4=128   or 64*8=512
-                + sizeof(my_size) + sizeof(my_mask)  // 4+4 or 8+8
-                + embedded_buckets*sizeof(bucket) ); // n*8 or n*16
+            std::memset(my_table, 0, sizeof(my_table));
+            my_mask = 0;
+            my_size = 0;
+            std::memset(my_embedded_segment, 0, sizeof(my_embedded_segment));
             for( size_type i = 0; i < embedded_block; i++ ) // fill the table
                 my_table[i] = my_embedded_segment + segment_base(i);
             my_mask = embedded_buckets - 1;
@@ -407,6 +411,14 @@ namespace interface5 {
             my_bucket(other.my_bucket),
             my_node(other.my_node)
         {}
+
+        hash_map_iterator& operator=( const hash_map_iterator<Container,typename Container::value_type> &other ) {
+            my_map = other.my_map;
+            my_index = other.my_index;
+            my_bucket = other.my_bucket;
+            my_node = other.my_node;
+            return *this;
+        }
         Value& operator*() const {
             __TBB_ASSERT( hash_map_base::is_valid(my_node), "iterator uninitialized or at end of container?" );
             return my_node->value();
@@ -664,7 +676,9 @@ protected:
         return create_node(allocator, std::piecewise_construct,
                            std::forward_as_tuple(key), std::forward_as_tuple());
 #else
-        T obj; // Use of temporary object in impossible, because create_node takes non-const reference
+        // Use of a temporary object is impossible, because create_node takes a non-const reference.
+        // copy-initialization is possible because T is already required to be CopyConstructible.
+        T obj = T();
         return create_node(allocator, key, tbb::internal::move(obj));
 #endif
     }
@@ -1206,7 +1220,7 @@ protected:
         }
         n = search_bucket( key, b );
         if( n )
-            return &n->item;
+            return n->storage();
         else if( check_mask_race( h, m ) )
             goto restart;
         return 0;
@@ -1629,5 +1643,8 @@ inline void swap(concurrent_hash_map<Key, T, HashCompare, A> &a, concurrent_hash
 #endif // warning 4127 is back
 
 } // namespace tbb
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_concurrent_hash_map_H_include_area
 
 #endif /* __TBB_concurrent_hash_map_H */

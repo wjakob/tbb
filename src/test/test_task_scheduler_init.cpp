@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@
 #if _MSC_VER
 #pragma warning (push)
     // MSVC discovers that ASSERT(false) inside TestBlockingTerminateNS::ExceptionTest2::Body makes the code
-    // in parallel_for after the body call unreachable. So supress the warning.
+    // in parallel_for after the body call unreachable. So suppress the warning.
 #pragma warning (disable: 4702)
 #endif
 #include "tbb/parallel_for.h"

@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2019 Intel Corporation
+# Copyright (c) 2005-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,6 +41,11 @@ else
 endif
 
 CPLUS_FLAGS += -DUSE_PTHREAD $(ITT_NOTIFY)
+
+ifeq (1,$(tbb_cpf))
+# For correct ucontext.h structures layout
+CPLUS_FLAGS += -D_XOPEN_SOURCE
+endif
 
 # For Clang, we add the option to support RTM intrinsics *iff* xtest is found in <immintrin.h>
 ifneq (,$(shell grep xtest `echo "\#include<immintrin.h>" | $(CONLY) -E -M - 2>&1 | grep immintrin.h` 2>/dev/null))

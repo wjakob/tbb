@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 #ifndef __TBB_concurrent_lru_cache_H
 #define __TBB_concurrent_lru_cache_H
+
+#define __TBB_concurrent_lru_cache_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #if ! TBB_PREVIEW_CONCURRENT_LRU_CACHE
     #error Set TBB_PREVIEW_CONCURRENT_LRU_CACHE to include concurrent_lru_cache.h
@@ -280,4 +283,8 @@ private:
 using interface6::concurrent_lru_cache;
 
 } // namespace tbb
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_concurrent_lru_cache_H_include_area
+
 #endif //__TBB_concurrent_lru_cache_H

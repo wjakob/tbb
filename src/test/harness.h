@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -58,6 +58,8 @@ int TestMain ();
     #include <cstdlib>
     #include <cstring>
 #endif /* !__SUNPRO_CC */
+#include <cerrno>
+#include <cctype>
 
 #include <new>
 
@@ -443,6 +445,25 @@ int main(int argc, char* argv[]) {
 
 #endif /* !HARNESS_CUSTOM_MAIN */
 
+#if __TBB_DEFAULTED_AND_DELETED_FUNC_PRESENT
+
+//! Base class for types that should not be assigned.
+class NoAssign {
+public:
+    void operator=( const NoAssign& ) = delete;
+    NoAssign( const NoAssign& ) = default;
+    NoAssign() = default;
+};
+
+//! Base class for types that should not be copied or assigned.
+class NoCopy: NoAssign {
+public:
+    NoCopy( const NoCopy& ) = delete;
+    NoCopy() = default;
+};
+
+#else /*__TBB_DEFAULTED_AND_DELETED_FUNC_PRESENT*/
+
 //! Base class for prohibiting compiler-generated operator=
 class NoAssign {
     //! Assignment not allowed
@@ -458,6 +479,8 @@ class NoCopy: NoAssign {
 public:
     NoCopy() {}
 };
+
+#endif /*__TBB_DEFAULTED_AND_DELETED_FUNC_PRESENT*/
 
 #if __TBB_CPP11_RVALUE_REF_PRESENT
 #include <utility>
@@ -818,6 +841,32 @@ public:
 #else
         return std::getenv(envname);
 #endif
+    }
+
+    long GetIntEnv( const char * envname ) {
+        ASSERT(envname, "Harness::GetIntEnv() requires a valid C string");
+#if !__TBB_WIN8UI_SUPPORT
+        if( const char* s = std::getenv(envname) ){
+            char* end = NULL;
+            errno = 0;
+            long value = std::strtol(s, &end, 10);
+
+            // We have exceeded the range, value is negative or string is incovertable
+            if ( errno == ERANGE || value < 0 || end==s )
+            {
+                return -1;
+            }
+
+            for ( ; *end != '\0'; end++ )
+            {
+                if ( !std::isspace(*end) )
+                    return -1;
+            }
+
+            return value;
+        }
+#endif
+        return -1;
     }
 
     class DummyBody {

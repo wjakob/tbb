@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -63,6 +63,23 @@ template<class W>          struct is_same_type<W,W> { static const bool value = 
 
 template<typename T> struct is_ref { static const bool value = false; };
 template<typename U> struct is_ref<U&> { static const bool value = true; };
+
+//! Partial support for std::is_integral
+template<typename T> struct is_integral_impl             { static const bool value = false; };
+template<>           struct is_integral_impl<bool>       { static const bool value = true;  };
+template<>           struct is_integral_impl<char>       { static const bool value = true;  };
+#if __TBB_CPP11_PRESENT
+template<>           struct is_integral_impl<char16_t>   { static const bool value = true;  };
+template<>           struct is_integral_impl<char32_t>   { static const bool value = true;  };
+#endif
+template<>           struct is_integral_impl<wchar_t>    { static const bool value = true;  };
+template<>           struct is_integral_impl<short>      { static const bool value = true;  };
+template<>           struct is_integral_impl<int>        { static const bool value = true;  };
+template<>           struct is_integral_impl<long>       { static const bool value = true;  };
+template<>           struct is_integral_impl<long long>  { static const bool value = true;  };
+
+template<typename T>
+struct is_integral : is_integral_impl<typename strip<T>::type> {};
 
 #if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
 //! std::void_t internal implementation (to avoid GCC < 4.7 "template aliases" absence)
@@ -193,6 +210,22 @@ using make_index_sequence = typename tbb::internal::make_index_sequence_impl<N>:
 
 #endif /* __TBB_CPP14_INTEGER_SEQUENCE_PRESENT */
 
+#if __TBB_CPP11_VARIADIC_TEMPLATES_PRESENT
+template<typename... Args>
+struct conjunction;
+
+template<typename First, typename... Args>
+struct conjunction<First, Args...>
+    : std::conditional<bool(First::value), conjunction<Args...>, First>::type {};
+
+template<typename T>
+struct conjunction<T> : T {};
+
+template<>
+struct conjunction<> : std::true_type {};
+
+#endif
+
 #if __TBB_CPP11_PRESENT
 
 template< typename Iter >
@@ -237,6 +270,12 @@ struct pack_element<0, T, Args...> {
 
 template< std::size_t N, typename... Args >
 using pack_element_t = typename pack_element<N, Args...>::type;
+
+// Helper alias for heterogeneous lookup functions in containers
+// template parameter K and std::conditional are needed to provide immediate context
+// and postpone getting is_trasparent from the compare functor until method instantiation.
+template <typename Comp, typename K>
+using is_transparent = typename std::conditional<true, Comp, K>::type::is_transparent;
 
 #endif /* __TBB_CPP11_PRESENT */
 

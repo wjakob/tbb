@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -62,6 +62,8 @@
 
     The parameters are chosen so that CPU and ASYNC work take approximately the same time.
 */
+
+#define TBB_PREVIEW_FLOW_GRAPH_FEATURES __TBB_CPF_BUILD
 
 #include "tbb/task_scheduler_init.h"
 #include "tbb/parallel_for.h"

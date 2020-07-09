@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -44,8 +44,15 @@ struct Foo {
     }
     Foo( const Foo& x ) {
         *this = x;
-        ++NumberOfFoo;
+        //Internal call of assignment
     }
+    Foo& operator=( const Foo& x ) {
+        for (size_t i = 0; i < N; i++)
+            foo_array[i] = x.foo_array[i];
+        ++NumberOfFoo;
+        return *this;
+    }
+
     ~Foo() {
         --NumberOfFoo;
     }

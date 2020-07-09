@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -200,6 +200,9 @@
     #endif
     #ifndef TBB_PREVIEW_ALGORITHM_TRACE
         #define TBB_PREVIEW_ALGORITHM_TRACE 1
+    #endif
+    #ifndef TBB_DEPRECATED_LIMITER_NODE_CONSTRUCTOR
+        #define TBB_DEPRECATED_LIMITER_NODE_CONSTRUCTOR 1
     #endif
 #endif
 

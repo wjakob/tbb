@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,7 +14,9 @@
     limitations under the License.
 */
 
-#if !(_WIN32||_WIN64) || (__MINGW64__||__MINGW32__)
+#include "tbb/tbb_config.h"
+
+#if !(_WIN32||_WIN64) || (__MINGW64__||__MINGW32__) || __TBB_WIN8UI_SUPPORT
 
 #include "harness.h"
 

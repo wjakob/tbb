@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -63,21 +63,21 @@ using tbb::flow::internal::SUCCESSFULLY_ENQUEUED;
 // conversion operators to the class, since we don't want it in general,
 // only in these tests.
 template<typename InputType, typename OutputType>
-struct convertor {
+struct converter {
     static OutputType convert_value(const InputType &i) {
         return OutputType(i);
     }
 };
 
 template<typename InputType>
-struct convertor<InputType,tbb::flow::continue_msg> {
+struct converter<InputType,tbb::flow::continue_msg> {
     static tbb::flow::continue_msg convert_value(const InputType &/*i*/) {
         return tbb::flow::continue_msg();
     }
 };
 
 template<typename OutputType>
-struct convertor<tbb::flow::continue_msg,OutputType> {
+struct converter<tbb::flow::continue_msg,OutputType> {
     static OutputType convert_value(const tbb::flow::continue_msg &/*i*/) {
         return OutputType();
     }
@@ -88,7 +88,7 @@ template<size_t N>
 struct mof_helper {
     template<typename InputType, typename ports_type>
     static inline void output_converted_value(const InputType &i, ports_type &p) {
-        (void)tbb::flow::get<N-1>(p).try_put(convertor<InputType,typename tbb::flow::tuple_element<N-1,ports_type>::type::output_type>::convert_value(i));
+        (void)tbb::flow::get<N-1>(p).try_put(converter<InputType,typename tbb::flow::tuple_element<N-1,ports_type>::type::output_type>::convert_value(i));
         output_converted_value<N-1>(i, p);
     }
 };
@@ -98,7 +98,7 @@ struct mof_helper<1> {
     template<typename InputType, typename ports_type>
     static inline void output_converted_value(const InputType &i, ports_type &p) {
         // just emit a default-constructed object
-        (void)tbb::flow::get<0>(p).try_put(convertor<InputType,typename tbb::flow::tuple_element<0,ports_type>::type::output_type>::convert_value(i));
+        (void)tbb::flow::get<0>(p).try_put(converter<InputType,typename tbb::flow::tuple_element<0,ports_type>::type::output_type>::convert_value(i));
     }
 };
 
@@ -292,7 +292,7 @@ struct harness_counting_receiver : public tbb::flow::receiver<T>, NoAssign {
        num_copies = c;
     }
 
-    tbb::flow::graph& graph_reference() __TBB_override {
+    tbb::flow::graph& graph_reference() const __TBB_override {
         return my_graph;
     }
 
@@ -362,7 +362,7 @@ struct harness_mapped_receiver : public tbb::flow::receiver<T>, NoCopy {
       return const_cast<tbb::task *>(SUCCESSFULLY_ENQUEUED);
     }
 
-    tbb::flow::graph& graph_reference() __TBB_override {
+    tbb::flow::graph& graph_reference() const __TBB_override {
         return my_graph;
     }
 
@@ -1226,7 +1226,11 @@ void test_lightweight(unsigned N) {
 template<template<typename, typename, typename, typename> class NodeType>
 void test(unsigned N) {
     typedef tbb::tbb_thread::id input_type;
+#if TBB_DEPRECATED_FLOW_NODE_ALLOCATOR
     typedef tbb::cache_aligned_allocator<input_type> allocator_type;
+#else
+    typedef tbb::flow::interface11::null_type allocator_type;
+#endif
     typedef NodeType<input_type, output_tuple_type, tbb::flow::queueing_lightweight, allocator_type> node_type;
     test_lightweight<node_type>(N);
 }

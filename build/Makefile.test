@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2019 Intel Corporation
+# Copyright (c) 2005-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -103,6 +103,9 @@ test_dynamic_link.$(TEST_EXT): LIBS += $(LIBDL)
 ifneq (,$(BIGOBJ_KEY))
 TEST_BIGOBJ = test_opencl_node.$(TEST_EXT)      \
     test_atomic.$(TEST_EXT)                     \
+    test_concurrent_hash_map.$(TEST_EXT)        \
+    test_concurrent_set.$(TEST_EXT)             \
+    test_concurrent_map.$(TEST_EXT)             \
     test_concurrent_unordered_set.$(TEST_EXT)   \
     test_concurrent_unordered_map.$(TEST_EXT)   \
     test_join_node_key_matching.$(TEST_EXT)     \
@@ -111,7 +114,7 @@ TEST_BIGOBJ = test_opencl_node.$(TEST_EXT)      \
 $(TEST_BIGOBJ): override CXXFLAGS += $(BIGOBJ_KEY)
 endif
 
-# TODO: remove repetition of .$(TEST_EXT) in the list bellow
+# TODO: remove repetition of .$(TEST_EXT) in the list below
 # The main list of TBB tests
 TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_global_control.$(TEST_EXT)              \
@@ -130,6 +133,8 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_concurrent_unordered_set.$(TEST_EXT)    \
 	test_concurrent_unordered_map.$(TEST_EXT)    \
 	test_concurrent_hash_map.$(TEST_EXT)         \
+	test_concurrent_set.$(TEST_EXT)              \
+	test_concurrent_map.$(TEST_EXT)              \
 	test_enumerable_thread_specific.$(TEST_EXT)  \
 	test_handle_perror.$(TEST_EXT)               \
 	test_halt.$(TEST_EXT)                        \
@@ -194,6 +199,7 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_priority_queue_node.$(TEST_EXT)         \
 	test_sequencer_node.$(TEST_EXT)              \
 	test_source_node.$(TEST_EXT)                 \
+	test_input_node.$(TEST_EXT)                  \
 	test_overwrite_node.$(TEST_EXT)              \
 	test_write_once_node.$(TEST_EXT)             \
 	test_indexer_node.$(TEST_EXT)                \
@@ -211,6 +217,7 @@ TEST_TBB_PLAIN.EXE = test_assembly.$(TEST_EXT)   \
 	test_composite_node.$(TEST_EXT)              \
 	test_async_node.$(TEST_EXT)                  \
 	test_async_msg.$(TEST_EXT)                   \
+	test_resumable_tasks.$(TEST_EXT)             \
 	test_tbb_version.$(TEST_EXT)                 # insert new files right above
 
 # These tests depend on other technologies
@@ -245,6 +252,8 @@ test_tbb_cilk:
 endif
 
 test_opencl_node.$(TEST_EXT): LIBS += $(OPENCL.LIB)
+
+test_arena_constraints_hwloc.$(TEST_EXT): LIBS += $(HWLOC.LIB)
 
 $(TEST_TBB_PLAIN.EXE) $(TEST_TBB_SPECIAL.EXE): WARNING_KEY += $(TEST_WARNING_KEY)
 

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -43,6 +43,8 @@
 #include "harness_assert.h"
 #include "harness.h"
 #include "harness_barrier.h"
+
+#include "tbb/tbb_thread.h"
 
 #if _MSC_VER
 // plays around __TBB_NO_IMPLICIT_LINKAGE. __TBB_LIB_NAME should be defined (in makefiles)
@@ -794,7 +796,6 @@ namespace TestIsolatedExecuteNS {
         tbb::enumerable_thread_specific<Harness::FastRandom>& myRandom;
         tbb::enumerable_thread_specific<int>& myIsolatedLevel;
         int myNestedLevel;
-        bool myHighPriority;
 
         template <typename Partitioner, typename Body>
         static void RunTwoBodies( Harness::FastRandom& rnd, const Body &body, Partitioner& p, tbb::task_group_context* ctx = NULL ) {
@@ -817,7 +818,7 @@ namespace TestIsolatedExecuteNS {
             void operator()() const {
                 RunTwoBodies( myHeavyMixTestBody.myRandom.local(),
                     HeavyMixTestBody( myHeavyMixTestBody.myRandom, myHeavyMixTestBody.myIsolatedLevel,
-                        myHeavyMixTestBody.myNestedLevel + 1, myHeavyMixTestBody.myHighPriority ),
+                        myHeavyMixTestBody.myNestedLevel + 1 ),
                     myPartitioner );
             }
         };
@@ -829,16 +830,16 @@ namespace TestIsolatedExecuteNS {
                 case 0: {
                     // No features
                     tbb::task_group_context ctx;
-                    if ( myHighPriority )
-                        ctx.set_priority( tbb::priority_high );
-                    RunTwoBodies( rnd, HeavyMixTestBody(myRandom, myIsolatedLevel, myNestedLevel + 1, myHighPriority), p, &ctx );
+                    RunTwoBodies( rnd, HeavyMixTestBody(myRandom, myIsolatedLevel, myNestedLevel + 1), p, &ctx );
                     break;
                 }
                 case 1: {
                     // High priority
                     tbb::task_group_context ctx;
+#if __TBB_TASK_PRIORITY
                     ctx.set_priority( tbb::priority_high );
-                    RunTwoBodies( rnd, HeavyMixTestBody(myRandom, myIsolatedLevel, myNestedLevel + 1, true), p, &ctx );
+#endif
+                    RunTwoBodies( rnd, HeavyMixTestBody(myRandom, myIsolatedLevel, myNestedLevel + 1), p, &ctx );
                     break;
                 }
                 case 2: {
@@ -853,9 +854,9 @@ namespace TestIsolatedExecuteNS {
         }
     public:
         HeavyMixTestBody( tbb::enumerable_thread_specific<Harness::FastRandom>& random,
-            tbb::enumerable_thread_specific<int>& isolated_level, int nested_level, bool high_priority )
+            tbb::enumerable_thread_specific<int>& isolated_level, int nested_level )
             : myRandom( random ), myIsolatedLevel( isolated_level )
-            , myNestedLevel( nested_level ), myHighPriority( high_priority ) {}
+            , myNestedLevel( nested_level ) {}
         void operator()() const {
             int &isolated_level = myIsolatedLevel.local();
             ASSERT( myNestedLevel > isolated_level, "The outer-level task should not be stolen on isolated level" );
@@ -885,7 +886,7 @@ namespace TestIsolatedExecuteNS {
         tbb::enumerable_thread_specific<Harness::FastRandom> random( init_random );
         tbb::enumerable_thread_specific<int> isolated_level( 0 );
         for ( int i = 0; i < 5; ++i ) {
-            HeavyMixTestBody b( random, isolated_level, 1, false );
+            HeavyMixTestBody b( random, isolated_level, 1 );
             b( 0 );
             REMARK( "." );
         }
@@ -1608,6 +1609,19 @@ private:
 
 Harness::SpinBarrier CheckArenaNumThreads::m_barrier;
 
+class EnqueueTaskIntoTaskArena
+{
+public:
+    EnqueueTaskIntoTaskArena(tbb::task& t, tbb::task_arena& a) : my_task(t), my_arena(a) {}
+    void operator() ()
+    {
+        tbb::task::enqueue(my_task, my_arena);
+    }
+private:
+    tbb::task& my_task;
+    tbb::task_arena& my_arena;
+};
+
 void TestTaskEnqueueInArena()
 {   
     int pp[8]={3, 4, 5, 7, 8, 11, 13, 17};
@@ -1617,10 +1631,21 @@ void TestTaskEnqueueInArena()
         int reserved_for_masters = p - 1;
         tbb::task_arena a(p, reserved_for_masters);
         a.initialize();
-        CheckArenaNumThreads& t = *new( tbb::task::allocate_root() ) CheckArenaNumThreads(p, reserved_for_masters);
-        tbb::task::enqueue(t, a);
-        CheckArenaNumThreads::m_barrier.wait();
-        a.debug_wait_until_empty();
+        //Enqueue on master thread
+        {
+            CheckArenaNumThreads& t = *new( tbb::task::allocate_root() ) CheckArenaNumThreads(p, reserved_for_masters);
+            tbb::task::enqueue(t, a);
+            CheckArenaNumThreads::m_barrier.wait();
+            a.debug_wait_until_empty();
+        }
+        //Enqueue on thread without scheduler
+        {
+            CheckArenaNumThreads& t = *new( tbb::task::allocate_root() ) CheckArenaNumThreads(p, reserved_for_masters);
+            tbb::tbb_thread thr(EnqueueTaskIntoTaskArena(t, a));
+            CheckArenaNumThreads::m_barrier.wait();
+            a.debug_wait_until_empty();
+            thr.join();
+        }
     }
 }
 

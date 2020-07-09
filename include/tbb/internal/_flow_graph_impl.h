@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -44,6 +44,16 @@
 #define __TBB_FLOW_GRAPH_PRIORITY_ARG1( arg1, priority ) arg1
 #endif // __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES
 
+#if TBB_DEPRECATED_LIMITER_NODE_CONSTRUCTOR
+#define __TBB_DEPRECATED_LIMITER_EXPR( expr ) expr
+#define __TBB_DEPRECATED_LIMITER_ARG2( arg1, arg2 ) arg1, arg2
+#define __TBB_DEPRECATED_LIMITER_ARG4( arg1, arg2, arg3, arg4 ) arg1, arg3, arg4
+#else
+#define __TBB_DEPRECATED_LIMITER_EXPR( expr )
+#define __TBB_DEPRECATED_LIMITER_ARG2( arg1, arg2 ) arg1
+#define __TBB_DEPRECATED_LIMITER_ARG4( arg1, arg2, arg3, arg4 ) arg1, arg2
+#endif // TBB_DEPRECATED_LIMITER_NODE_CONSTRUCTOR
+
 namespace tbb {
 namespace flow {
 
@@ -56,6 +66,10 @@ static const node_priority_t no_priority = node_priority_t(0);
 }
 
 namespace interface10 {
+class graph;
+}
+
+namespace interface11 {
 
 using tbb::flow::internal::SUCCESSFULLY_ENQUEUED;
 
@@ -71,13 +85,11 @@ struct graph_task : public task {
 typedef task graph_task;
 #endif /* __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES */
 
-
-class graph;
 class graph_node;
 
 template <typename GraphContainerType, typename GraphNodeType>
 class graph_iterator {
-    friend class graph;
+    friend class tbb::flow::interface10::graph;
     friend class graph_node;
 public:
     typedef size_t size_type;
@@ -151,12 +163,13 @@ enum reset_flags {
 
 namespace internal {
 
-void activate_graph(graph& g);
-void deactivate_graph(graph& g);
-bool is_graph_active(graph& g);
-void spawn_in_graph_arena(graph& g, tbb::task& arena_task);
-void add_task_to_graph_reset_list(graph& g, tbb::task *tp);
-template<typename F> void execute_in_graph_arena(graph& g, F& f);
+void activate_graph(tbb::flow::interface10::graph& g);
+void deactivate_graph(tbb::flow::interface10::graph& g);
+bool is_graph_active(tbb::flow::interface10::graph& g);
+tbb::task& prioritize_task(tbb::flow::interface10::graph& g, tbb::task& arena_task);
+void spawn_in_graph_arena(tbb::flow::interface10::graph& g, tbb::task& arena_task);
+void enqueue_in_graph_arena(tbb::flow::interface10::graph &g, tbb::task& arena_task);
+void add_task_to_graph_reset_list(tbb::flow::interface10::graph& g, tbb::task *tp);
 
 #if __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES
 struct graph_task_comparator {
@@ -191,18 +204,20 @@ private:
 
 }
 
+} // namespace interfaceX
+namespace interface10 {
 //! The graph class
 /** This class serves as a handle to the graph */
 class graph : tbb::internal::no_copy, public tbb::flow::graph_proxy {
-    friend class graph_node;
+    friend class tbb::flow::interface11::graph_node;
 
     template< typename Body >
-    class run_task : public graph_task {
+    class run_task : public tbb::flow::interface11::graph_task {
     public:
         run_task(Body& body
 #if __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES
-                 , node_priority_t node_priority = no_priority
-        ) : graph_task(node_priority),
+                 , tbb::flow::interface11::node_priority_t node_priority = tbb::flow::interface11::no_priority
+        ) : tbb::flow::interface11::graph_task(node_priority),
 #else
         ) :
 #endif
@@ -216,12 +231,12 @@ class graph : tbb::internal::no_copy, public tbb::flow::graph_proxy {
     };
 
     template< typename Receiver, typename Body >
-    class run_and_put_task : public graph_task {
+    class run_and_put_task : public tbb::flow::interface11::graph_task {
     public:
         run_and_put_task(Receiver &r, Body& body) : my_receiver(r), my_body(body) {}
         tbb::task *execute() __TBB_override {
             tbb::task *res = my_receiver.try_put_task(my_body());
-            if (res == SUCCESSFULLY_ENQUEUED) res = NULL;
+            if (res == tbb::flow::interface11::SUCCESSFULLY_ENQUEUED) res = NULL;
             return res;
         }
     private:
@@ -300,7 +315,7 @@ public:
     that need to block a wait_for_all() on the graph.  For example a one-off source. */
     template< typename Receiver, typename Body >
     void run(Receiver &r, Body body) {
-        if (internal::is_graph_active(*this)) {
+        if (tbb::flow::interface11::internal::is_graph_active(*this)) {
             task* rtask = new (task::allocate_additional_child_of(*root_task()))
                 run_and_put_task< Receiver, Body >(r, body);
             my_task_arena->execute(spawn_functor(*rtask));
@@ -312,7 +327,7 @@ public:
     that need to block a wait_for_all() on the graph. For example a one-off source. */
     template< typename Body >
     void run(Body body) {
-        if (internal::is_graph_active(*this)) {
+        if (tbb::flow::interface11::internal::is_graph_active(*this)) {
             task* rtask = new (task::allocate_additional_child_of(*root_task())) run_task< Body >(body);
             my_task_arena->execute(spawn_functor(*rtask));
         }
@@ -328,7 +343,9 @@ public:
             try {
 #endif
                 my_task_arena->execute(wait_functor(my_root_task));
+#if __TBB_TASK_GROUP_CONTEXT
                 cancelled = my_context->is_group_execution_cancelled();
+#endif
 #if TBB_USE_EXCEPTIONS
             }
             catch (...) {
@@ -339,13 +356,17 @@ public:
                 throw;
             }
 #endif
+#if __TBB_TASK_GROUP_CONTEXT
             // TODO: the "if" condition below is just a work-around to support the concurrent wait
             // mode. The cancellation and exception mechanisms are still broken in this mode.
             // Consider using task group not to re-implement the same functionality.
             if (!(my_context->traits() & tbb::task_group_context::concurrent_wait)) {
                 my_context->reset();  // consistent with behavior in catch()
+#endif
                 my_root_task->set_ref_count(1);
+#if __TBB_TASK_GROUP_CONTEXT
             }
+#endif
         }
     }
 
@@ -356,11 +377,11 @@ public:
 
     // ITERATORS
     template<typename C, typename N>
-    friend class graph_iterator;
+    friend class tbb::flow::interface11::graph_iterator;
 
     // Graph iterator typedefs
-    typedef graph_iterator<graph, graph_node> iterator;
-    typedef graph_iterator<const graph, const graph_node> const_iterator;
+    typedef tbb::flow::interface11::graph_iterator<graph, tbb::flow::interface11::graph_node> iterator;
+    typedef tbb::flow::interface11::graph_iterator<const graph, const tbb::flow::interface11::graph_node> const_iterator;
 
     // Graph iterator constructors
     //! start iterator
@@ -381,49 +402,64 @@ public:
     bool exception_thrown() { return caught_exception; }
 
     // thread-unsafe state reset.
-    void reset(reset_flags f = rf_reset_protocol);
+    void reset(tbb::flow::interface11::reset_flags f = tbb::flow::interface11::rf_reset_protocol);
 
 private:
     tbb::task *my_root_task;
+#if __TBB_TASK_GROUP_CONTEXT
     tbb::task_group_context *my_context;
+#endif
     bool own_context;
     bool cancelled;
     bool caught_exception;
     bool my_is_active;
     task_list_type my_reset_task_list;
 
-    graph_node *my_nodes, *my_nodes_last;
+    tbb::flow::interface11::graph_node *my_nodes, *my_nodes_last;
 
     tbb::spin_mutex nodelist_mutex;
-    void register_node(graph_node *n);
-    void remove_node(graph_node *n);
+    void register_node(tbb::flow::interface11::graph_node *n);
+    void remove_node(tbb::flow::interface11::graph_node *n);
 
     tbb::task_arena* my_task_arena;
 
 #if __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES
-    internal::graph_task_priority_queue_t my_priority_queue;
+    tbb::flow::interface11::internal::graph_task_priority_queue_t my_priority_queue;
 #endif
 
-    friend void internal::activate_graph(graph& g);
-    friend void internal::deactivate_graph(graph& g);
-    friend bool internal::is_graph_active(graph& g);
-    friend void internal::spawn_in_graph_arena(graph& g, tbb::task& arena_task);
-    friend void internal::add_task_to_graph_reset_list(graph& g, tbb::task *tp);
-    template<typename F> friend void internal::execute_in_graph_arena(graph& g, F& f);
-#if __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES
-    template<typename Input, typename Output, typename Policy, typename Allocator>
-    friend class async_node;
-#endif
+    friend void tbb::flow::interface11::internal::activate_graph(graph& g);
+    friend void tbb::flow::interface11::internal::deactivate_graph(graph& g);
+    friend bool tbb::flow::interface11::internal::is_graph_active(graph& g);
+    friend tbb::task& tbb::flow::interface11::internal::prioritize_task(graph& g, tbb::task& arena_task);
+    friend void tbb::flow::interface11::internal::spawn_in_graph_arena(graph& g, tbb::task& arena_task);
+    friend void tbb::flow::interface11::internal::enqueue_in_graph_arena(graph &g, tbb::task& arena_task);
+    friend void tbb::flow::interface11::internal::add_task_to_graph_reset_list(graph& g, tbb::task *tp);
 
     friend class tbb::interface7::internal::task_arena_base;
 
 };  // class graph
+} // namespace interface10
+
+namespace interface11 {
+
+using tbb::flow::interface10::graph;
+
+#if __TBB_PREVIEW_FLOW_GRAPH_NODE_SET
+namespace internal{
+class get_graph_helper;
+}
+#endif
 
 //! The base of all graph nodes.
 class graph_node : tbb::internal::no_copy {
     friend class graph;
     template<typename C, typename N>
     friend class graph_iterator;
+
+#if __TBB_PREVIEW_FLOW_GRAPH_NODE_SET
+    friend class internal::get_graph_helper;
+#endif
+
 protected:
     graph& my_graph;
     graph_node *next, *prev;
@@ -459,33 +495,43 @@ inline bool is_graph_active(graph& g) {
     return g.my_is_active;
 }
 
-//! Executes custom functor inside graph arena
-template<typename F>
-inline void execute_in_graph_arena(graph& g, F& f) {
-    if (is_graph_active(g)) {
-        __TBB_ASSERT(g.my_task_arena && g.my_task_arena->is_active(), NULL);
-        g.my_task_arena->execute(f);
-    }
-}
-
-//! Spawns a task inside graph arena
-inline void spawn_in_graph_arena(graph& g, tbb::task& arena_task) {
-    task* task_to_spawn = &arena_task;
 #if __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES
+inline tbb::task& prioritize_task(graph& g, tbb::task& t) {
+    task* critical_task = &t;
     // TODO: change flow graph's interfaces to work with graph_task type instead of tbb::task.
-    graph_task* t = static_cast<graph_task*>(&arena_task);
-    if( t->priority != no_priority ) {
+    graph_task* gt = static_cast<graph_task*>(&t);
+    if( gt->priority != no_priority ) {
         //! Non-preemptive priority pattern. The original task is submitted as a work item to the
         //! priority queue, and a new critical task is created to take and execute a work item with
         //! the highest known priority. The reference counting responsibility is transferred (via
         //! allocate_continuation) to the new task.
-        task_to_spawn = new( t->allocate_continuation() ) priority_task_selector(g.my_priority_queue);
-        tbb::internal::make_critical( *task_to_spawn );
-        g.my_priority_queue.push(t);
+        critical_task = new( gt->allocate_continuation() ) priority_task_selector(g.my_priority_queue);
+        tbb::internal::make_critical( *critical_task );
+        g.my_priority_queue.push(gt);
     }
+    return *critical_task;
+}
+#else
+inline tbb::task& prioritize_task(graph&, tbb::task& t) {
+    return t;
+}
 #endif /* __TBB_PREVIEW_FLOW_GRAPH_PRIORITIES */
-    graph::spawn_functor s_fn(*task_to_spawn);
-    execute_in_graph_arena(g, s_fn);
+
+//! Spawns a task inside graph arena
+inline void spawn_in_graph_arena(graph& g, tbb::task& arena_task) {
+    if (is_graph_active(g)) {
+        graph::spawn_functor s_fn(prioritize_task(g, arena_task));
+        __TBB_ASSERT(g.my_task_arena && g.my_task_arena->is_active(), NULL);
+        g.my_task_arena->execute(s_fn);
+    }
+}
+
+//! Enqueues a task inside graph arena
+inline void enqueue_in_graph_arena(graph &g, tbb::task& arena_task) {
+    if (is_graph_active(g)) {
+        __TBB_ASSERT( g.my_task_arena && g.my_task_arena->is_active(), "Is graph's arena initialized and active?" );
+        task::enqueue(prioritize_task(g, arena_task), *g.my_task_arena);
+    }
 }
 
 inline void add_task_to_graph_reset_list(graph& g, tbb::task *tp) {
@@ -494,7 +540,7 @@ inline void add_task_to_graph_reset_list(graph& g, tbb::task *tp) {
 
 } // namespace internal
 
-} // namespace interface10
+} // namespace interfaceX
 } // namespace flow
 } // namespace tbb
 

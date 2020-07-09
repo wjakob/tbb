@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -44,6 +44,11 @@ class ClassWithVectorType {
 public:
     ClassWithVectorType() {init(-n);}
     ClassWithVectorType( int i ) {init(i);}
+    ClassWithVectorType( const ClassWithVectorType& src ) {
+        for( int i=0; i<n; ++i ) {
+            field[i] = src.field[i];
+        }
+    }
     void operator=( const ClassWithVectorType& src ) {
         __Mvec stack[n];
         for( int i=0; i<n; ++i )

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 #ifndef __TBB_parallel_sort_H
 #define __TBB_parallel_sort_H
+
+#define __TBB_parallel_sort_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #include "parallel_for.h"
 #include "blocked_range.h"
@@ -246,6 +249,9 @@ inline void parallel_sort( T * begin, T * end ) {
 
 
 } // namespace tbb
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_parallel_sort_H_include_area
 
 #endif
 

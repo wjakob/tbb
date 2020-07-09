@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 #ifndef __TBB_task_scheduler_observer_H
 #define __TBB_task_scheduler_observer_H
+
+#define __TBB_task_scheduler_observer_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #include "atomic.h"
 #if __TBB_ARENA_OBSERVER
@@ -156,5 +159,8 @@ typedef tbb::internal::task_scheduler_observer_v3 task_scheduler_observer;
 } // namespace tbb
 
 #endif /* __TBB_SCHEDULER_OBSERVER */
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_task_scheduler_observer_H_include_area
 
 #endif /* __TBB_task_scheduler_observer_H */

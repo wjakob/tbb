@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -44,8 +44,7 @@ namespace internal {
     protected:
         typedef size_t size_type;
         typedef typename aligned_pair<item_type, buffer_item_state>::type buffer_item_type;
-        typedef typename A::template rebind<buffer_item_type>::other allocator_type;
-
+        typedef typename tbb::internal::allocator_rebind<A, buffer_item_type>::type allocator_type;
         buffer_item_type *my_array;
         size_type my_array_size;
         static const size_type initial_buffer_size = 4;
@@ -140,7 +139,7 @@ namespace internal {
             return get_my_item(my_tail - 1);
         }
 
-        // following methods are for reservation of the front of a bufffer.
+        // following methods are for reservation of the front of a buffer.
         void reserve_item(size_type i) { __TBB_ASSERT(my_item_valid(i) && !my_item_reserved(i), "item cannot be reserved"); item(i).second = reserved_item; }
         void release_item(size_type i) { __TBB_ASSERT(my_item_reserved(i), "item is not reserved"); item(i).second = has_item; }
 
