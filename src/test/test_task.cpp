@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -789,7 +789,7 @@ void TestWaitableTask() {
     tbb::task::destroy(wt);
 }
 
-#if __TBB_PREVIEW_CRITICAL_TASKS
+#if __TBB_PREVIEW_CRITICAL_TASKS && __TBB_TASK_PRIORITY
 #include <stdexcept>
 #include <vector>
 #include <map>
@@ -1120,13 +1120,13 @@ void TestSchedulerTaskSelectionWhenEnqueue() {
 
     ASSERT( g_execution_profile[idx].size() == task_num + num_critical_tasks,
             "Incorrect number of tasks executed" );
-    ASSERT( g_execution_profile[idx][0] == outer_critical_task,
-            "Critical task was executed in wrong order." );
+    ASSERT( *(g_execution_profile[idx].end() - 1) == outer_critical_task,
+            "Critical task was executed in wrong order. It should be the last one." );
     bool all_regular = true;
-    for( std::vector<task_marker_t>::const_iterator it = g_execution_profile[idx].begin() + 1;
-         it != g_execution_profile[idx].end(); ++it )
+    for( std::vector<task_marker_t>::const_iterator it = g_execution_profile[idx].begin();
+         it != g_execution_profile[idx].end() - 1; ++it )
         all_regular &= regular_task == *it;
-    ASSERT( all_regular, "Critical task was executed in wrong order." );
+    ASSERT( all_regular, "Critical task was executed in wrong order. It should be the last one." );
 }
 
 enum ways_to_cancel_t {
@@ -1313,7 +1313,7 @@ void test() {
     NestedArenaCase::test();
 }
 } // namespace CriticalTaskSupport
-#endif /* __TBB_PREVIEW_CRITICAL_TASKS */
+#endif /* __TBB_PREVIEW_CRITICAL_TASKS && __TBB_TASK_PRIORITY */
 
 int TestMain () {
 #if TBB_USE_EXCEPTIONS
@@ -1338,7 +1338,7 @@ int TestMain () {
         TestMastersIsolation( p );
     }
     TestWaitableTask();
-#if __TBB_PREVIEW_CRITICAL_TASKS
+#if __TBB_PREVIEW_CRITICAL_TASKS && __TBB_TASK_PRIORITY
     CriticalTaskSupport::test();
 #endif
     return Harness::Done;

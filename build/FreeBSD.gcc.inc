@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2019 Intel Corporation
+# Copyright (c) 2005-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ C_FLAGS = $(CPLUS_FLAGS)
 
 # gcc 6.0 and later have -flifetime-dse option that controls
 # elimination of stores done outside the object lifetime
-ifneq (,$(shell gcc -dumpversion | egrep  "^([6-9])"))
+ifneq (,$(shell gcc -dumpfullversion -dumpversion | egrep  "^([6-9]|1[0-9])"))
     # keep pre-contruction stores for zero initialization
     DSE_KEY = -flifetime-dse=1
 endif

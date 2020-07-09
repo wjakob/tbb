@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2017-2019 Intel Corporation
+    Copyright (c) 2017-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include <iostream>
 #include <algorithm>
 #include <numeric>
+#include <type_traits>
 
 #include "harness.h"
 
@@ -35,9 +36,10 @@ void test_random_iterator(const RandomIt& it) {
     {
         auto t1 = typename RandomIt::difference_type{};
         auto t2 = typename RandomIt::value_type{};
+        auto t3 = typename RandomIt::pointer{};
+        tbb::internal::suppress_unused_warning(t1,t2,t3);
         typename RandomIt::reference ref = *it;
         tbb::internal::suppress_unused_warning(ref);
-        auto t3 = typename RandomIt::pointer{};
         typename RandomIt::iterator_category{};
     }
 
@@ -195,6 +197,12 @@ struct test_zip_iterator {
             // TODO: Add simple check: comparison with sort_fun().
         }
         test_explicit_move(b, b+1);
+        auto iter_base = b.base();
+        static_assert(std::is_same<decltype(iter_base),
+            std::tuple<decltype(in1.begin()), decltype(in2.begin())>>::value, "base returned wrong type");
+        ASSERT(std::get<0>(iter_base) == in1.begin(), "wrong result from base (get<0>)");
+        ASSERT(std::get<1>(iter_base) == in2.begin(), "wrong result from base (get<1>)");
+
         test_random_iterator(b);
     }
 };

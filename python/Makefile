@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2019 Intel Corporation
+# Copyright (c) 2016-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 tbb_root?=..
+BUILDING_PHASE:=0
 include $(tbb_root)/build/common.inc
 .PHONY: all release test install test-install
 
@@ -23,15 +24,15 @@ PY_SETUP=python $(tbb_root)/python/setup.py
 all: install test
 
 clean:
-	$(PY_SETUP) clean -b$(CURDIR)
+	$(PY_SETUP) clean -b$(work_dir)_release
 
 release: CC=$(compiler)
 release: $(SRC) rml
-	$(PY_SETUP) build -b$(CURDIR) -f check
+	$(PY_SETUP) build -b$(work_dir)_release -f check
 
 install: CC=$(compiler)
 install: $(SRC) rml
-	$(PY_SETUP) build -b$(CURDIR) install
+	$(PY_SETUP) build -b$(work_dir)_release build_ext -f -I$(tbb_root)/include -L$(work_dir)_release install -f
 
 test:
 	python -m tbb test

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 #ifndef __TBB_concurrent_queue_H
 #define __TBB_concurrent_queue_H
+
+#define __TBB_concurrent_queue_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #include "internal/_concurrent_queue_impl.h"
 #include "internal/_allocator_traits.h"
@@ -469,5 +472,8 @@ void concurrent_bounded_queue<T,A>::clear() {
 using strict_ppl::concurrent_queue;
 
 } // namespace tbb
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_concurrent_queue_H_include_area
 
 #endif /* __TBB_concurrent_queue_H */

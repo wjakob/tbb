@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2019 Intel Corporation
+# Copyright (c) 2005-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,6 +68,9 @@ endif
 endif # X
 
 MYCXXFLAGS = $(CXXFLAGS) $(UI_CXXFLAGS)
+
+# autodetect C++11 support
+include ../../common/examples-common.inc
 
 all: build run
 release: build
@@ -168,9 +171,9 @@ ifeq ($(UI),mac)
 	cp ../../common/gui/xcode/tbbExample/tbbExample-Info.plist $(NAME)$(SUFFIX).app/Contents/Info.plist
 	cp ../../common/gui/xcode/tbbExample/PkgInfo $(NAME)$(SUFFIX).app/Contents
 	cp ../../common/gui/xcode/tbbExample/en.lproj/* $(APPRES)/en.lproj
-	$(CXX_UI) $(MYCXXFLAGS) $(CXXFLAGS) -c $(MACUISOURCES)
+	$(CXX_UI) $(MYCXXFLAGS) $(CXXFLAGS) -c $(MACUISOURCES) $(CXX0XFLAGS)
 endif # macOS*
-	$(CXX) $(MYCXXFLAGS) -o $@ $(SOURCE) $(MACUIOBJS) $(LIBS)
+	$(CXX) $(MYCXXFLAGS) -o $@ $(SOURCE) $(MACUIOBJS) $(LIBS) $(CXX0XFLAGS)
 	$(RM) *.o
 
 clean: VERSION = *

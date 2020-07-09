@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -618,6 +618,7 @@ void TestParallelismRestored()
         const int P = 4;
         blocking_task_scheduler_init tsi(P);
         {
+            ASSERT(tbb::this_task_arena::max_concurrency() == P, NULL);
             tbb::global_control s(tbb::global_control::max_allowed_parallelism, 1);
             Harness::ExactConcurrencyLevel::check(1);
             // create enforced concurrency in the arena
@@ -625,7 +626,9 @@ void TestParallelismRestored()
                 FFTask* t = new( tbb::task::allocate_root() ) FFTask(&counter);
                 tbb::task::enqueue(*t);
             }
+            ASSERT(tbb::this_task_arena::max_concurrency() == P, NULL);
         }
+        ASSERT(tbb::this_task_arena::max_concurrency() == P, NULL);
         // global control is off, check that concurrency P is available
         Harness::ExactConcurrencyLevel::check(P);
     }
@@ -719,6 +722,7 @@ void TestMultipleControls()
     NativeParallelFor( 2, TestMultipleControlsRun(&barrier) );
 }
 
+#if __TBB_TASK_PRIORITY
 // enqueued tasks with priority below current must not be forgotten,
 // when enqueue enforced priority is enabled
 void TestForgottenEnqueuedTasks()
@@ -747,6 +751,7 @@ void TestForgottenEnqueuedTasks()
     r.wait_for_all();
     tbb::task::destroy(r);
 }
+#endif
 
 int TestMain()
 {
@@ -754,6 +759,7 @@ int TestMain()
     TestConcurrentArenas();
     TestMultipleControls();
     TestNoUnwantedEnforced();
+    TestParallelismRestored();
     const unsigned h_c = tbb::tbb_thread::hardware_concurrency();
     bool excessHC;
     {

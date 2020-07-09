@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -433,7 +433,7 @@ private:
 void TestSendData_withoutSetArgs() {
     graph g;
 
-    typedef send_data_factory< tbb::flow::interface10::internal::port_ref_impl<0, 1> > device_factory;
+    typedef send_data_factory< tbb::flow::interface11::internal::port_ref_impl<0, 1> > device_factory;
 
     device_factory factory;
     device_selector<device_factory> device_selector;
@@ -470,7 +470,7 @@ void TestSendData_setArgsOnly() {
 void TestSendData_portRefOnly() {
     graph g;
 
-    typedef send_data_factory< tbb::flow::interface10::internal::port_ref_impl<0,1> > device_factory;
+    typedef send_data_factory< tbb::flow::interface11::internal::port_ref_impl<0,1> > device_factory;
 
     device_factory factory;
     device_selector<device_factory> device_selector;
@@ -489,7 +489,7 @@ void TestSendData_portRefOnly() {
 void TestSendData_setArgsAndPortRef1() {
     graph g;
 
-    typedef send_data_factory< factory_msg<int>, tbb::flow::interface10::internal::port_ref_impl<0, 1> > device_factory;
+    typedef send_data_factory< factory_msg<int>, tbb::flow::interface11::internal::port_ref_impl<0, 1> > device_factory;
 
     device_factory factory;
     device_selector<device_factory> device_selector;
@@ -508,8 +508,8 @@ void TestSendData_setArgsAndPortRef1() {
 void TestSendData_setArgsAndPortRef2() {
     graph g;
 
-    typedef send_data_factory< factory_msg<int>, tbb::flow::interface10::internal::port_ref_impl<0,0>,
-                               factory_msg<int>, tbb::flow::interface10::internal::port_ref_impl<1,1> > device_factory;
+    typedef send_data_factory< factory_msg<int>, tbb::flow::interface11::internal::port_ref_impl<0,0>,
+                               factory_msg<int>, tbb::flow::interface11::internal::port_ref_impl<1,1> > device_factory;
 
     device_factory factory;
     device_selector<device_factory> device_selector;
@@ -796,11 +796,11 @@ void TestChaining() {
         nodes_vector.emplace_back(g, kernel, device_selector, factory);
     }
 
-    function_node< int, int > source_n(g, unlimited, [&g](const int& value) -> int {
+    function_node< int, int > source_n(g, unlimited, [](const int& value) -> int {
         return value;
     });
 
-    function_node< int > destination_n(g, unlimited, [&g, &STREAMING_GRAPH_CHAIN_LENGTH](const int& result) {
+    function_node< int > destination_n(g, unlimited, [&](const int& result) {
         ASSERT(result == STREAMING_GRAPH_CHAIN_LENGTH, "calculation chain result is wrong");
     });
 

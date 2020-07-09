@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 #ifndef __TBB_combinable_H
 #define __TBB_combinable_H
+
+#define __TBB_combinable_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #include "enumerable_thread_specific.h"
 #include "cache_aligned_allocator.h"
@@ -78,4 +81,8 @@ namespace tbb {
 
     };
 } // namespace tbb
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_combinable_H_include_area
+
 #endif /* __TBB_combinable_H */

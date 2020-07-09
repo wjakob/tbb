@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 #ifndef __TBB_partitioner_H
 #define __TBB_partitioner_H
+
+#define __TBB_partitioner_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #ifndef __TBB_INITIAL_CHUNKS
 // initial task divisions per thread
@@ -671,4 +674,8 @@ private:
 #undef __TBB_INITIAL_CHUNKS
 #undef __TBB_RANGE_POOL_CAPACITY
 #undef __TBB_INIT_DEPTH
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_partitioner_H_include_area
+
 #endif /* __TBB_partitioner_H */

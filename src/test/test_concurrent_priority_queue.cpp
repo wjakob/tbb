@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -81,7 +81,10 @@ public:
     my_throwing_type() : my_data_type() {}
     my_throwing_type(const my_throwing_type& src) : my_data_type(src) {
         if (my_throwing_type::throw_flag) throw 42;
+    }
+    my_throwing_type& operator=(const my_throwing_type& src) {
         priority = src.priority;
+        return *this;
     }
 };
 int my_throwing_type::throw_flag = 0;
@@ -181,7 +184,6 @@ namespace equality_comparison_helpers {
     };
 }
 //TODO: make CPQ more testable instead of hacking ad-hoc operator ==
-//operator == is required for __TBB_TEST_INIT_LIST_SUITE
 template <typename element_type, typename compare_t, typename allocator_t>
 bool operator==(tbb::concurrent_priority_queue<element_type, compare_t, allocator_t> const& lhs, tbb::concurrent_priority_queue<element_type, compare_t, allocator_t> const& rhs){
     using equality_comparison_helpers::to_vector;
@@ -209,13 +211,13 @@ void TestHelpers(){
     TestToVector();
 }
 
-//Comparator with assert in default consructor
+//Comparator with assert in default constructor
 template<typename T>
 class less_a : public std::less<T>
 {
 public:
     explicit less_a(bool no_assert = false) {
-        ASSERT(no_assert,"empty consructor should not be called");
+        ASSERT(no_assert,"empty constructor should not be called");
     };
 };
 

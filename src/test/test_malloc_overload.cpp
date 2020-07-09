@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -370,7 +370,7 @@ void FuncReplacementInfoCheck() {
     func_replacement_status = TBB_malloc_replacement_log(NULL);
     ASSERT(func_replacement_status == status_check, "replacement_opcodes_log() function return wrong status");
 
-    ASSERT_WARNING(func_replacement_status == 0, "Some standart allocation functions was not replaced to tbb_malloc functions.");
+    ASSERT_WARNING(func_replacement_status == 0, "Some standard allocation functions was not replaced to tbb_malloc functions.");
 }
 #endif // MALLOC_WINDOWS_OVERLOAD_ENABLED
 

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
 #endif
 
 #if !__TBB_CPF_BUILD
-#error This code bears a preview status until it proves its usefulness/peformance suitability.
+#error This code bears a preview status until it proves its usefulness/performance suitability.
 #endif
 
 #include "tbb/tbb_stddef.h"

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@
 #ifndef __TBB_concurrent_unordered_map_H
 #define __TBB_concurrent_unordered_map_H
 
+#define __TBB_concurrent_unordered_map_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
+
 #include "internal/_concurrent_unordered_impl.h"
 
 namespace tbb
@@ -37,7 +40,9 @@ protected:
     typedef Hash_compare hash_compare;
     typedef typename tbb::internal::allocator_rebind<Allocator, value_type>::type allocator_type;
 #if __TBB_UNORDERED_NODE_HANDLE_PRESENT
-    typedef internal::node_handle<Key, value_type, Allocator> node_type;
+    typedef tbb::internal::node_handle<key_type, value_type,
+                                  typename internal::split_ordered_list<value_type, allocator_type>::node,
+                                  allocator_type> node_type;
 #endif // __TBB_UNORDERED_NODE_HANDLE_PRESENT
 
     enum { allow_multimapping = Allow_multimapping };
@@ -480,5 +485,8 @@ using interface5::concurrent_unordered_map;
 using interface5::concurrent_unordered_multimap;
 
 } // namespace tbb
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_concurrent_unordered_map_H_include_area
 
 #endif// __TBB_concurrent_unordered_map_H

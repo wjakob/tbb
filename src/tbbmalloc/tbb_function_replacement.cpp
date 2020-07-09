@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ namespace Log {
     static char *records[RECORDS_COUNT + 1];
     static bool replacement_status = true;
 
-    // Internal counter, thats contain number of next string for record
+    // Internal counter that contains number of next string for record
     static unsigned record_number = 0;
 
     // Function that writes info about (not)found opcodes to the Log journal

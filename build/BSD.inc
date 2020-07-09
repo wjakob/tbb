@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2019 Intel Corporation
+# Copyright (c) 2005-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ ifndef arch
 endif
 
 ifndef runtime
-        clang_version:=$(shell clang -v 2>&1 | grep version | sed "s/.*version \([0-9]*\.[0-9]*\).*/\1/")
+        clang_version:=$(shell clang --version | sed -n "1s/.*version \(.*[0-9]\) .*/\1/p")
         os_version:=$(shell uname -r)
         os_kernel_version:=$(shell uname -r | sed -e 's/-.*$$//')
         export runtime:=cc$(clang_version)_kernel$(os_kernel_version)

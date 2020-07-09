@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,12 +14,24 @@
     limitations under the License.
 */
 
+
 #pragma once
 
-#include <wrl/client.h>
-#include <d3d11_1.h>
-#include <d2d1_1.h>
-#include <d2d1effects.h>
-#include <dwrite_1.h>
-#include <wincodec.h>
-#include "App.xaml.h"
+#include "App.g.h"
+#include "DirectXPage.xaml.h"
+
+namespace tbbTachyon
+{
+    /// <summary>
+    /// Provides application-specific behavior to supplement the default Application class.
+    /// </summary>
+    ref class App sealed
+    {
+    public:
+        App();
+        virtual void OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEventArgs^ pArgs) override;
+
+    private:
+        DirectXPage^ m_directXPage;
+    };
+}

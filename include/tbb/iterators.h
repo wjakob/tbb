@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2017-2019 Intel Corporation
+    Copyright (c) 2017-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -156,7 +156,7 @@ struct tuplewrapper : public std::tuple<typename std::enable_if<std::is_referenc
 
 template <typename... Types>
 class zip_iterator {
-    __TBB_STATIC_ASSERT(sizeof...(Types), "Cannot instantiate zip_iterator with empty template parameter pack");
+    __TBB_STATIC_ASSERT(sizeof...(Types)>0, "Cannot instantiate zip_iterator with empty template parameter pack");
     static const std::size_t num_types = sizeof...(Types);
     typedef std::tuple<Types...> it_types;
 public:
@@ -221,6 +221,8 @@ public:
     bool operator==(const zip_iterator& it) const {
         return *this - it == 0;
     }
+    it_types base() const { return my_it; }
+
     bool operator!=(const zip_iterator& it) const { return !(*this == it); }
     bool operator<(const zip_iterator& it) const { return *this - it < 0; }
     bool operator>(const zip_iterator& it) const { return it < *this; }

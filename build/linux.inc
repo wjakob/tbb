@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2019 Intel Corporation
+# Copyright (c) 2005-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ ifndef arch
 endif
 
 ifndef runtime
-        export gcc_version:=$(shell gcc -dumpversion)
+        export gcc_version:=$(shell gcc -dumpfullversion -dumpversion)
         os_version:=$(shell uname -r)
         os_kernel_version:=$(shell uname -r | sed -e 's/-.*$$//')
         export os_glibc_version_full:=$(shell getconf GNU_LIBC_VERSION | grep glibc | sed -e 's/^glibc //')
@@ -115,6 +115,13 @@ TBB.DLL = $(TBB_NO_VERSION.DLL).$(SONAME_SUFFIX)
 TBB.LIB = $(TBB.DLL)
 TBB_NO_VERSION.DLL=libtbb$(CPF_SUFFIX)$(DEBUG_SUFFIX).$(DLL)
 LINK_TBB.LIB = $(TBB_NO_VERSION.DLL)
+
+TBBBIND_NO_VERSION.DLL = libtbbbind$(DEBUG_SUFFIX).$(DLL)
+TBBBIND.DEF = $(tbb_root)/src/tbb/$(def_prefix)-tbbbind-export.def
+TBBBIND.DLL = $(TBBBIND_NO_VERSION.DLL).$(SONAME_SUFFIX)
+TBBBIND.LIB = $(TBBBIND_NO_VERSION.DLL)
+LINK_TBBBIND.LIB = $(TBBBIND.LIB)
+HWLOC.LIB = -lhwloc
 
 MALLOC_NO_VERSION.DLL = libtbbmalloc$(DEBUG_SUFFIX).$(MALLOC_DLL)
 MALLOC.DEF = $(MALLOC_ROOT)/$(def_prefix)-tbbmalloc-export.def

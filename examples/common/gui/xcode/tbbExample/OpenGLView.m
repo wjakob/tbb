@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ extern unsigned int *g_pImg;
 void on_mouse_func(int x, int y, int k);
 void on_key_func(int x);
 
-bool initilized = false;
+bool initialized = false;
 
 #if TARGET_OS_IPHONE
 
@@ -38,7 +38,7 @@ bool initilized = false;
 
 - (void)drawRect:(CGRect)start
 {
-    if (initilized == false) {
+    if (initialized == false) {
         NSLog(@"INITIALIZE");
         timer = [NSTimer scheduledTimerWithTimeInterval:0.03 target:self selector:@selector(update_window) userInfo:nil repeats:YES];
         imageRect = [[UIScreen mainScreen] bounds];
@@ -46,19 +46,19 @@ bool initilized = false;
         const float ratio=(float)g_sizex/g_sizey;
         imageRect.size.height=imageRect.size.width/ratio;
         imageRect.origin.y=(full_height-imageRect.size.height)/2;
-        initilized = true;
+        initialized = true;
     }
-    
+
     CGColorSpaceRef colourSpace = CGColorSpaceCreateDeviceRGB();
     CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, g_pImg, 4*g_sizex*g_sizey, NULL);
-    
+
     CGImageRef inputImage = CGImageCreate(g_sizex, g_sizey, 8, 32, g_sizex * 4, colourSpace,(CGBitmapInfo)kCGImageAlphaNoneSkipLast, dataProvider, NULL, NO, kCGRenderingIntentDefault);
     UIImage *image = [UIImage imageWithCGImage:inputImage];
-    
+
     CGDataProviderRelease(dataProvider);
     CGColorSpaceRelease(colourSpace);
     CGImageRelease(inputImage);
-    
+
     [image drawInRect:imageRect];
 
 }
@@ -89,10 +89,10 @@ bool initilized = false;
 
 - (void) drawRect:(NSRect)start
 {
-    if (initilized == false) {
+    if (initialized == false) {
         NSLog(@"INITIALIZE");
         timer = [NSTimer scheduledTimerWithTimeInterval:0.03 target:self selector:@selector(update_window) userInfo:nil repeats:YES];
-        initilized = true;
+        initialized = true;
     }
     glWindowPos2i(0, (int)self.visibleRect.size.height);
     glPixelZoom( (float)self.visibleRect.size.width /(float)g_sizex,
@@ -102,8 +102,8 @@ bool initilized = false;
 }
 
 -(void) update_window{
-    if( cocoa_update ) [self setNeedsDisplay:YES]; 
-    if( window_title ) [_window setTitle:[NSString stringWithFormat:@"%s", window_title]];
+    if( cocoa_update ) [self setNeedsDisplay:YES];
+    if( window_title ) [self.window setTitle:[NSString stringWithFormat:@"%s", window_title]];
 }
 
 -(void) keyDown:(NSEvent *)theEvent{
@@ -135,7 +135,7 @@ bool initilized = false;
     NSRect rect = self.visibleRect;
     const int x=(int)rect.size.width;
     const int y=(int)rect.size.height;
-    [_window setTitle:[NSString stringWithFormat:@"X=%d Y=%d", x,y]];
+    [self.window setTitle:[NSString stringWithFormat:@"X=%d Y=%d", x,y]];
 }
 
 @end

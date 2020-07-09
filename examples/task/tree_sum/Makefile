@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2019 Intel Corporation
+# Copyright (c) 2005-2020 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,13 +34,16 @@ else ifeq ($(shell uname), Darwin)
 override CXXFLAGS += -Wl,-rpath,$(TBBROOT)/lib
 endif
 
+# autodetect C++11 support
+include ../../common/examples-common.inc
+
 all:	release test
 
 release: *.cpp
-	$(CXX) -O2 -DNDEBUG $(CXXFLAGS) -o $(PROG) $^ -ltbbmalloc -ltbb $(LIBS)
+	$(CXX) -O2 -DNDEBUG $(CXXFLAGS) -o $(PROG) $^ -ltbbmalloc -ltbb $(LIBS) $(CXX0XFLAGS)
 
 debug: *.cpp
-	$(CXX) -O0 -g -DTBB_USE_DEBUG $(CXXFLAGS) -o $(PROG) $^ -ltbbmalloc_debug -ltbb_debug $(LIBS)
+	$(CXX) -O0 -g -DTBB_USE_DEBUG $(CXXFLAGS) -o $(PROG) $^ -ltbbmalloc_debug -ltbb_debug $(LIBS) $(CXX0XFLAGS)
 
 clean:
 	$(RM) $(PROG) *.o *.d

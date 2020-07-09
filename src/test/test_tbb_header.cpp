@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@
 #define TBB_PREVIEW_FLOW_GRAPH_NODES 1
 #define TBB_PREVIEW_BLOCKED_RANGE_ND 1
 #define TBB_PREVIEW_WAITING_FOR_WORKERS 1
+#define TBB_PREVIEW_CONCURRENT_ORDERED_CONTAINERS 1
+#define TBB_PREVIEW_ISOLATED_TASK_GROUP 1
 #endif
 
 #if __TBB_TEST_SECONDARY
@@ -190,8 +192,15 @@ static void TestPreviewNames() {
     TestTypeDefinitionPresence2(blocked_rangeNd<int,4> );
 #endif
     TestTypeDefinitionPresence2(concurrent_lru_cache<int, int> );
+    TestTypeDefinitionPresence( isolated_task_group );
 #if !__TBB_TEST_SECONDARY
     TestExceptionClassExports( std::runtime_error("test"), tbb::internal::eid_blocking_thread_join_impossible );
+#endif
+#if __TBB_CONCURRENT_ORDERED_CONTAINERS_PRESENT
+    TestTypeDefinitionPresence2(concurrent_map<int, int> );
+    TestTypeDefinitionPresence2(concurrent_multimap<int, int> );
+    TestTypeDefinitionPresence(concurrent_set<int> );
+    TestTypeDefinitionPresence(concurrent_multiset<int> );
 #endif
 }
 #endif
@@ -234,6 +243,7 @@ int TestMain ()
     TestFuncDefinitionPresence( flow::remove_edge, (tbb::flow::sender<Msg>&, tbb::flow::receiver<Msg>&), void );
     typedef tbb::flow::tuple<int, int> intpair;
     TestTypeDefinitionPresence( flow::source_node<int> );
+    TestTypeDefinitionPresence( flow::input_node<int> );
     TestTypeDefinitionPresence3(flow::function_node<int, int, tbb::flow::rejecting> );
     TestTypeDefinitionPresence3(flow::multifunction_node<int, intpair, tbb::flow::queueing> );
     TestTypeDefinitionPresence3(flow::async_node<int, int, tbb::flow::queueing_lightweight> );

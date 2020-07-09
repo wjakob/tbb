@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,24 +14,14 @@
     limitations under the License.
 */
 
+#if __TBB_SUPPRESS_INTERNAL_DEPRECATED_MESSAGES
 
-#pragma once
+#if __INTEL_COMPILER || _MSC_VER
+#pragma warning( pop )
+#elif __GNUC__
+#pragma GCC diagnostic pop
+#elif __clang__
+#pragma clang diagnostic pop
+#endif
 
-#include "App.g.h"
-#include "DirectXPage.xaml.h"
-
-namespace tbbTachyon
-{
-    /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
-    /// </summary>
-    ref class App sealed
-    {
-    public:
-        App();
-        virtual void OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEventArgs^ pArgs) override;
-
-    private:
-        DirectXPage^ m_directXPage;
-    };
-}
+#endif  // __TBB_SUPPRESS_INTERNAL_DEPRECATED_MESSAGES

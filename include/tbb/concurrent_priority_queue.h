@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2019 Intel Corporation
+    Copyright (c) 2005-2020 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 #ifndef __TBB_concurrent_priority_queue_H
 #define __TBB_concurrent_priority_queue_H
+
+#define __TBB_concurrent_priority_queue_H_include_area
+#include "internal/_warning_suppress_enable_notice.h"
 
 #include "atomic.h"
 #include "cache_aligned_allocator.h"
@@ -542,5 +545,8 @@ concurrent_priority_queue(std::initializer_list<T> init_list, CompareOrAllocalor
 using interface5::concurrent_priority_queue;
 
 } // namespace tbb
+
+#include "internal/_warning_suppress_disable_notice.h"
+#undef __TBB_concurrent_priority_queue_H_include_area
 
 #endif /* __TBB_concurrent_priority_queue_H */
