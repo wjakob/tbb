@@ -125,13 +125,10 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   endif()
 endif()
 
+set (CMAKE_CXX_STANDARD 11)
+
 if (UNIX)
   add_definitions (-DUSE_PTHREAD)
-
-  check_cxx_compiler_flag ("-std=c++11" SUPPORTS_STDCXX11)
-  if (SUPPORTS_STDCXX11)
-    set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-  endif ()
 
   check_cxx_compiler_flag ("-mrtm -Werror" SUPPORTS_MRTM)
   if (SUPPORTS_MRTM)
