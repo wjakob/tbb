@@ -21,12 +21,14 @@ matrix:
       script:
         - cmake -DCMAKE_INSTALL_PREFIX=~/.local .
         - make install -j2
-        - ctest -j2 --output-on-failure --timeout 500 -E parallel_for
+        - ctest -j2 --output-on-failure --timeout 500
     - os: linux
       compiler: x86_64-w64-mingw32-g++
       script:
-        - cmake -DCMAKE_TOOLCHAIN_FILE=build/mingw_cross_toolchain.cmake .
-        - make -j2
+        - cmake -DCMAKE_TOOLCHAIN_FILE=build/mingw_cross_toolchain.cmake -DCMAKE_INSTALL_PREFIX=~/.local -DCMAKE_CROSSCOMPILING_EMULATOR=/usr/bin/wine-development .
+        - make install -j2
+        - cp -v /usr/lib/gcc/x86_64-w64-mingw32/5.3-posix/*.dll /usr/x86_64-w64-mingw32/lib/*.dll .
+        - ctest -j2 --output-on-failure --timeout 500
       addons:
         apt:
           packages:
@@ -35,3 +37,4 @@ matrix:
             - binutils-mingw-w64-x86-64
             - cmake
             - make
+            - wine-development
