@@ -390,6 +390,17 @@ if (TBB_BUILD_SHARED)
   install(EXPORT TBB DESTINATION ${TBB_CMAKE_PACKAGE_INSTALL_DIR} NAMESPACE TBB:: FILE TBBConfig.cmake)
 endif()
 
+# version file
+set (_VERSION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/include/tbb/tbb_stddef.h)
+file (STRINGS ${_VERSION_FILE} _VERSION_MAJOR_STRING REGEX ".*define[ ]+TBB_VERSION_MAJOR[ ]+[0-9]+.*")
+file (STRINGS ${_VERSION_FILE} _VERSION_MINOR_STRING REGEX ".*define[ ]+TBB_VERSION_MINOR[ ]+[0-9]+.*")
+string (REGEX REPLACE ".*TBB_VERSION_MAJOR[ ]+([0-9]+)" "\\1" TBB_MAJOR_VERSION ${_VERSION_MAJOR_STRING})
+string (REGEX REPLACE ".*TBB_VERSION_MINOR[ ]+([0-9]+)" "\\1" TBB_MINOR_VERSION ${_VERSION_MINOR_STRING})
+set (TBB_VERSION_STRING "${TBB_MAJOR_VERSION}.${TBB_MINOR_VERSION}")
+include (CMakePackageConfigHelpers)
+write_basic_package_version_file (TBBConfigVersion.cmake VERSION "${TBB_VERSION_STRING}" COMPATIBILITY AnyNewerVersion)
+install (FILES ${CMAKE_CURRENT_BINARY_DIR}/TBBConfigVersion.cmake DESTINATION "${TBB_CMAKE_PACKAGE_INSTALL_DIR}")
+
 # version_string.ver
 if (UNIX AND NOT TBB_NO_DATE)
   execute_process (COMMAND date "+%a, %d %b %Y %H:%M:%S %z"
