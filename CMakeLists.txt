@@ -631,7 +631,7 @@ if (TBB_BUILD_PYTHON)
 
     if(UNIX AND NOT APPLE)
       add_library(irml SHARED python/rml/ipc_server.cpp python/rml/ipc_utils.cpp src/tbb/cache_aligned_allocator.cpp src/tbb/dynamic_link.cpp src/tbb/tbb_misc_ex.cpp src/tbb/tbb_misc.cpp)
-      target_compile_definitions(irml PRIVATE DO_ITT_NOTIFY=0)
+      target_compile_definitions(irml PRIVATE DO_ITT_NOTIFY=0 USE_PTHREAD=1)
       target_link_libraries(irml PRIVATE tbb)
       set_target_properties(irml PROPERTIES VERSION 1)
       install(TARGETS irml DESTINATION ${TBB_INSTALL_LIBRARY_DIR})
