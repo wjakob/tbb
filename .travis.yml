@@ -6,7 +6,7 @@ matrix:
     - os: linux
       compiler: g++
       script:
-        - cmake -DCMAKE_INSTALL_PREFIX=~/.local .
+        - cmake -DTBB_BUILD_PYTHON=ON -DCMAKE_INSTALL_PREFIX=~/.local .
         - make install -j2
         - ctest -j2 --output-on-failure --timeout 500
       addons:
