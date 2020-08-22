@@ -215,9 +215,13 @@ else()
 endif()
 
 if (MINGW)
-  set (ARCH_PREFIX "${ARCH_PREFIX}-gcc")
-  # there's no win32-gcc-tbb-export.def, use lin32-tbb-export.def
-  execute_process (COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/lin32-tbb-export.def ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/win32-gcc-tbb-export.def)
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set (ARCH_PREFIX "${ARCH_PREFIX}-clang")
+  else()
+    set (ARCH_PREFIX "${ARCH_PREFIX}-gcc")
+    # there's no win32-gcc-tbb-export.def, use lin32-tbb-export.def
+    execute_process (COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/lin32-tbb-export.def ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/win32-gcc-tbb-export.def)
+  endif()
 endif()
 
 if (MSVC)
@@ -279,7 +283,8 @@ if (TBB_BUILD_SHARED)
     set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,\"${CMAKE_CURRENT_BINARY_DIR}/tbb.def\"")
   elseif (MSVC)
     set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "/DEF:\"${CMAKE_CURRENT_BINARY_DIR}/tbb.def\"")
-  else ()
+  elseif (MINGW AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")) # do nothing
+  else()
     set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,\"${CMAKE_CURRENT_BINARY_DIR}/tbb.def\"")
   endif()
 
@@ -335,6 +340,7 @@ if(TBB_BUILD_TBBMALLOC)
       set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-exported_symbols_list,\"${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def\"")
     elseif (MSVC)
       set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "/DEF:\"${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def\"")
+    elseif (MINGW AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")) # do nothing
     else ()
       set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,\"${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def\"")
     endif()
