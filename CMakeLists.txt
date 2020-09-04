@@ -86,6 +86,7 @@ set(tbbmalloc_proxy_src
   src/tbbmalloc/tbb_function_replacement.cpp)
 
 add_library (tbb_interface INTERFACE)
+add_definitions(-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1)
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "(i386|x86_64)")
   if (NOT APPLE AND NOT MINGW)
