@@ -61,6 +61,10 @@ option(TBB_BUILD_TESTS           "Build TBB tests and enable testing infrastruct
 option(TBB_NO_DATE               "Do not save the configure date in the version string" OFF)
 option(TBB_BUILD_PYTHON          "Build TBB Python bindings" OFF)
 
+# When this repository is part of a larger build system of a parent project
+# we may not want TBB to set up default installation targets
+option(TBB_INSTALL_TARGETS       "Include build targets for 'make install'" ON)
+
 if(APPLE)
   set(CMAKE_MACOSX_RPATH ON)
 endif()
@@ -258,7 +262,9 @@ if (TBB_BUILD_STATIC)
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_DYNAMIC_LOAD_ENABLED=0")
   set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_SOURCE_DIRECTLY_INCLUDED=1")
   set_property(TARGET tbb_static APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
-  install(TARGETS tbb_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
+  if (TBB_INSTALL_TARGETS)
+    install(TARGETS tbb_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
+  endif()
   if (MSVC)
     target_compile_definitions(tbb_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1)
   endif()
@@ -284,12 +290,14 @@ if (TBB_BUILD_SHARED)
     set_property(TARGET tbb APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,\"${CMAKE_CURRENT_BINARY_DIR}/tbb.def\"")
   endif()
 
-  install(TARGETS tbb EXPORT TBB
-          LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
-          ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
-          RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
-  if (MSVC)
-    install(FILES $<TARGET_PDB_FILE:tbb> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+  if (TBB_INSTALL_TARGETS)
+    install(TARGETS tbb EXPORT TBB
+            LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
+            ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
+            RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
+    if (MSVC)
+      install(FILES $<TARGET_PDB_FILE:tbb> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+    endif()
   endif()
   if (UNIX AND NOT APPLE)
     target_link_libraries(tbb PUBLIC pthread dl)
@@ -323,7 +331,9 @@ if(TBB_BUILD_TBBMALLOC)
     if (MSVC)
       target_compile_definitions(tbbmalloc_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
     endif()
-    install(TARGETS tbbmalloc_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
+    if (TBB_INSTALL_TARGETS)
+      install(TARGETS tbbmalloc_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
+    endif()
   endif()
 
   if (TBB_BUILD_SHARED)
@@ -342,12 +352,14 @@ if(TBB_BUILD_TBBMALLOC)
     if (MSVC)
       target_compile_definitions(tbbmalloc PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
     endif()
-    install(TARGETS tbbmalloc EXPORT TBB
-            LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
-            ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
-            RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
-    if (MSVC)
-      install(FILES $<TARGET_PDB_FILE:tbbmalloc> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+    if (TBB_INSTALL_TARGETS)
+      install(TARGETS tbbmalloc EXPORT TBB
+              LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
+              ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
+              RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
+      if (MSVC)
+        install(FILES $<TARGET_PDB_FILE:tbbmalloc> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+      endif()
     endif()
     if (UNIX AND NOT APPLE)
       target_link_libraries(tbbmalloc PUBLIC pthread dl)
@@ -364,7 +376,9 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     set_property(TARGET tbbmalloc_proxy_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_DYNAMIC_LOAD_ENABLED=0")
     set_property(TARGET tbbmalloc_proxy_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_SOURCE_DIRECTLY_INCLUDED=1")
     set_property(TARGET tbbmalloc_proxy_static APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
-    install(TARGETS tbbmalloc_proxy_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
+    if (TBB_INSTALL_TARGETS)
+      install(TARGETS tbbmalloc_proxy_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
+    endif()
   endif()
 
   if (TBB_BUILD_SHARED)
@@ -373,12 +387,14 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
     set_property(TARGET tbbmalloc_proxy APPEND PROPERTY COMPILE_DEFINITIONS "__TBBMALLOC_BUILD=1")
     set_property(TARGET tbbmalloc_proxy APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     target_link_libraries(tbbmalloc_proxy PUBLIC tbbmalloc)
-    install(TARGETS tbbmalloc_proxy EXPORT TBB
-            LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
-            ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
-            RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
-    if (MSVC)
-      install(FILES $<TARGET_PDB_FILE:tbbmalloc_proxy> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+    if (TBB_INSTALL_TARGETS)
+      install(TARGETS tbbmalloc_proxy EXPORT TBB
+              LIBRARY DESTINATION ${TBB_INSTALL_LIBRARY_DIR}
+              ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR}
+              RUNTIME DESTINATION ${TBB_INSTALL_RUNTIME_DIR})
+      if (MSVC)
+        install(FILES $<TARGET_PDB_FILE:tbbmalloc_proxy> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
+      endif()
     endif()
     if (UNIX AND NOT APPLE)
       target_link_libraries(tbbmalloc_proxy PUBLIC pthread dl)
@@ -386,21 +402,25 @@ if(TBB_BUILD_TBBMALLOC_PROXY)
   endif()
 endif()
 
-install(DIRECTORY include/tbb DESTINATION ${TBB_INSTALL_INCLUDE_DIR})
-if (TBB_BUILD_SHARED)
-  install(EXPORT TBB DESTINATION ${TBB_CMAKE_PACKAGE_INSTALL_DIR} NAMESPACE TBB:: FILE TBBConfig.cmake)
+if (TBB_INSTALL_TARGETS)
+  install(DIRECTORY include/tbb DESTINATION ${TBB_INSTALL_INCLUDE_DIR})
+  if (TBB_BUILD_SHARED)
+    install(EXPORT TBB DESTINATION ${TBB_CMAKE_PACKAGE_INSTALL_DIR} NAMESPACE TBB:: FILE TBBConfig.cmake)
+  endif()
 endif()
 
 # version file
-set (_VERSION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/include/tbb/tbb_stddef.h)
-file (STRINGS ${_VERSION_FILE} _VERSION_MAJOR_STRING REGEX ".*define[ ]+TBB_VERSION_MAJOR[ ]+[0-9]+.*")
-file (STRINGS ${_VERSION_FILE} _VERSION_MINOR_STRING REGEX ".*define[ ]+TBB_VERSION_MINOR[ ]+[0-9]+.*")
-string (REGEX REPLACE ".*TBB_VERSION_MAJOR[ ]+([0-9]+)" "\\1" TBB_MAJOR_VERSION ${_VERSION_MAJOR_STRING})
-string (REGEX REPLACE ".*TBB_VERSION_MINOR[ ]+([0-9]+)" "\\1" TBB_MINOR_VERSION ${_VERSION_MINOR_STRING})
-set (TBB_VERSION_STRING "${TBB_MAJOR_VERSION}.${TBB_MINOR_VERSION}")
-include (CMakePackageConfigHelpers)
-write_basic_package_version_file (TBBConfigVersion.cmake VERSION "${TBB_VERSION_STRING}" COMPATIBILITY AnyNewerVersion)
-install (FILES ${CMAKE_CURRENT_BINARY_DIR}/TBBConfigVersion.cmake DESTINATION "${TBB_CMAKE_PACKAGE_INSTALL_DIR}")
+if (TBB_INSTALL_TARGETS)
+  set (_VERSION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/include/tbb/tbb_stddef.h)
+  file (STRINGS ${_VERSION_FILE} _VERSION_MAJOR_STRING REGEX ".*define[ ]+TBB_VERSION_MAJOR[ ]+[0-9]+.*")
+  file (STRINGS ${_VERSION_FILE} _VERSION_MINOR_STRING REGEX ".*define[ ]+TBB_VERSION_MINOR[ ]+[0-9]+.*")
+  string (REGEX REPLACE ".*TBB_VERSION_MAJOR[ ]+([0-9]+)" "\\1" TBB_MAJOR_VERSION ${_VERSION_MAJOR_STRING})
+  string (REGEX REPLACE ".*TBB_VERSION_MINOR[ ]+([0-9]+)" "\\1" TBB_MINOR_VERSION ${_VERSION_MINOR_STRING})
+  set (TBB_VERSION_STRING "${TBB_MAJOR_VERSION}.${TBB_MINOR_VERSION}")
+  include (CMakePackageConfigHelpers)
+  write_basic_package_version_file (TBBConfigVersion.cmake VERSION "${TBB_VERSION_STRING}" COMPATIBILITY AnyNewerVersion)
+  install (FILES ${CMAKE_CURRENT_BINARY_DIR}/TBBConfigVersion.cmake DESTINATION "${TBB_CMAKE_PACKAGE_INSTALL_DIR}")
+endif()
 
 # version_string.ver
 if (UNIX AND NOT TBB_NO_DATE)
@@ -623,19 +643,23 @@ if (TBB_BUILD_PYTHON)
     else ()
       set (PYTHON_SITE_PACKAGES lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages)
     endif ()
-    install(FILES python/TBB.py
-            DESTINATION ${PYTHON_SITE_PACKAGES})
-    install(FILES python/tbb/__init__.py python/tbb/pool.py python/tbb/test.py python/tbb/__main__.py ${CMAKE_CURRENT_BINARY_DIR}/api.py
-            DESTINATION ${PYTHON_SITE_PACKAGES}/tbb)
-    install(TARGETS ${module_target}
-            DESTINATION ${PYTHON_SITE_PACKAGES}/tbb)
+    if (TBB_INSTALL_TARGETS)
+      install(FILES python/TBB.py
+              DESTINATION ${PYTHON_SITE_PACKAGES})
+      install(FILES python/tbb/__init__.py python/tbb/pool.py python/tbb/test.py python/tbb/__main__.py ${CMAKE_CURRENT_BINARY_DIR}/api.py
+              DESTINATION ${PYTHON_SITE_PACKAGES}/tbb)
+      install(TARGETS ${module_target}
+              DESTINATION ${PYTHON_SITE_PACKAGES}/tbb)
+    endif()
 
     if(UNIX AND NOT APPLE)
       add_library(irml SHARED python/rml/ipc_server.cpp python/rml/ipc_utils.cpp src/tbb/cache_aligned_allocator.cpp src/tbb/dynamic_link.cpp src/tbb/tbb_misc_ex.cpp src/tbb/tbb_misc.cpp)
       target_compile_definitions(irml PRIVATE DO_ITT_NOTIFY=0)
       target_link_libraries(irml PRIVATE tbb)
       set_target_properties(irml PROPERTIES VERSION 1)
-      install(TARGETS irml DESTINATION ${TBB_INSTALL_LIBRARY_DIR})
+      if (TBB_INSTALL_TARGETS)
+        install(TARGETS irml DESTINATION ${TBB_INSTALL_LIBRARY_DIR})
+      endif()
     endif ()
   endif ()
 endif ()
