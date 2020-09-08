@@ -147,10 +147,10 @@ elseif(WIN32)
   target_compile_definitions(tbb_interface INTERFACE USE_WINTHREAD _WIN32_WINNT=0x0600)
   if (MSVC)
     enable_language(ASM_MASM)
-    target_compile_options(tbb_interface INTERFACE "/GS- /Zc:wchar_t /Zc:forScope")
+    target_compile_options(tbb_interface INTERFACE /GS- /Zc:wchar_t /Zc:forScope)
     check_cxx_compiler_flag ("/volatile:iso" SUPPORTS_VOLATILE_FLAG)
     if (SUPPORTS_VOLATILE_FLAG)
-      target_compile_options(tbb_interface INTERFACE "/volatile:iso")
+      target_compile_options(tbb_interface INTERFACE /volatile:iso)
     endif ()
     target_compile_options(tbb_interface INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/wd4267 /wd4800 /wd4146 /wd4244 /wd4577 /wd4018>)
     if (NOT CMAKE_SIZEOF_VOID_P)
@@ -201,7 +201,7 @@ endif()
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
    check_cxx_compiler_flag ("-flifetime-dse=1" SUPPORTS_FLIFETIME)
    if (SUPPORTS_FLIFETIME)
-     target_compile_options(tbb_interface INTERFACE "-flifetime-dse=1")
+     target_compile_options(tbb_interface INTERFACE -flifetime-dse=1)
    endif()
 endif()
 
@@ -259,15 +259,21 @@ if (TBB_BUILD_STATIC)
   add_library(tbb_static STATIC ${tbb_src})
   target_link_libraries(tbb_static PRIVATE tbb_interface)
   target_include_directories(tbb_static INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:${TBB_INSTALL_INCLUDE_DIR}>")
-  set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
-  set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_DYNAMIC_LOAD_ENABLED=0")
-  set_property(TARGET tbb_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_SOURCE_DIRECTLY_INCLUDED=1")
   set_property(TARGET tbb_static APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
   if (TBB_INSTALL_TARGETS)
     install(TARGETS tbb_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
   endif()
+
+  target_compile_definitions(tbb_static
+    PRIVATE
+      -D__TBB_BUILD=1
+      -D__TBB_DYNAMIC_LOAD_ENABLED=0
+      -D__TBB_SOURCE_DIRECTLY_INCLUDED=1)
+
   if (MSVC)
-    target_compile_definitions(tbb_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1)
+    target_compile_definitions(tbb_static
+      PUBLIC -D__TBB_NO_IMPLICIT_LINKAGE=1
+      PRIVATE -D_CRT_SECURE_NO_WARNINGS)
   endif()
 
   if (UNIX AND NOT APPLE)
@@ -279,11 +285,20 @@ if (TBB_BUILD_SHARED)
   add_library(tbb SHARED ${tbb_src})
   target_link_libraries(tbb PRIVATE tbb_interface)
   target_include_directories(tbb INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:${TBB_INSTALL_INCLUDE_DIR}>")
-  set_property(TARGET tbb APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_BUILD=1")
   set_property(TARGET tbb APPEND_STRING PROPERTY COMPILE_FLAGS ${ENABLE_RTTI})
   if (TBB_SET_SOVERSION)
     set_property(TARGET tbb PROPERTY SOVERSION 2)
   endif ()
+
+  target_compile_definitions(tbb
+    PRIVATE -D__TBB_BUILD=1)
+
+  if (MSVC)
+    target_compile_definitions(tbb
+      PUBLIC -D__TBB_NO_IMPLICIT_LINKAGE=1
+      PRIVATE -D_CRT_SECURE_NO_WARNINGS)
+  endif()
+
   add_dependencies(tbb tbb_def_files)
 
   if (APPLE)
@@ -303,11 +318,9 @@ if (TBB_BUILD_SHARED)
       install(FILES $<TARGET_PDB_FILE:tbb> DESTINATION ${TBB_INSTALL_RUNTIME_DIR} OPTIONAL)
     endif()
   endif()
+
   if (UNIX AND NOT APPLE)
     target_link_libraries(tbb PUBLIC pthread dl)
-  endif()
-  if (MSVC)
-    target_compile_definitions(tbb PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1)
   endif()
 endif()
 
