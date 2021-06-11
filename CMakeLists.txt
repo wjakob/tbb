@@ -160,11 +160,20 @@ elseif(WIN32)
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
       list(APPEND tbb_src src/tbb/intel64-masm/atomic_support.asm
         src/tbb/intel64-masm/itsx.asm src/tbb/intel64-masm/intel64_misc.asm)
+      set_source_files_properties(
+        src/tbb/intel64-masm/atomic_support.asm
+        src/tbb/intel64-masm/itsx.asm src/tbb/intel64-masm/intel64_misc.asm
+        src/tbb/intel64-masm/atomic_support.asm
+        PROPERTIES LANGUAGE ASM_MASM)
       list(APPEND tbbmalloc_src src/tbb/intel64-masm/atomic_support.asm)
       set(CMAKE_ASM_MASM_FLAGS "/DEM64T=1 ${CMAKE_ASM_MASM_FLAGS}")
     else()
       list(APPEND tbb_src src/tbb/ia32-masm/atomic_support.asm
         src/tbb/ia32-masm/itsx.asm src/tbb/ia32-masm/lock_byte.asm)
+      set_source_files_properties(
+        src/tbb/ia32-masm/atomic_support.asm
+        src/tbb/ia32-masm/itsx.asm src/tbb/ia32-masm/lock_byte.asm
+        PROPERTIES LANGUAGE ASM_MASM)
       # Enable SAFESEH feature for assembly (x86 builds only).
       set(CMAKE_ASM_MASM_FLAGS "/safeseh ${CMAKE_ASM_MASM_FLAGS}")
     endif()
