@@ -788,7 +788,7 @@ void doMallocReplacement()
 extern "C" BOOL WINAPI DllMain( HINSTANCE hInst, DWORD callReason, LPVOID reserved )
 {
 
-    if ( callReason==DLL_PROCESS_ATTACH && reserved && hInst ) {
+    if ( callReason==DLL_PROCESS_ATTACH && hInst ) {
 #if !__TBB_WIN8UI_SUPPORT
         if (!tbb::internal::GetBoolEnvironmentVariable("TBB_MALLOC_DISABLE_REPLACEMENT"))
         {
