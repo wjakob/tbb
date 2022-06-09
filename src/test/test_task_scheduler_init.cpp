@@ -321,7 +321,7 @@ void TestBlockingTerminate() {
 int TestMain () {
     // Do not use tbb::task_scheduler_init directly in the scope of main's body,
     // as a static variable, or as a member of a static variable.
-#if _MSC_VER && !__TBB_NO_IMPLICIT_LINKAGE && !defined(__TBB_LIB_NAME)
+#if _MSC_VER && __TBB_IMPLICIT_LINKAGE && !defined(__TBB_LIB_NAME)
     #ifdef _DEBUG
         ASSERT(!GetModuleHandle(_T("tbb.dll")) && GetModuleHandle(_T("tbb_debug.dll")),
             "test linked with wrong (non-debug) TBB library");
@@ -329,7 +329,7 @@ int TestMain () {
         ASSERT(!GetModuleHandle(_T("tbb_debug.dll")) && GetModuleHandle(_T("tbb.dll")),
             "test linked with wrong (debug) TBB library");
     #endif
-#endif /* _MSC_VER && !__TBB_NO_IMPLICIT_LINKAGE && !__TBB_LIB_NAME */
+#endif
     std::srand(2);
     REMARK("testing master thread\n");
     int threads = DefaultThreads*2;

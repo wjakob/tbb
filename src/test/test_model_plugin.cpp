@@ -177,7 +177,7 @@ int TestMain () {
         REMARK("Iteration %d, loading plugin library...\n", i);
         hLib = Harness::OpenLibrary(TEST_LIBRARY_NAME("test_model_plugin_dll"));
         if ( !hLib ) {
-#if !__TBB_NO_IMPLICIT_LINKAGE
+#if __TBB_IMPLICIT_LINKAGE
 #if _WIN32 || _WIN64
             report_error_in("LoadLibrary");
 #else

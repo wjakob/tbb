@@ -63,7 +63,7 @@ int __TBB_load_ittnotify() {
 
 #endif /* DO_ITT_NOTIFY */
 
-#define __TBB_NO_IMPLICIT_LINKAGE 1
+#define __TBB_IMPLICIT_LINKAGE 0
 #include "itt_notify.h"
 
 namespace tbb {

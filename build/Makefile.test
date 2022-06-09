@@ -31,7 +31,7 @@ DEBUG_SUFFIX=$(findstring _debug,$(call cross_cfg,_$(cfg)))
 #------------------------------------------------------------
 
 VPATH = $(tbb_root)/src/tbb/$(ASSEMBLY_SOURCE) $(tbb_root)/src/tbb $(tbb_root)/src/rml/client $(tbb_root)/src/old $(tbb_root)/src/test $(tbb_root)/src/perf
-CPLUS_FLAGS += $(if $(crosstest),$(DEFINE_KEY)__TBB_NO_IMPLICIT_LINKAGE=1) \
+CPLUS_FLAGS += $(if $(crosstest),$(DEFINE_KEY)__TBB_IMPLICIT_LINKAGE=0) \
                $(if $(no_exceptions),$(DEFINE_KEY)__TBB_TEST_NO_EXCEPTIONS=1) \
                $(if $(LINK_TBB.LIB),$(DEFINE_KEY)TEST_USES_TBB=1)
 

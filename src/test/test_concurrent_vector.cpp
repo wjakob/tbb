@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#if _MSC_VER
+#if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
 #define _SCL_SECURE_NO_WARNINGS
 #endif
 
@@ -401,6 +401,7 @@ void TestSequentialFor() {
     }
 
     // cross-allocator tests
+#if defined(CONCURRENT_VECTOR_COPY_CONSTRUCT_FROM_OTHER_ALLOCATOR)
 #if !defined(_WIN64) || defined(_CPPLIB_VER)
     typedef local_counting_allocator<std::allocator<int>, size_t> allocator1_t;
     typedef tbb::cache_aligned_allocator<int> allocator2_t;
@@ -411,6 +412,7 @@ void TestSequentialFor() {
     ASSERT( (v1 == v) && !(v2 != v), NULL);
     ASSERT( !(v1 < v) && !(v2 > v), NULL);
     ASSERT( (v1 <= v) && (v2 >= v), NULL);
+#endif
 #endif
 }
 
@@ -1646,11 +1648,13 @@ void TypeTester( const std::vector<Type> &vec ) {
     tbb::concurrent_vector< Type, debug_allocator<Type> > c4;
     std::copy( vec.begin(), vec.end(), std::back_inserter(c4) );
     Examine<default_construction_present>( c4, vec );
+#if defined(CONCURRENT_VECTOR_COPY_CONSTRUCT_FROM_OTHER_ALLOCATOR)
     // Copying constructor for vector with different allocator type.
     tbb::concurrent_vector<Type> c5(c4);
     Examine<default_construction_present>( c5, vec );
     tbb::concurrent_vector< Type, debug_allocator<Type> > c6(c3);
     Examine<default_construction_present>( c6, vec );
+#endif
     // Construction with initial size specified by argument n.
     do_default_construction_test<default_construction_present>()(test_default_construction<Type>(vec));
     // Construction with initial size specified by argument n, initialization by copying of t, and given allocator instance.

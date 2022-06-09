@@ -287,7 +287,7 @@ if (TBB_BUILD_STATIC)
 
   if (MSVC)
     target_compile_definitions(tbb_static
-      PUBLIC -D__TBB_NO_IMPLICIT_LINKAGE=1
+      PUBLIC -D__TBB_IMPLICIT_LINKAGE=0
       PRIVATE -D_CRT_SECURE_NO_WARNINGS)
   endif()
 
@@ -310,7 +310,7 @@ if (TBB_BUILD_SHARED)
 
   if (MSVC)
     target_compile_definitions(tbb
-      PUBLIC -D__TBB_NO_IMPLICIT_LINKAGE=1
+      PUBLIC -D__TBB_IMPLICIT_LINKAGE=0
       PRIVATE -D_CRT_SECURE_NO_WARNINGS)
   endif()
 
@@ -361,7 +361,7 @@ if(TBB_BUILD_TBBMALLOC)
     set_property(TARGET tbbmalloc_static APPEND PROPERTY COMPILE_DEFINITIONS "__TBB_SOURCE_DIRECTLY_INCLUDED=1")
     set_property(TARGET tbbmalloc_static APPEND_STRING PROPERTY COMPILE_FLAGS ${DISABLE_RTTI})
     if (MSVC)
-      target_compile_definitions(tbbmalloc_static PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
+      target_compile_definitions(tbbmalloc_static PUBLIC __TBB_IMPLICIT_LINKAGE=0 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
     endif()
     if (TBB_INSTALL_TARGETS)
       install(TARGETS tbbmalloc_static ARCHIVE DESTINATION ${TBB_INSTALL_ARCHIVE_DIR})
@@ -385,7 +385,7 @@ if(TBB_BUILD_TBBMALLOC)
       set_property(TARGET tbbmalloc APPEND PROPERTY LINK_FLAGS "-Wl,-version-script,\"${CMAKE_CURRENT_BINARY_DIR}/tbbmalloc.def\"")
     endif()
     if (MSVC)
-      target_compile_definitions(tbbmalloc PUBLIC __TBB_NO_IMPLICIT_LINKAGE=1 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
+      target_compile_definitions(tbbmalloc PUBLIC __TBB_IMPLICIT_LINKAGE=0 __TBBMALLOC_NO_IMPLICIT_LINKAGE=1)
     endif()
     if (TBB_INSTALL_TARGETS)
       install(TARGETS tbbmalloc EXPORT TBB
