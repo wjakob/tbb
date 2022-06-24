@@ -16,7 +16,7 @@
 
 #include "harness_allocator_overload.h"
 #define HARNESS_NO_PARSE_COMMAND_LINE 1
-#define __TBB_NO_IMPLICIT_LINKAGE 1
+#define __TBB_IMPLICIT_LINKAGE 0
 
 #include "harness.h"
 

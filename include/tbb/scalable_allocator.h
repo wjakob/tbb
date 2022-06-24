@@ -199,10 +199,10 @@ size_t pool_msize(MemoryPool *memPool, void *object);
 #include <new>      /* To use new with the placement argument */
 
 /* Ensure that including this header does not cause implicit linkage with TBB */
-#ifndef __TBB_NO_IMPLICIT_LINKAGE
-    #define __TBB_NO_IMPLICIT_LINKAGE 1
+#ifndef __TBB_IMPLICIT_LINKAGE
+    #define __TBB_IMPLICIT_LINKAGE 0
     #include "tbb_stddef.h"
-    #undef  __TBB_NO_IMPLICIT_LINKAGE
+    #undef  __TBB_IMPLICIT_LINKAGE
 #else
     #include "tbb_stddef.h"
 #endif

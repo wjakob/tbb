@@ -28,7 +28,7 @@
 #endif
 
 // Suppress usage of #pragma comment
-#define __TBB_NO_IMPLICIT_LINKAGE 1
+#define __TBB_IMPLICIT_LINKAGE 0
 
 // Enable preview features if any
 #define __TBB_BUILD 1

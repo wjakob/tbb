@@ -15,7 +15,7 @@
 */
 
 #define __TBB_EXTRA_DEBUG 1
-#if _MSC_VER
+#if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
 #define _SCL_SECURE_NO_WARNINGS
 #endif
 

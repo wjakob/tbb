@@ -39,7 +39,7 @@
 #include <climits>
 
 #if _MSC_VER
-    #if ! __TBB_NO_IMPLICIT_LINKAGE
+    #if __TBB_IMPLICIT_LINKAGE
         #ifdef _DEBUG
             #pragma comment( linker, "/nodefaultlib:tbb_debug.lib" )
             #pragma comment( linker, "/defaultlib:tbbproxy_debug.lib" )

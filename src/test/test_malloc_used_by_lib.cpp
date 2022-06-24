@@ -61,7 +61,7 @@ static RegisterProcessShutdownNotification reg;
 
 #else // _USRDLL
 
-#define __TBB_NO_IMPLICIT_LINKAGE 1
+#define __TBB_IMPLICIT_LINKAGE 0
 #include "harness_dynamic_libs.h"
 #if __TBB_WIN8UI_SUPPORT
 // FIXME: fix the test to support Windows* 8 Store Apps mode.

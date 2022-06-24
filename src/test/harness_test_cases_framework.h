@@ -17,7 +17,7 @@
 #ifndef tbb_harness_test_cases_framework_H
 #define tbb_harness_test_cases_framework_H
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
     #define _SCL_SECURE_NO_WARNINGS
 #endif
 

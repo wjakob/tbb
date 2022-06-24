@@ -22,8 +22,8 @@
 #include "tbb/atomic.h"
 #include "../tbb/tls.h"
 // Note: This file is used by RML tests which do not link TBB.
-// Functionality that requires TBB binaries must be guarded by !__TBB_NO_IMPLICIT_LINKAGE
-#if !defined(__TBB_NO_IMPLICIT_LINKAGE)
+// Functionality that requires TBB binaries must be guarded by __TBB_IMPLICIT_LINKAGE
+#if __TBB_IMPLICIT_LINKAGE
 #include "tbb/mutex.h"
 #include "tbb/task.h"
 #include "tbb/combinable.h"
@@ -79,7 +79,7 @@ public:
     }
 }; // ConcurrencyTracker
 
-#if !defined(__TBB_NO_IMPLICIT_LINKAGE)
+#if __TBB_IMPLICIT_LINKAGE
 struct ExactConcurrencyLevel : NoCopy {
     typedef tbb::combinable<size_t> Combinable;
 private:
@@ -163,7 +163,7 @@ public:
 
 tbb::mutex ExactConcurrencyLevel::global_mutex;
 
-#endif /* !defined(__TBB_NO_IMPLICIT_LINKAGE) */
+#endif /* __TBB_IMPLICIT_LINKAGE */
 
 } // namespace Harness
 

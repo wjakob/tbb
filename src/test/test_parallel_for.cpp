@@ -31,7 +31,9 @@
     #pragma warning (disable: 4267)
 #endif
 
+#if !defined(_SCL_SECURE_NO_WARNINGS)
 #define _SCL_SECURE_NO_WARNINGS
+#endif
 #endif //#if _MSC_VER
 
 #include "harness_defs.h"
