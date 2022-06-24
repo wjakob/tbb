@@ -251,17 +251,18 @@ else()
 
   if (APPLE)
     list(GET CMAKE_OSX_ARCHITECTURES 0 TARGET_ARCH)
-    set(ARCH_COMPILER_OPTION "-arch ${TARGET_ARCH}")
+    set(ARCH_COMPILER_OPTION -arch ${TARGET_ARCH})
+    set(STDLIB_COMPILER_OPTION -stdlib=libc++)
   endif(APPLE)
 
   add_custom_command(OUTPUT tbb.def
-    COMMAND ${CMAKE_CXX_COMPILER} ${ARCH_COMPILER_OPTION} -xc++ -std=c++11 -E ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/${ARCH_PREFIX}-tbb-export.def  -I ${CMAKE_CURRENT_SOURCE_DIR}/include -o tbb.def
+    COMMAND ${CMAKE_CXX_COMPILER} ${ARCH_COMPILER_OPTION} ${STDLIB_COMPILER_OPTION} -xc++ -std=c++11 -E ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/${ARCH_PREFIX}-tbb-export.def  -I ${CMAKE_CURRENT_SOURCE_DIR}/include -o tbb.def
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/src/tbb/${ARCH_PREFIX}-tbb-export.def
     COMMENT "Preprocessing tbb.def"
   )
 
   add_custom_command(OUTPUT tbbmalloc.def
-    COMMAND ${CMAKE_CXX_COMPILER} ${ARCH_COMPILER_OPTION} -xc++ -std=c++11 -E ${CMAKE_CURRENT_SOURCE_DIR}/src/tbbmalloc/${ARCH_PREFIX}-tbbmalloc-export.def  -I ${CMAKE_CURRENT_SOURCE_DIR}/include -o   tbbmalloc.def
+    COMMAND ${CMAKE_CXX_COMPILER} ${ARCH_COMPILER_OPTION} ${STDLIB_COMPILER_OPTION} -xc++ -std=c++11 -E ${CMAKE_CURRENT_SOURCE_DIR}/src/tbbmalloc/${ARCH_PREFIX}-tbbmalloc-export.def  -I ${CMAKE_CURRENT_SOURCE_DIR}/include -o   tbbmalloc.def
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/src/tbbmalloc/${ARCH_PREFIX}-tbbmalloc-export.def
     COMMENT "Preprocessing tbbmalloc.def"
   )
