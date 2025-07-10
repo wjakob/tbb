@@ -5,6 +5,11 @@
 [![Build Status](https://travis-ci.org/wjakob/tbb.svg?branch=master)](https://travis-ci.org/wjakob/tbb)
 [![Build status](https://ci.appveyor.com/api/projects/status/fvepmk5nxekq27r8?svg=true)](https://ci.appveyor.com/project/wjakob/tbb/branch/master)
 
+**NOTE**: A note from the maintainer of this repository: I was burned by breaking
+changes during the oneAPI/oneTBB transition and since then switched to a custom
+[parallelization library](https://github.com/mitsuba-renderer/nanothread). I no
+longer use TBB and decided to archive this repository.
+
 This is git repository is currently based on TBB 2020.2 and will be
 updated from time to time to track the most recent release. The only
 modification is the addition of a CMake-based build system.
