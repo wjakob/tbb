@@ -50,12 +50,12 @@ namespace std {
 #    endif
 #endif
 
-#if (__TBB_BUILD || __TBBMALLOC_BUILD || __TBBBIND_BUILD) && !defined(__TBB_NO_IMPLICIT_LINKAGE)
-#define __TBB_NO_IMPLICIT_LINKAGE 1
+#if (__TBB_BUILD || __TBBMALLOC_BUILD || __TBBBIND_BUILD) && !defined(__TBB_IMPLICIT_LINKAGE)
+#define __TBB_IMPLICIT_LINKAGE 0
 #endif
 
 #if _MSC_VER
-    #if !__TBB_NO_IMPLICIT_LINKAGE
+    #if __TBB_IMPLICIT_LINKAGE
         #ifdef __TBB_LIB_NAME
 	        #pragma comment(lib, __TBB_STRING(__TBB_LIB_NAME))
         #else

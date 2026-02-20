@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#if (_MSC_VER)
+#if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
     //MSVC 10 "deprecated" application of some std:: algorithms to raw pointers as not safe.
     //The reason is that destination is not checked against bounds/having enough place.
     #define _SCL_SECURE_NO_WARNINGS

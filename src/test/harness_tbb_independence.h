@@ -27,7 +27,7 @@
 
 #if __linux__  && __ia64__
 
-#define __TBB_NO_IMPLICIT_LINKAGE 1
+#define __TBB_IMPLICIT_LINKAGE 0
 #include "tbb/tbb_machine.h"
 
 #include <pthread.h>

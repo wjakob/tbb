@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#if _MSC_VER
+#if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
 #define _SCL_SECURE_NO_WARNINGS
 #endif
 

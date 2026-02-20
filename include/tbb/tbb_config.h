@@ -529,7 +529,7 @@ There are four cases that are supported:
     it's necessary to test internal functions not exported from TBB DLLs
 **/
 #if (_WIN32||_WIN64) && (__TBB_SOURCE_DIRECTLY_INCLUDED || TBB_USE_PREVIEW_BINARY)
-    #define __TBB_NO_IMPLICIT_LINKAGE 1
+    #define __TBB_IMPLICIT_LINKAGE 0
     #define __TBBMALLOC_NO_IMPLICIT_LINKAGE 1
 #endif
 

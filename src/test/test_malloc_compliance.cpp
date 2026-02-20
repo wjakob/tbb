@@ -105,7 +105,7 @@ void limitMem( size_t limit )
 #include <time.h>
 #include <errno.h>
 #include <limits.h> // for CHAR_BIT
-#define __TBB_NO_IMPLICIT_LINKAGE 1
+#define __TBB_IMPLICIT_LINKAGE 0
 #include "tbb/scalable_allocator.h"
 
 #define HARNESS_CUSTOM_MAIN 1

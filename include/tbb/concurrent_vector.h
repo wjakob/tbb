@@ -675,6 +675,12 @@ public:
 
 #endif
 
+#if !defined(_MSC_VER)
+#define CONCURRENT_VECTOR_COPY_CONSTRUCT_FROM_OTHER_ALLOCATOR
+#endif
+
+// This deprecated function declaration causes a compiler error in Visual Studio 2017
+#if defined(CONCURRENT_VECTOR_COPY_CONSTRUCT_FROM_OTHER_ALLOCATOR)
     //! Copying constructor for vector with different allocator type
     template<class M>
     __TBB_DEPRECATED concurrent_vector( const concurrent_vector<T, M>& vector, const allocator_type& a = allocator_type() )
@@ -689,7 +695,7 @@ public:
             __TBB_RETHROW();
         }
     }
-
+#endif
     //! Construction with initial size specified by argument n
     explicit concurrent_vector(size_type n)
     {
